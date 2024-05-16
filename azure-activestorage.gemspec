@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "lib/azure/activestorage/version"
+require_relative "lib/azure/active_storage/version"
 
 Gem::Specification.new do |spec|
   spec.name = "azure-activestorage"
-  spec.version = Azure::Activestorage::VERSION
+  spec.version = Azure::ActiveStorage::VERSION
   spec.authors = ["Joé Dupuis"]
   spec.email = ["joe@dupuis.io"]
 

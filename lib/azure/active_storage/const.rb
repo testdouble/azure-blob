@@ -1,0 +1,2 @@
+module Azure::ActiveStorage
+end
