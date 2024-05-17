@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     azure-activestorage (0.1.0)
+      rexml
 
 GEM
   remote: https://rubygems.org/
