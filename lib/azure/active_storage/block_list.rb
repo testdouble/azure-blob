@@ -1,6 +1,6 @@
 # frozen_string_literal: true
-require 'rexml'
 
+require "rexml"
 
 module Azure::ActiveStorage
   class BlockList
@@ -20,7 +20,7 @@ module Azure::ActiveStorage
 
     def build_document
       document = Document.new
-      document.add(XMLDecl.new('1.0', 'utf-8'))
+      document.add(XMLDecl.new("1.0", "utf-8"))
       block_list = document.add_element(Element.new("BlockList"))
       blocks.each do |block_id|
         block = block_list.add_element(Element.new("Latest"))

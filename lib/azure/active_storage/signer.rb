@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-require 'base64'
-require 'openssl'
-require_relative 'canonicalized_headers'
-require_relative 'canonicalized_resource'
+require "base64"
+require "openssl"
+require_relative "canonicalized_headers"
+require_relative "canonicalized_resource"
 
 module Azure::ActiveStorage
   class Signer
@@ -46,11 +46,12 @@ module Azure::ActiveStorage
         if_unmodified_since,
         range,
         canonicalized_headers,
-        canonicalized_resource,
+        canonicalized_resource
       ].join("\n")
 
       Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, to_sign))
     end
+
     private
 
     attr_reader :access_key
