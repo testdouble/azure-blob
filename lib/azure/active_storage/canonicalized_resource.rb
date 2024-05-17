@@ -8,7 +8,7 @@ module Azure::ActiveStorage
       params = CGI.parse(uri.query.to_s)
         .transform_keys(&:downcase)
         .sort
-        .map { |param,value| "#{param}#{value.map(&:strip).sort.join(',')}" }
+        .map { |param,value| "#{param}:#{value.map(&:strip).sort.join(',')}" }
 
       @canonicalized_resource = [resource, *params].join("\n")
     end
