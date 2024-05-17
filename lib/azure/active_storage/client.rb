@@ -31,7 +31,7 @@ module Azure::ActiveStorage
         "x-ms-blob-content-disposition": options[:content_disposition]
       }.reject{|_,value| value.nil? }
 
-      options[:metadata].each do |key,value|
+      options[:metadata]&.each do |key,value|
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
