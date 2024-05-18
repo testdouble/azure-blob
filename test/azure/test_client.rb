@@ -20,6 +20,18 @@ class Azure::TestClient < Minitest::Test
     pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), max_block_size: 1, metadata: {:lol => 123, "no" => :qwe})
   end
 
+  def test_upload_prefix
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+    key = "some prefix/inside the prefix #{Random.rand(20)}"
+    data = "hello world!"
+
+    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), max_block_size: 1, metadata: {:lol => 123, "no" => :qwe})
+  end
+
+
   def test_upload_multiple
     client = Azure::ActiveStorage::Client.new(
       account_name: @account_name,
