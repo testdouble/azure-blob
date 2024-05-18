@@ -17,6 +17,18 @@ module Azure::ActiveStorage
       document.get_elements("//EnumerationResults/Blobs/Blob/Name").map(&:get_text)
     end
 
+    def each
+      to_a.each
+    end
+
+    def to_s
+      to_a.to_s
+    end
+
+    def inspect
+      to_a.inspect
+    end
+
     private
 
     attr_reader :document

@@ -92,7 +92,7 @@ module Azure::ActiveStorage
         http.get(uri, headers)
       end.body
 
-      BlobList.new(response).to_a
+      BlobList.new(response)
     end
 
     private

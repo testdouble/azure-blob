@@ -114,4 +114,20 @@ class Azure::TestClient < Minitest::Test
 
     pp "end_result:", client.list_blobs("dev")
   end
+
+  def test_list_blobs_pages
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+
+    marker = nil
+    blobs = []
+    loop do
+      results = client.list_blobs("dev", max_results: 2, marker:)
+      blobs += results.to_a
+      break unless marker = results.marker
+    end
+    pp "end_results:", blobs
+  end
 end
