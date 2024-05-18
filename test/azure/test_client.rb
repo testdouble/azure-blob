@@ -86,4 +86,14 @@ class Azure::TestClient < Minitest::Test
 
     pp "end_result:", client.get_blob("dev", key, start_range: 3)
   end
+
+  def test_delete
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+    key = "random name"
+
+    pp "end_result:", client.delete_blob("dev", key)
+  end
 end
