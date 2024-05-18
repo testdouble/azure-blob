@@ -96,4 +96,22 @@ class Azure::TestClient < Minitest::Test
 
     pp "end_result:", client.delete_blob("dev", key)
   end
+
+  def test_list_blobs_prefix
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+
+    pp "end_result:", client.list_blobs("dev", prefix: 'some prefix/')
+  end
+
+  def test_list_blobs_root
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+
+    pp "end_result:", client.list_blobs("dev")
+  end
 end

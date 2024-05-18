@@ -2,6 +2,7 @@
 
 require_relative "signer"
 require_relative "block_list"
+require_relative "blob_list"
 require "net/http"
 require "time"
 require "base64"
@@ -62,6 +63,36 @@ module Azure::ActiveStorage
       http.start do |http|
         http.delete(uri.path, headers)
       end.body
+    end
+
+    def list_blobs(container, options = {})
+      Enumerator.new do |yielder|
+
+      end
+      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/"))
+      date = Time.now.httpdate
+      query = {
+        comp: "list",
+        restype: "container",
+        prefix: options[:prefix].to_s.gsub(/\\/, "/"),
+        marker: options[:marker].to_s,
+      }
+      query[:maxresults] = options[:max_results] if options[:max_results]
+      uri.query = URI.encode_www_form(**query)
+
+      headers = {
+        "x-ms-version": api_version,
+        "x-ms-date": date,
+      }.reject { |_, value| value.nil? }
+
+      signature = signer.sign(uri:, account_name:, verb: "GET", headers:)
+      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+
+      response = http.start do |http|
+        http.get(uri, headers)
+      end.body
+
+      BlobList.new(response).to_a
     end
 
     private
