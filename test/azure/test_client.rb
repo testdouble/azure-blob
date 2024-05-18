@@ -130,4 +130,18 @@ class Azure::TestClient < Minitest::Test
     end
     pp "end_results:", blobs
   end
+
+  def test_delete_prefixed
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+    prefix = 'some prefix/'
+    marker = nil
+    loop do
+      results = client.list_blobs("dev", max_results: 1, marker:, prefix:)
+      results.each {|blob| client.delete_blob("dev", blob)}
+      break unless marker = results.marker
+    end
+  end
 end

@@ -17,8 +17,8 @@ module Azure::ActiveStorage
       document.get_elements("//EnumerationResults/Blobs/Blob/Name").map(&:get_text)
     end
 
-    def each
-      to_a.each
+    def each(&block)
+      to_a.each(&block)
     end
 
     def to_s
