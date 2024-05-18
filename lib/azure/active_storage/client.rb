@@ -3,6 +3,7 @@
 require_relative "signer"
 require_relative "block_list"
 require_relative "blob_list"
+require_relative "blob"
 require "net/http"
 require "time"
 require "base64"
@@ -93,6 +94,25 @@ module Azure::ActiveStorage
       end.body
 
       BlobList.new(response)
+    end
+
+    def get_blob_properties(container, key, options = {})
+      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/#{key}"))
+      date = Time.now.httpdate
+
+      headers = {
+        "x-ms-version": api_version,
+        "x-ms-date": date,
+        "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
+      }.reject { |_, value| value.nil? }
+
+      signature = signer.sign(uri:, account_name:, verb: "HEAD", headers:)
+      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+
+      response = http.start do |http|
+        http.head(uri.path, headers)
+      end
+      Blob.new(response)
     end
 
     private

@@ -144,4 +144,17 @@ class Azure::TestClient < Minitest::Test
       break unless marker = results.marker
     end
   end
+
+  def test_get_blob_properties
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+    key = "random name"
+
+    response = client.get_blob_properties("dev", key)
+    pp "end_result:", response.present?, response.content_length
+    response = client.get_blob_properties("dev", "incorect file")
+    pp "end_result:", response.present?, response.content_length
+  end
 end
