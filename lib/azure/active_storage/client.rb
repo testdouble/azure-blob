@@ -46,6 +46,24 @@ module Azure::ActiveStorage
       end.body
     end
 
+    def delete_blob(container, key, options = {})
+      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/#{key}"))
+      date = Time.now.httpdate
+
+      headers = {
+        "x-ms-version": api_version,
+        "x-ms-date": date,
+        "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
+      }.reject { |_, value| value.nil? }
+
+      signature = signer.sign(uri:, account_name:, verb: "DELETE", headers:)
+      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+
+      http.start do |http|
+        http.delete(uri.path, headers)
+      end.body
+    end
+
     private
 
     def put_blob_multiple(container, key, content, options = {})
