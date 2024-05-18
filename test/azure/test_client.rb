@@ -63,4 +63,15 @@ class Azure::TestClient < Minitest::Test
 
     pp "end_result:", client.get_blob("dev", key, start_range: 0, end_range: 3)
   end
+
+  def test_download_chunk_endless
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+    key = "random name"
+    data = "hello world!"
+
+    pp "end_result:", client.get_blob("dev", key, start_range: 3)
+  end
 end
