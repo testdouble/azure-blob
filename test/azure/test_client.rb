@@ -31,7 +31,7 @@ class Azure::TestClient < Minitest::Test
     pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), max_block_size: 6, metadata: {:lol => 123, "no" => :qwe}, content_type: "lol", content_disposition: "inline")
   end
 
-  def test_upload_qwe
+  def test_upload
     client = Azure::ActiveStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
@@ -53,7 +53,7 @@ class Azure::TestClient < Minitest::Test
     pp "end_result:", client.get_blob("dev", key)
   end
 
-  def test_stream
+  def test_download_chunk
     client = Azure::ActiveStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
