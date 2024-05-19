@@ -31,7 +31,7 @@ module Azure::ActiveStorage
     end
 
     def get_blob(container, key, options = {})
-      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/#{key}"))
+      uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
 
       headers = {
@@ -49,7 +49,7 @@ module Azure::ActiveStorage
     end
 
     def delete_blob(container, key, options = {})
-      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/#{key}"))
+      uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
 
       headers = {
@@ -70,7 +70,7 @@ module Azure::ActiveStorage
       Enumerator.new do |yielder|
 
       end
-      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/"))
+      uri = generate_uri(container)
       date = Time.now.httpdate
       query = {
         comp: "list",
@@ -97,7 +97,7 @@ module Azure::ActiveStorage
     end
 
     def get_blob_properties(container, key, options = {})
-      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/#{key}"))
+      uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
 
       headers = {
@@ -113,6 +113,10 @@ module Azure::ActiveStorage
         http.head(uri.path, headers)
       end
       Blob.new(response)
+    end
+
+    def generate_uri(path)
+      URI.parse(URI::DEFAULT_PARSER.escape(File.join(host, path)))
     end
 
     private
@@ -132,7 +136,7 @@ module Azure::ActiveStorage
     def commit_blob_blocks(container, key, block_ids, options = {})
       block_list = BlockList.new(block_ids)
       content = block_list.to_s
-      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/#{key}"))
+      uri = generate_uri("#{container}/#{key}")
 
       date = Time.now.httpdate
       headers = {
@@ -157,7 +161,7 @@ module Azure::ActiveStorage
     end
 
     def put_blob_block(container, key, block_id, content, options = {})
-      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/#{key}"))
+      uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
 
       date = Time.now.httpdate
@@ -178,7 +182,7 @@ module Azure::ActiveStorage
     end
 
     def put_blob(container, key, content, options = {})
-      uri = URI(URI::DEFAULT_PARSER.escape("#{host}/#{container}/#{key}"))
+      uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
       headers = {
         "x-ms-version": api_version,
