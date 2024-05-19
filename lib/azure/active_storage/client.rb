@@ -67,9 +67,6 @@ module Azure::ActiveStorage
     end
 
     def list_blobs(container, options = {})
-      Enumerator.new do |yielder|
-
-      end
       uri = generate_uri(container)
       date = Time.now.httpdate
       query = {
