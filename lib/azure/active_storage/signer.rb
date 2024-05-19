@@ -52,7 +52,54 @@ module Azure::ActiveStorage
       Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, to_sign))
     end
 
+    def sas_token(uri, options)
+      to_sign = [
+        options[:permissions],
+        options[:start],
+        options[:expiry],
+        CanonicalizedResource.new(uri, account_name, service_name: :blob),
+        options[:identifier],
+        options[:ip],
+        options[:protocol],
+        SAS::Version,
+        SAS::Resources::Blob,
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+      ].join('\n')
+      puts 'aaa:', to_sign
+
+      signature = Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, to_sign))
+
+      URI.encode_www_form(
+        SAS::Fields::Permissions => options[:permissions],
+        SAS::Fields::Version => SAS::Version,
+        SAS::Fields::Expiry => options[:expiry],
+        SAS::Fields::Resource => SAS::Resources::Blob,
+        SAS::Fields::Signature => signature
+      )
+    end
+
     private
+
+    module SAS
+      Version = '2020-12-06'
+      module Fields
+        Permissions = :sp
+        Version = :sv
+        Expiry = :se
+        Resource = :sr
+        Signature = :sig
+      end
+      module Resources
+        Blob = :b
+      end
+    end
+
 
     attr_reader :access_key, :account_name
   end

@@ -116,6 +116,11 @@ module Azure::ActiveStorage
       URI.parse(URI::DEFAULT_PARSER.escape(File.join(host, path)))
     end
 
+    def signed_uri(uri, options)
+      uri.query = signer.sas_token(uri, options)
+      uri
+    end
+
     private
 
     def put_blob_multiple(container, key, content, options = {})

@@ -157,4 +157,21 @@ class Azure::TestClient < Minitest::Test
     response = client.get_blob_properties("dev", "incorect file")
     pp "end_result:", response.present?, response.content_length
   end
+
+  def test_url_for_direct_upload
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+    pp 'results:', client.signed_uri(
+      client.generate_uri("dev/direct_upload"),
+      service: "b",
+      permissions: "rw",
+      expiry: Time.at(Time.now.to_i + 3600).utc.iso8601
+    ).to_s
+  end
+
+  def test_private_url
+
+  end
 end
