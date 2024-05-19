@@ -13,7 +13,7 @@ module Azure::ActiveStorage
     def initialize(account_name:, access_key:)
       @account_name = account_name
       @api_version = "2024-05-04"
-      @signer = Signer.new(access_key:)
+      @signer = Signer.new(account_name:, access_key:)
 
       uri = URI(host)
 
@@ -40,7 +40,7 @@ module Azure::ActiveStorage
         "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, account_name:, verb: "GET", headers:)
+      signature = signer.sign(uri:, verb: "GET", headers:)
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
@@ -58,7 +58,7 @@ module Azure::ActiveStorage
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, account_name:, verb: "DELETE", headers:)
+      signature = signer.sign(uri:, verb: "DELETE", headers:)
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
@@ -83,7 +83,7 @@ module Azure::ActiveStorage
         "x-ms-date": date,
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, account_name:, verb: "GET", headers:)
+      signature = signer.sign(uri:, verb: "GET", headers:)
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       response = http.start do |http|
@@ -103,7 +103,7 @@ module Azure::ActiveStorage
         "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, account_name:, verb: "HEAD", headers:)
+      signature = signer.sign(uri:, verb: "HEAD", headers:)
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       response = http.start do |http|
@@ -149,7 +149,7 @@ module Azure::ActiveStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      signature = signer.sign(uri:, account_name:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
@@ -170,7 +170,7 @@ module Azure::ActiveStorage
         "Content-MD5": options[:content_md5]
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, account_name:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
@@ -195,7 +195,7 @@ module Azure::ActiveStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      signature = signer.sign(uri:, account_name:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|

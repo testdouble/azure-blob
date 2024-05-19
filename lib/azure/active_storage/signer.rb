@@ -7,13 +7,13 @@ require_relative "canonicalized_resource"
 
 module Azure::ActiveStorage
   class Signer
-    def initialize(access_key:)
+    def initialize(account_name:, access_key:)
+      @account_name = account_name
       @access_key = Base64.decode64(access_key)
     end
 
     def sign(
       uri:,
-      account_name:,
       verb:,
       content_length: nil,
       content_encoding: nil,
@@ -54,6 +54,6 @@ module Azure::ActiveStorage
 
     private
 
-    attr_reader :access_key
+    attr_reader :access_key, :account_name
   end
 end
