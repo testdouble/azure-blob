@@ -17,7 +17,7 @@ class Azure::TestClient < Minitest::Test
     key = "random name"
     data = "hello world!"
 
-    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), block_size: 1, metadata: {:lol => 123, "no" => :qwe})
+    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), metadata: {:lol => 123, "no" => :qwe})
   end
 
   def test_upload_prefix
@@ -169,6 +169,37 @@ class Azure::TestClient < Minitest::Test
       permissions: "rw",
       expiry: Time.at(Time.now.to_i + 3600).utc.iso8601
     ).to_s
+  end
+
+  def test_append_blob
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+
+    10.times {|i| client.create_block_blob("dev", "#{i}.txt", StringIO.new((i*100).to_s)) }
+    composed_block_key = 'composed append blob'
+    append_blob = client.create_append_blob('dev', composed_block_key)
+    10.times do |i|
+      chunk = client.get_blob('dev', "#{i}.txt")
+      client.append_blob_block('dev', composed_block_key, chunk)
+    end
+  end
+
+  def test_compose_block
+    client = Azure::ActiveStorage::Client.new(
+      account_name: @account_name,
+      access_key: @access_key
+    )
+
+    10.times {|i| client.create_block_blob("dev", "#{i}.txt", StringIO.new((i*100).to_s)) }
+    composed_block_key = 'composed block'
+
+    block_ids = 10.times.map do |i|
+      chunk = client.get_blob('dev', "#{i}.txt")
+      client.put_blob_block('dev', composed_block_key, i, chunk)
+    end
+    client.commit_blob_blocks('dev', composed_block_key, block_ids)
   end
 
   def test_private_url

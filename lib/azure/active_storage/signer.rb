@@ -31,7 +31,7 @@ module Azure::ActiveStorage
 
       canonicalized_headers = CanonicalizedHeaders.new(headers)
       canonicalized_resource = CanonicalizedResource.new(uri, account_name)
-
+      content_length = nil if content_length == 0
       to_sign = [
         verb,
         content_encoding,

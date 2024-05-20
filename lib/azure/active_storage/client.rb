@@ -121,18 +121,73 @@ module Azure::ActiveStorage
       uri
     end
 
-    private
+    def create_append_blob(container, key, options = {})
+      uri = generate_uri("#{container}/#{key}")
+      date = Time.now.httpdate
+      headers = {
+        "x-ms-version": api_version,
+        "x-ms-date": date,
+        "x-ms-blob-type": "AppendBlob",
+        "Content-Length": 0.to_s,
+        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
+        "Content-MD5": options[:content_md5],
+        "x-ms-blob-content-disposition": options[:content_disposition]
+      }.reject { |_, value| value.nil? }
 
-    def put_blob_multiple(container, key, content, options = {})
-      content = StringIO.new(content) if content.is_a? String
-      block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
-      block_count = (content.size.to_f / block_size).ceil
-      block_ids = block_count.times.map { |i| Base64.urlsafe_encode64(i.to_s.rjust(6, "0")) }
-      block_ids.each do |block_id|
-        put_blob_block(container, key, block_id, content.read(block_size))
+      options[:metadata]&.each do |key, value|
+        headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      commit_blob_blocks(container, key, block_ids, options)
+      signature = signer.sign(uri:, verb: "PUT", content_length: 0, headers:, **options.slice(:content_type))
+      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+
+      http.start do |http|
+        http.put(uri.path, nil, headers)
+      end
+    end
+
+    def append_blob_block(container, key, content, options = {})
+      uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(comp: "appendblock")
+
+      date = Time.now.httpdate
+      headers = {
+        "x-ms-version": api_version,
+        "x-ms-date": date,
+        "Content-Length": content.size.to_s,
+        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
+        "Content-MD5": options[:content_md5]
+      }.reject { |_, value| value.nil? }
+
+      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+
+      http.start do |http|
+        http.put(uri, content, headers)
+      end
+    end
+
+    def put_blob_block(container, key, index, content, options = {})
+      block_id = generate_block_id(index)
+      uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
+
+      date = Time.now.httpdate
+      headers = {
+        "x-ms-version": api_version,
+        "x-ms-date": date,
+        "Content-Length": content.size.to_s,
+        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
+        "Content-MD5": options[:content_md5]
+      }.reject { |_, value| value.nil? }
+
+      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+
+      http.start do |http|
+        http.put(uri, content, headers)
+      end
+      block_id
     end
 
     def commit_blob_blocks(container, key, block_ids, options = {})
@@ -163,25 +218,21 @@ module Azure::ActiveStorage
       end
     end
 
-    def put_blob_block(container, key, block_id, content, options = {})
-      uri = generate_uri("#{container}/#{key}")
-      uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
+    private
 
-      date = Time.now.httpdate
-      headers = {
-        "x-ms-version": api_version,
-        "x-ms-date": date,
-        "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
-        "Content-MD5": options[:content_md5]
-      }.reject { |_, value| value.nil? }
+    def generate_block_id(index)
+      Base64.urlsafe_encode64(index.to_s.rjust(6, "0"))
+    end
 
-      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
-
-      http.start do |http|
-        http.put(uri, content, headers)
+    def put_blob_multiple(container, key, content, options = {})
+      content = StringIO.new(content) if content.is_a? String
+      block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
+      block_count = (content.size.to_f / block_size).ceil
+      block_ids = block_count.times.map do |i|
+        put_blob_block(container, key, i, content.read(block_size))
       end
+
+      commit_blob_blocks(container, key, block_ids, options)
     end
 
     def put_blob(container, key, content, options = {})
