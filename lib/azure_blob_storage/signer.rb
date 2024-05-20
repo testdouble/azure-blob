@@ -12,7 +12,7 @@ module AzureBlobStorage
       @access_key = Base64.decode64(access_key)
     end
 
-    def sign(
+    def authorization_header(
       uri:,
       verb:,
       content_length: nil,
@@ -28,7 +28,6 @@ module AzureBlobStorage
       range: nil,
       headers: {}
     )
-
       canonicalized_headers = CanonicalizedHeaders.new(headers)
       canonicalized_resource = CanonicalizedResource.new(uri, account_name)
       content_length = nil if content_length == 0
@@ -49,7 +48,7 @@ module AzureBlobStorage
         canonicalized_resource
       ].join("\n")
 
-      Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, to_sign))
+      "SharedKey #{account_name}:#{sign(to_sign)}"
     end
 
     def sas_token(uri, options)
@@ -72,15 +71,17 @@ module AzureBlobStorage
         nil,
       ].join("\n")
 
-      signature = Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, to_sign))
-
       URI.encode_www_form(
         SAS::Fields::Permissions => options[:permissions],
         SAS::Fields::Version => SAS::Version,
         SAS::Fields::Expiry => options[:expiry],
         SAS::Fields::Resource => SAS::Resources::Blob,
-        SAS::Fields::Signature => signature
+        SAS::Fields::Signature => sign(to_sign)
       )
+    end
+
+    def sign(body)
+      Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, body))
     end
 
     private

@@ -40,8 +40,7 @@ module AzureBlobStorage
         "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, verb: "GET", headers:)
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "GET", headers:)
 
       http.start do |http|
         http.get(uri, headers)
@@ -58,8 +57,7 @@ module AzureBlobStorage
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, verb: "DELETE", headers:)
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "DELETE", headers:)
 
       http.start do |http|
         http.delete(uri, headers)
@@ -83,8 +81,7 @@ module AzureBlobStorage
         "x-ms-date": date,
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, verb: "GET", headers:)
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "GET", headers:)
 
       response = http.start do |http|
         http.get(uri, headers)
@@ -103,8 +100,7 @@ module AzureBlobStorage
         "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, verb: "HEAD", headers:)
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "HEAD", headers:)
 
       response = http.start do |http|
         http.head(uri, headers)
@@ -138,8 +134,7 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      signature = signer.sign(uri:, verb: "PUT", content_length: 0, headers:, **options.slice(:content_type))
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: 0, headers:, **options.slice(:content_type))
 
       http.start do |http|
         http.put(uri, nil, headers)
@@ -159,8 +154,7 @@ module AzureBlobStorage
         "Content-MD5": options[:content_md5]
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
 
       http.start do |http|
         http.put(uri, content, headers)
@@ -181,8 +175,7 @@ module AzureBlobStorage
         "Content-MD5": options[:content_md5]
       }.reject { |_, value| value.nil? }
 
-      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
 
       http.start do |http|
         http.put(uri, content, headers)
@@ -210,8 +203,7 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
 
       http.start do |http|
         http.put(uri, content, headers)
@@ -252,8 +244,7 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      signature = signer.sign(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
-      headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
 
       http.start do |http|
         http.put(uri, content.read, headers)
