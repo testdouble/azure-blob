@@ -3,8 +3,8 @@
 require "test_helper"
 require "securerandom"
 
-  attr_reader :client, :key
 class TestClient < TestCase
+  attr_reader :client, :key, :content
 
   def setup
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
@@ -15,15 +15,18 @@ class TestClient < TestCase
       access_key: @access_key,
       container: @container,
     )
+    @key = "test_client##{name}"
+    @content = "Some random content #{Random.rand(200)}"
   end
 
   def teardown
     client.delete_blob(key)
   end
 
-  def test_single_upload
-    @key = 'test_client#test_single_upload'
-    content = "single upload content"
+  def test_single_block_upload
+    client.create_block_blob(key, content)
+
+    assert_equal content, client.get_blob(key)
 
     client.create_block_blob(key, content)
 
