@@ -7,5 +7,5 @@
 
 
   languages.ruby.enable = true;
-  languages.ruby.version = "3.3.1";
+  languages.ruby.version = "3.1.5";
 }
