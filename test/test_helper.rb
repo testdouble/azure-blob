@@ -4,6 +4,7 @@ $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "azure_blob_storage"
 
 require "minitest/autorun"
+require "net/http"
 require "debug"
 
 class TestCase < Minitest::Test

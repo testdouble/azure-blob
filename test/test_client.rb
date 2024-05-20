@@ -140,4 +140,61 @@ class TestClient < TestCase
 
     assert_equal content, client.get_blob(key)
   end
+
+  def test_read_signed_uri
+    client.create_block_blob(key, content)
+
+    uri = client.signed_uri(
+      key,
+      permissions: "r",
+      expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
+    )
+
+    http = Net::HTTP.new(uri.hostname, uri.port)
+    http.use_ssl = true
+    response = http.start do |http|
+      http.get(uri, {"x-ms-blob-type": "BlockBlob"})
+    end
+
+    assert_equal response.body, content
+  end
+
+
+  def test_read_only_signed_uri
+    client.create_block_blob(key, content)
+
+    uri = client.signed_uri(
+      key,
+      permissions: "r",
+      expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
+    )
+
+    http = Net::HTTP.new(uri.hostname, uri.port)
+    http.use_ssl = true
+    response = http.start do |http|
+      http.put(uri, content, {"x-ms-blob-type": "BlockBlob"})
+    end
+
+    refute_equal content, response.body
+    assert_equal "403", response.code
+  end
+
+
+  def test_write_signed_uri
+    client.create_block_blob(key, content)
+
+    uri = client.signed_uri(
+      key,
+      permissions: "rw",
+      expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
+    )
+
+    http = Net::HTTP.new(uri.hostname, uri.port)
+    http.use_ssl = true
+    http.start do |http|
+      http.put(uri, content, {"x-ms-blob-type": "BlockBlob"})
+    end
+
+    assert_equal content, client.get_blob(key)
+  end
 end
