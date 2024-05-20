@@ -42,9 +42,11 @@ module AzureBlobStorage
 
       headers[:Authorization] = signer.authorization_header(uri:, verb: "GET", headers:)
 
-      http.start do |http|
+      response = http.start do |http|
         http.get(uri, headers)
-      end.body
+      end
+      raise_response(response) unless success?(response)
+      response.body
     end
 
     def delete_blob(key, options = {})
