@@ -1,7 +1,7 @@
 module AzureBlobStorage
   class CanonicalizedHeaders
     STANDARD_HEADERS = [
-      :"x-ms-version"
+      :"x-ms-version",
     ]
 
     def initialize(headers)

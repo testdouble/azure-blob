@@ -13,7 +13,7 @@ module AzureBlobStorage
         .sort
         .map { |param, value| "#{param}:#{value.map(&:strip).sort.join(",")}" }
 
-      @canonicalized_resource = [resource, *params].join("\n")
+      @canonicalized_resource = [ resource, *params ].join("\n")
     end
 
     def to_s

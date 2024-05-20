@@ -5,8 +5,8 @@ require_relative "lib/azure_blob_storage/version"
 Gem::Specification.new do |spec|
   spec.name = "azure-blob-storage"
   spec.version = AzureBlobStorage::VERSION
-  spec.authors = ["Joé Dupuis"]
-  spec.email = ["joe@dupuis.io"]
+  spec.authors = [ "Joé Dupuis" ]
+  spec.email = [ "joe@dupuis.io" ]
 
   spec.summary = "Azure blob backend for Active Storage"
   spec.homepage = "https://github.com/JoeDupuis/azure-blob-storage"
@@ -29,5 +29,5 @@ Gem::Specification.new do |spec|
   end
   spec.bindir = "exe"
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
-  spec.require_paths = ["lib"]
+  spec.require_paths = [ "lib" ]
 end

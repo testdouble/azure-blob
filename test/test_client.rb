@@ -64,7 +64,7 @@ class TestClient < TestCase
 
   def test_delete_prefix
     prefix = "#{name}_prefix"
-    keys = 4.times.map do|i|
+    keys = 4.times.map do |i|
       key = "#{prefix}/#{name}_#{i}"
       client.create_block_blob(key, content)
       key
@@ -84,12 +84,12 @@ class TestClient < TestCase
 
     blobs = client.list_blobs(prefix: prefix).to_a
 
-    assert_match_content [key], blobs
+    assert_match_content [ key ], blobs
   end
 
   def test_list_blobs_with_pages
     prefix = "#{name}_prefix"
-    keys = 4.times.map do|i|
+    keys = 4.times.map do |i|
       key = "#{prefix}/#{name}_#{i}"
       client.create_block_blob(key, content)
       key
@@ -126,13 +126,13 @@ class TestClient < TestCase
 
   def test_append_blob
     client.create_block_blob(key, content)
-    content.split('', 3).each {|chunk| client.append_blob_block(key, chunk)}
+    content.split("", 3).each { |chunk| client.append_blob_block(key, chunk) }
 
     assert_equal content, client.get_blob(key)
   end
 
   def test_put_blob_block
-    block_ids = content.split('', 3).map.with_index {|chunk, i| client.put_blob_block(key, i,chunk)}
+    block_ids = content.split("", 3).map.with_index { |chunk, i| client.put_blob_block(key, i, chunk) }
 
     client.commit_blob_blocks(key, block_ids)
 
@@ -151,7 +151,7 @@ class TestClient < TestCase
     http = Net::HTTP.new(uri.hostname, uri.port)
     http.use_ssl = true
     response = http.start do |http|
-      http.get(uri, {"x-ms-blob-type": "BlockBlob"})
+      http.get(uri, { "x-ms-blob-type": "BlockBlob" })
     end
 
     assert_equal response.body, content
@@ -169,10 +169,10 @@ class TestClient < TestCase
     http = Net::HTTP.new(uri.hostname, uri.port)
     http.use_ssl = true
     response = http.start do |http|
-      http.put(uri, content, {"x-ms-blob-type": "BlockBlob"})
+      http.put(uri, content, { "x-ms-blob-type": "BlockBlob" })
     end
 
-    refute_equal content, response.body
+    assert_not_equal content, response.body
     assert_equal "403", response.code
   end
 
@@ -188,7 +188,7 @@ class TestClient < TestCase
     http = Net::HTTP.new(uri.hostname, uri.port)
     http.use_ssl = true
     http.start do |http|
-      http.put(uri, content, {"x-ms-blob-type": "BlockBlob"})
+      http.put(uri, content, { "x-ms-blob-type": "BlockBlob" })
     end
 
     assert_equal content, client.get_blob(key)

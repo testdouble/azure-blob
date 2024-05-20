@@ -10,7 +10,7 @@ require "base64"
 
 module AzureBlobStorage
   class Client
-    def initialize(account_name:, access_key:, container:, debug: ENV['AZURE_BLOB_STORAGE_DEBUG'])
+    def initialize(account_name:, access_key:, container:, debug: ENV["AZURE_BLOB_STORAGE_DEBUG"])
       @account_name = account_name
       @container = container
       @signer = Signer.new(account_name:, access_key:)
@@ -37,7 +37,7 @@ module AzureBlobStorage
       headers = {
         "x-ms-version": API_VERSION,
         "x-ms-date": date,
-        "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}"
+        "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}",
       }.reject { |_, value| value.nil? }
 
       headers[:Authorization] = signer.authorization_header(uri:, verb: "GET", headers:)
@@ -70,7 +70,7 @@ module AzureBlobStorage
       marker = nil
       loop do
         results = list_blobs(marker:, prefix:)
-        results.each {|key| delete_blob(key)}
+        results.each { |key| delete_blob(key) }
         break unless marker = results.marker
       end
     end
@@ -108,7 +108,7 @@ module AzureBlobStorage
       headers = {
         "x-ms-version": API_VERSION,
         "x-ms-date": date,
-        "x-ms-range": options[:start_range] && "bytes=#{options[:start]}-#{options[:end]}"
+        "x-ms-range": options[:start_range] && "bytes=#{options[:start]}-#{options[:end]}",
       }.reject { |_, value| value.nil? }
 
       headers[:Authorization] = signer.authorization_header(uri:, verb: "HEAD", headers:)
@@ -140,7 +140,7 @@ module AzureBlobStorage
         "Content-Length": 0.to_s,
         "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
         "Content-MD5": options[:content_md5],
-        "x-ms-blob-content-disposition": options[:content_disposition]
+        "x-ms-blob-content-disposition": options[:content_disposition],
       }.reject { |_, value| value.nil? }
 
       options[:metadata]&.each do |key, value|
@@ -164,7 +164,7 @@ module AzureBlobStorage
         "x-ms-date": date,
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
-        "Content-MD5": options[:content_md5]
+        "Content-MD5": options[:content_md5],
       }.reject { |_, value| value.nil? }
 
       headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
@@ -185,7 +185,7 @@ module AzureBlobStorage
         "x-ms-date": date,
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
-        "Content-MD5": options[:content_md5]
+        "Content-MD5": options[:content_md5],
       }.reject { |_, value| value.nil? }
 
       headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
@@ -209,7 +209,7 @@ module AzureBlobStorage
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
         "Content-MD5": options[:content_md5],
-        "x-ms-blob-content-disposition": options[:content_disposition]
+        "x-ms-blob-content-disposition": options[:content_disposition],
       }.reject { |_, value| value.nil? }
 
       options[:metadata]&.each do |key, value|
@@ -259,7 +259,7 @@ module AzureBlobStorage
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
         "Content-MD5": options[:content_md5],
-        "x-ms-blob-content-disposition": options[:content_disposition]
+        "x-ms-blob-content-disposition": options[:content_disposition],
       }.reject { |_, value| value.nil? }
 
       options[:metadata]&.each do |key, value|

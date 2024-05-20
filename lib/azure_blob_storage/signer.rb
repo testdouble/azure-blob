@@ -32,7 +32,7 @@ module AzureBlobStorage
           :"Range"
         ) { nil },
         canonicalized_headers,
-        canonicalized_resource
+        canonicalized_resource,
       ].join("\n")
 
       "SharedKey #{account_name}:#{sign(to_sign)}"
@@ -74,7 +74,7 @@ module AzureBlobStorage
     private
 
     module SAS
-      Version = '2024-05-04'
+      Version = "2024-05-04"
       module Fields
         Permissions = :sp
         Version = :sv
