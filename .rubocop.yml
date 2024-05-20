@@ -17,3 +17,9 @@ Style/TrailingCommaInArrayLiteral:
 Style/TrailingCommaInHashLiteral:
   Enabled: true
   EnforcedStyleForMultiline: consistent_comma
+
+
+Rails/AssertNot:
+  Enabled: false
+Rails/RefuteMethods:
+  Enabled: false

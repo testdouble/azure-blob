@@ -172,7 +172,7 @@ class TestClient < TestCase
       http.put(uri, content, { "x-ms-blob-type": "BlockBlob" })
     end
 
-    assert_not_equal content, response.body
+    refute_equal content, response.body
     assert_equal "403", response.code
   end
 
