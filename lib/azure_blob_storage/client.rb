@@ -26,7 +26,7 @@ module AzureBlobStorage
       if content.size > (options[:block_size] || DEFAULT_BLOCK_SIZE)
         put_blob_multiple(key, content, **options)
       else
-        put_blob(key, content, **options)
+        put_blob_single(key, content, **options)
       end
     end
 
@@ -227,7 +227,8 @@ module AzureBlobStorage
       commit_blob_blocks(key, block_ids, options)
     end
 
-    def put_blob(key, content, options = {})
+    def put_blob_single(key, content, options = {})
+      content = StringIO.new(content) if content.is_a? String
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
       headers = {
