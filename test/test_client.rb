@@ -128,7 +128,15 @@ class TestClient < TestCase
 
   def test_append_blob
     client.create_block_blob(key, content)
-    content.each_char {|char| client.append_blob_block(key, char)}
+    content.split('', 3).each {|chunk| client.append_blob_block(key, chunk)}
+
+    assert_equal content, client.get_blob(key)
+  end
+
+  def test_put_blob_block
+    block_ids = content.split('', 3).map.with_index {|chunk, i| client.put_blob_block(key, i,chunk)}
+
+    client.commit_blob_blocks(key, block_ids)
 
     assert_equal content, client.get_blob(key)
   end
