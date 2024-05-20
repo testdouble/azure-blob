@@ -1,6 +1,6 @@
 require "cgi"
 
-module Azure::ActiveStorage
+module AzureBlobStorage
   class CanonicalizedResource
     def initialize(uri, account_name, service_name: nil)
       resource = "/#{account_name}#{uri.path.empty? ? "/" : uri.path}"

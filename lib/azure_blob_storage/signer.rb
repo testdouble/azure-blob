@@ -5,7 +5,7 @@ require "openssl"
 require_relative "canonicalized_headers"
 require_relative "canonicalized_resource"
 
-module Azure::ActiveStorage
+module AzureBlobStorage
   class Signer
     def initialize(account_name:, access_key:)
       @account_name = account_name

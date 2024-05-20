@@ -2,7 +2,7 @@
 
 require "rexml"
 
-module Azure::ActiveStorage
+module AzureBlobStorage
   class BlockList
     include REXML
     def initialize(blocks)

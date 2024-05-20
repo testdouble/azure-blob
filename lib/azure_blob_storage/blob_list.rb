@@ -2,7 +2,7 @@
 
 require "rexml"
 
-module Azure::ActiveStorage
+module AzureBlobStorage
   class BlobList
     include REXML
     def initialize(response)

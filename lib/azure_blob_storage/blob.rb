@@ -2,7 +2,7 @@
 
 require "rexml"
 
-module Azure::ActiveStorage
+module AzureBlobStorage
   class Blob
     def initialize(response)
       @response = response

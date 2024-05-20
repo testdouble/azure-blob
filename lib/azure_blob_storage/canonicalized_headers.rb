@@ -1,4 +1,4 @@
-module Azure::ActiveStorage
+module AzureBlobStorage
   class CanonicalizedHeaders
     STANDARD_HEADERS = [
       :"x-ms-version"

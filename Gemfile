@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in azure-activestorage.gemspec
+# Specify your gem's dependencies in azure-blob-storage.gemspec
 gemspec
 
 gem "rake", "~> 13.0"

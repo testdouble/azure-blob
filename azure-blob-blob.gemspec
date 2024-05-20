@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
-require_relative "lib/azure/active_storage/version"
+require_relative "lib/azure_blob_storage/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "azure-activestorage"
-  spec.version = Azure::ActiveStorage::VERSION
+  spec.name = "azure-blob-storage"
+  spec.version = AzureBlobStorage::VERSION
   spec.authors = ["Joé Dupuis"]
   spec.email = ["joe@dupuis.io"]
 
   spec.summary = "Azure blob backend for Active Storage"
-  spec.homepage = "https://github.com/JoeDupuis/JoeDupuis-azure-activestorage"
+  spec.homepage = "https://github.com/JoeDupuis/azure-blob-storage"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["changelog_uri"] = "https://github.com/JoeDupuis/JoeDupuis-azure-activestorage/blob/main/CHANGELOG.md"
+  spec.metadata["changelog_uri"] = "https://github.com/JoeDupuis/azure-blob-storage/blob/main/CHANGELOG.md"
 
   spec.add_dependency "rexml"
 

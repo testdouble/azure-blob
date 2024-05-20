@@ -8,7 +8,7 @@ require "net/http"
 require "time"
 require "base64"
 
-module Azure::ActiveStorage
+module AzureBlobStorage
   class Client
     def initialize(account_name:, access_key:)
       @account_name = account_name

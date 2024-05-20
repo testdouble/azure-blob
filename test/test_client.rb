@@ -3,14 +3,14 @@
 require "test_helper"
 require "securerandom"
 
-class Azure::TestClient < Minitest::Test
+class TestClient < Minitest::Test
   def setup
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
   end
 
   def test_upload
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -21,7 +21,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_upload_prefix
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -33,7 +33,7 @@ class Azure::TestClient < Minitest::Test
 
 
   def test_upload_multiple
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -44,7 +44,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_upload
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -55,7 +55,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_download
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -66,7 +66,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_download_chunk
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -77,7 +77,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_download_chunk_endless
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -88,7 +88,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_delete
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -98,7 +98,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_list_blobs_prefix
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -107,7 +107,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_list_blobs_root
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -116,7 +116,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_list_blobs_pages
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -132,7 +132,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_delete_prefixed
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -146,7 +146,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_get_blob_properties
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -159,7 +159,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_url_for_direct_upload
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -172,7 +172,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_append_blob
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
@@ -187,7 +187,7 @@ class Azure::TestClient < Minitest::Test
   end
 
   def test_compose_block
-    client = Azure::ActiveStorage::Client.new(
+    client = AzureBlobStorage::Client.new(
       account_name: @account_name,
       access_key: @access_key
     )
