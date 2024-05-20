@@ -69,8 +69,7 @@ module Azure::ActiveStorage
         nil,
         nil,
         nil,
-        nil,
-      ].join('\n')
+      ].join("\n")
 
       signature = Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, to_sign))
 
