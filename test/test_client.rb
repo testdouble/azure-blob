@@ -27,7 +27,16 @@ class TestClient < TestCase
     client.create_block_blob(key, content)
 
     assert_equal content, client.get_blob(key)
+  end
 
+
+  def test_multi_block_upload
+    client.create_block_blob(key, content, block_size: 1)
+
+    assert_equal content, client.get_blob(key)
+  end
+
+  def test_download
     client.create_block_blob(key, content)
 
     assert_equal content, client.get_blob(key)
