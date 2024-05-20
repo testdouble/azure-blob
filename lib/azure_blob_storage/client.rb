@@ -124,8 +124,9 @@ module AzureBlobStorage
       URI.parse(URI::DEFAULT_PARSER.escape(File.join(host, path)))
     end
 
-    def signed_uri(uri, options)
-      uri.query = signer.sas_token(uri, options)
+    def signed_uri(key, permissions:, expiry:)
+      uri = generate_uri("#{container}/#{key}")
+      uri.query = signer.sas_token(uri, permissions:, expiry:)
       uri
     end
 

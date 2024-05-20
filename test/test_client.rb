@@ -15,7 +15,7 @@ class TestClient < TestCase
       access_key: @access_key,
       container: @container,
     )
-    @key = "test_client##{name}"
+    @key = "test client##{name}"
     @content = "Some random content #{Random.rand(200)}"
   end
 

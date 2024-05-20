@@ -43,7 +43,7 @@ module AzureBlobStorage
         options[:permissions],
         options[:start],
         options[:expiry],
-        CanonicalizedResource.new(uri, account_name, service_name: :blob),
+        CanonicalizedResource.new(uri, account_name, url_safe: false, service_name: :blob),
         options[:identifier],
         options[:ip],
         options[:protocol],
