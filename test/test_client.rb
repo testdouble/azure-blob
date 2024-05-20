@@ -41,4 +41,12 @@ class TestClient < TestCase
 
     assert_equal content, client.get_blob(key)
   end
+
+  def test_download_chunk
+    client.create_block_blob(key, content)
+
+    result = client.get_blob(key, start: 0, end: 5) + client.get_blob(key, start: 6)
+
+    assert_equal content, result
+  end
 end
