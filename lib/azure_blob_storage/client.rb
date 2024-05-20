@@ -116,6 +116,7 @@ module AzureBlobStorage
       response = http.start do |http|
         http.head(uri, headers)
       end
+      raise_response(response) unless success?(response)
       Blob.new(response)
     end
 

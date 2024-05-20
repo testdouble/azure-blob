@@ -50,7 +50,7 @@ class TestClient < TestCase
     assert_equal content, result
   end
 
-  def test_404
+  def test_download_404
     assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob(key) }
   end
 
@@ -111,5 +111,18 @@ class TestClient < TestCase
     keys.each do |key|
       client.delete_blob(key)
     end
+  end
+
+  def test_get_blob_properties
+    client.create_block_blob(key, content)
+
+    blob = client.get_blob_properties(key)
+
+    assert_equal content.present?
+    assert_equal content.size, blob.size
+  end
+
+  def test_get_blob_properties_404
+    assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob_properties(key) }
   end
 end

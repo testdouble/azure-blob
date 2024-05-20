@@ -8,7 +8,7 @@ module AzureBlobStorage
       @response = response
     end
 
-    def content_length
+    def size
       response.content_length
     end
 
