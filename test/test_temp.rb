@@ -3,7 +3,7 @@
 require "test_helper"
 require "securerandom"
 
-class TestClient < Minitest::Test
+class TestTemp < Minitest::Test
   attr_reader :client
 
   def setup
