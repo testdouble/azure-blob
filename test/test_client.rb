@@ -62,4 +62,37 @@ class TestClient < TestCase
 
     assert_equal content, client.get_blob(key)
   end
+  def test_list_prefix
+    prefix = "#{name}_prefix"
+    @key = "#{prefix}/#{key}"
+    client.create_block_blob(key, content)
+
+    blobs = client.list_blobs(prefix: prefix).to_a
+
+    assert_match_content [key], blobs
+  end
+
+  def test_list_blobs_with_pages
+    prefix = "#{name}_prefix"
+    keys = 4.times.map do|i|
+      key = "#{prefix}/#{name}_#{i}"
+      client.create_block_blob(key, content)
+      key
+    end
+
+    blobs = []
+    marker = nil
+    loop do
+      results = client.list_blobs(max_results: 2, marker:, prefix:)
+      assert_equal 2, results.size
+      blobs += results.to_a
+      break unless marker = results.marker
+    end
+
+    assert_match_content keys, blobs
+
+    keys.each do |key|
+      client.delete_blob(key)
+    end
+  end
 end
