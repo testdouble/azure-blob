@@ -13,7 +13,6 @@ module AzureBlobStorage
     def initialize(account_name:, access_key:, container:)
       @account_name = account_name
       @container = container
-      @api_version = "2024-05-04"
       @signer = Signer.new(account_name:, access_key:)
 
       uri = URI(host)
@@ -36,7 +35,7 @@ module AzureBlobStorage
       date = Time.now.httpdate
 
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
       }.reject { |_, value| value.nil? }
@@ -54,7 +53,7 @@ module AzureBlobStorage
       date = Time.now.httpdate
 
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
       }.reject { |_, value| value.nil? }
@@ -80,7 +79,7 @@ module AzureBlobStorage
       uri.query = URI.encode_www_form(**query)
 
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
       }.reject { |_, value| value.nil? }
 
@@ -99,7 +98,7 @@ module AzureBlobStorage
       date = Time.now.httpdate
 
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
       }.reject { |_, value| value.nil? }
@@ -126,7 +125,7 @@ module AzureBlobStorage
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "x-ms-blob-type": "AppendBlob",
         "Content-Length": 0.to_s,
@@ -153,7 +152,7 @@ module AzureBlobStorage
 
       date = Time.now.httpdate
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
@@ -175,7 +174,7 @@ module AzureBlobStorage
 
       date = Time.now.httpdate
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
@@ -199,7 +198,7 @@ module AzureBlobStorage
 
       date = Time.now.httpdate
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
@@ -240,7 +239,7 @@ module AzureBlobStorage
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
       headers = {
-        "x-ms-version": api_version,
+        "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "x-ms-blob-type": "BlockBlob",
         "Content-Length": content.size.to_s,
@@ -261,7 +260,7 @@ module AzureBlobStorage
       end
     end
 
-    attr_reader :account_name, :signer, :container, :api_version, :http
+    attr_reader :account_name, :signer, :container, :http
 
     def host
       "https://#{account_name}.blob.core.windows.net"
