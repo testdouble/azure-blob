@@ -12,38 +12,25 @@ module AzureBlobStorage
       @access_key = Base64.decode64(access_key)
     end
 
-    def authorization_header(
-      uri:,
-      verb:,
-      content_length: nil,
-      content_encoding: nil,
-      content_language: nil,
-      content_md5: nil,
-      content_type: nil,
-      date: nil,
-      if_modified_since: nil,
-      if_match: nil,
-      if_none_match: nil,
-      if_unmodified_since: nil,
-      range: nil,
-      headers: {}
-    )
+    def authorization_header(uri:, verb:, headers: {})
       canonicalized_headers = CanonicalizedHeaders.new(headers)
       canonicalized_resource = CanonicalizedResource.new(uri, account_name)
       content_length = nil if content_length == 0
       to_sign = [
         verb,
-        content_encoding,
-        content_language,
-        content_length,
-        content_md5,
-        content_type,
-        date,
-        if_modified_since,
-        if_match,
-        if_none_match,
-        if_unmodified_since,
-        range,
+        *headers.fetch_values(
+          :"Content-Encoding",
+          :"Content-Language",
+          :"Content-Length",
+          :"Content-MD5",
+          :"Content-Type",
+          :"Date",
+          :"If-Modified-Since",
+          :"If-Match",
+          :"If-None-Match",
+          :"If-Unmodified-Since",
+          :"Range"
+        ) { nil },
         canonicalized_headers,
         canonicalized_resource
       ].join("\n")

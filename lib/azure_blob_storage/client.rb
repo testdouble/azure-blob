@@ -134,7 +134,7 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: 0, headers:, **options.slice(:content_type))
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
 
       http.start do |http|
         http.put(uri, nil, headers)
@@ -154,7 +154,7 @@ module AzureBlobStorage
         "Content-MD5": options[:content_md5]
       }.reject { |_, value| value.nil? }
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
 
       http.start do |http|
         http.put(uri, content, headers)
@@ -175,7 +175,7 @@ module AzureBlobStorage
         "Content-MD5": options[:content_md5]
       }.reject { |_, value| value.nil? }
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
 
       http.start do |http|
         http.put(uri, content, headers)
@@ -203,7 +203,7 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
 
       http.start do |http|
         http.put(uri, content, headers)
@@ -244,7 +244,7 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", content_length: content.size, headers:, **options.slice(:content_type))
+      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
 
       http.start do |http|
         http.put(uri, content.read, headers)
