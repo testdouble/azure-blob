@@ -10,7 +10,7 @@ require "base64"
 
 module AzureBlobStorage
   class Client
-    def initialize(account_name:, access_key:, container:)
+    def initialize(account_name:, access_key:, container:, debug: ENV['AZURE_BLOB_STORAGE_DEBUG'])
       @account_name = account_name
       @container = container
       @signer = Signer.new(account_name:, access_key:)
@@ -19,7 +19,7 @@ module AzureBlobStorage
 
       @http = Net::HTTP.new(uri.hostname, uri.port)
       @http.use_ssl = true
-      @http.set_debug_output($stdout)
+      @http.set_debug_output($stdout) if debug
     end
 
     def create_block_blob(key, content, options = {})
