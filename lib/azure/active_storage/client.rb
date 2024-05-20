@@ -127,7 +127,7 @@ module Azure::ActiveStorage
       content = StringIO.new(content) if content.is_a? String
       block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
       block_count = (content.size.to_f / block_size).ceil
-      block_ids = block_count.times.map { |i| Base64.urlsafe_encode64(i.to_s) }
+      block_ids = block_count.times.map { |i| Base64.urlsafe_encode64(i.to_s.rjust(6, "0")) }
       block_ids.each do |block_id|
         put_blob_block(container, key, block_id, content.read(block_size))
       end
