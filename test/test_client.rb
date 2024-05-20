@@ -125,4 +125,11 @@ class TestClient < TestCase
   def test_get_blob_properties_404
     assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob_properties(key) }
   end
+
+  def test_append_blob
+    client.create_block_blob(key, content)
+    content.each_char {|char| client.append_blob_block(key, char)}
+
+    assert_equal content, client.get_blob(key)
+  end
 end
