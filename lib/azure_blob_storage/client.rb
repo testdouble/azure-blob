@@ -37,7 +37,7 @@ module AzureBlobStorage
       headers = {
         "x-ms-version": API_VERSION,
         "x-ms-date": date,
-        "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
+        "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}"
       }.reject { |_, value| value.nil? }
 
       headers[:Authorization] = signer.authorization_header(uri:, verb: "GET", headers:)
@@ -97,7 +97,7 @@ module AzureBlobStorage
       headers = {
         "x-ms-version": API_VERSION,
         "x-ms-date": date,
-        "x-ms-range": options[:start_range] && "bytes=#{options[:start_range]}-#{options[:end_range]}"
+        "x-ms-range": options[:start_range] && "bytes=#{options[:start]}-#{options[:end]}"
       }.reject { |_, value| value.nil? }
 
       headers[:Authorization] = signer.authorization_header(uri:, verb: "HEAD", headers:)
