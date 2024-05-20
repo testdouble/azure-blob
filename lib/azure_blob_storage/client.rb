@@ -214,6 +214,14 @@ module AzureBlobStorage
 
     private
 
+    def success?(response)
+       Net::HTTPResponse::CODE_TO_OBJ[response.code] < Net::HTTPSuccess
+    end
+
+    def raise_response(response)
+      raise AzureBlobStorage.error_from_response_type(Net::HTTPResponse::CODE_TO_OBJ[response.code]).new
+    end
+
     def generate_block_id(index)
       Base64.urlsafe_encode64(index.to_s.rjust(6, "0"))
     end
