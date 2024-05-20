@@ -49,4 +49,8 @@ class TestClient < TestCase
 
     assert_equal content, result
   end
+
+  def test_404
+    assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob(key) }
+  end
 end
