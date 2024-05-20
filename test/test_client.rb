@@ -29,7 +29,6 @@ class TestClient < TestCase
     assert_equal content, client.get_blob(key)
   end
 
-
   def test_multi_block_upload
     client.create_block_blob(key, content, block_size: 1)
 
@@ -72,7 +71,6 @@ class TestClient < TestCase
     end
 
     client.delete_prefix(prefix)
-
 
     keys.each do |key|
       assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob(key) }
@@ -159,7 +157,6 @@ class TestClient < TestCase
     assert_equal response.body, content
   end
 
-
   def test_read_only_signed_uri
     client.create_block_blob(key, content)
 
@@ -178,7 +175,6 @@ class TestClient < TestCase
     refute_equal content, response.body
     assert_equal "403", response.code
   end
-
 
   def test_write_signed_uri
     client.create_block_blob(key, content)
