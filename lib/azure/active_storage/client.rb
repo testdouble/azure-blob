@@ -139,6 +139,7 @@ module Azure::ActiveStorage
       block_list = BlockList.new(block_ids)
       content = block_list.to_s
       uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(comp: "blocklist")
 
       date = Time.now.httpdate
       headers = {
@@ -158,7 +159,7 @@ module Azure::ActiveStorage
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
-        http.put(uri.path, content, headers)
+        http.put(uri, content, headers)
       end
     end
 
