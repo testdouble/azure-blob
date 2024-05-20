@@ -3,8 +3,8 @@
 require "test_helper"
 require "securerandom"
 
-class TestClient < Minitest::Test
   attr_reader :client, :key
+class TestClient < TestCase
 
   def setup
     @account_name = ENV["AZURE_ACCOUNT_NAME"]

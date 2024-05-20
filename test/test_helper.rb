@@ -5,3 +5,6 @@ require "azure_blob_storage"
 
 require "minitest/autorun"
 require "debug"
+
+class TestCase < Minitest::Test
+end
