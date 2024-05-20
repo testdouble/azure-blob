@@ -9,10 +9,11 @@ class TestTemp < Minitest::Test
   def setup
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
+    @container = ENV["AZURE_CONTAINER"]
     @client = AzureBlobStorage::Client.new(
       account_name: @account_name,
-      access_key: @access_key
-      container: "dev",
+      access_key: @access_key,
+      container: @container,
     )
   end
 
