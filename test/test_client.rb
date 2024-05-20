@@ -62,6 +62,23 @@ class TestClient < TestCase
 
     assert_equal content, client.get_blob(key)
   end
+
+  def test_delete_prefix
+    prefix = "#{name}_prefix"
+    keys = 4.times.map do|i|
+      key = "#{prefix}/#{name}_#{i}"
+      client.create_block_blob(key, content)
+      key
+    end
+
+    client.delete_prefix(prefix)
+
+
+    keys.each do |key|
+      assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob(key) }
+    end
+  end
+
   def test_list_prefix
     prefix = "#{name}_prefix"
     @key = "#{prefix}/#{key}"

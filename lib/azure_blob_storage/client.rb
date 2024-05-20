@@ -66,6 +66,15 @@ module AzureBlobStorage
       end.body
     end
 
+    def delete_prefix(prefix, options = {})
+      marker = nil
+      loop do
+        results = list_blobs(marker:, prefix:)
+        results.each {|key| delete_blob(key)}
+        break unless marker = results.marker
+      end
+    end
+
     def list_blobs(options = {})
       uri = generate_uri(container)
       date = Time.now.httpdate
