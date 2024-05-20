@@ -60,7 +60,7 @@ class TestClient < TestCase
 
     client.delete_blob(key)
 
-    assert_equal content, client.get_blob(key)
+    assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob(key) }
   end
 
   def test_delete_prefix
@@ -118,7 +118,7 @@ class TestClient < TestCase
 
     blob = client.get_blob_properties(key)
 
-    assert_equal content.present?
+    assert blob.present?
     assert_equal content.size, blob.size
   end
 
