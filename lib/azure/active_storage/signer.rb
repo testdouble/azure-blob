@@ -69,6 +69,7 @@ module Azure::ActiveStorage
         nil,
         nil,
         nil,
+        nil,
       ].join("\n")
 
       signature = Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, to_sign))
@@ -85,7 +86,7 @@ module Azure::ActiveStorage
     private
 
     module SAS
-      Version = '2020-12-06'
+      Version = '2024-05-04'
       module Fields
         Permissions = :sp
         Version = :sv
