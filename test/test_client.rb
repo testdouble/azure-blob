@@ -9,17 +9,6 @@ class TestClient < Minitest::Test
     @access_key = ENV["AZURE_ACCESS_KEY"]
   end
 
-  def test_upload
-    client = AzureBlobStorage::Client.new(
-      account_name: @account_name,
-      access_key: @access_key
-    )
-    key = "random name"
-    data = "hello world!"
-
-    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), metadata: {:lol => 123, "no" => :qwe})
-  end
-
   def test_upload_prefix
     client = AzureBlobStorage::Client.new(
       account_name: @account_name,
