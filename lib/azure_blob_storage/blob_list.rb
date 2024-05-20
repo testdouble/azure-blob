@@ -17,6 +17,10 @@ module AzureBlobStorage
       document.get_elements("//EnumerationResults/Blobs/Blob/Name").map(&:get_text)
     end
 
+    def size
+      to_a.size
+    end
+
     def each(&block)
       to_a.each(&block)
     end
