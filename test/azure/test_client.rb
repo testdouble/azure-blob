@@ -17,7 +17,7 @@ class Azure::TestClient < Minitest::Test
     key = "random name"
     data = "hello world!"
 
-    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), max_block_size: 1, metadata: {:lol => 123, "no" => :qwe})
+    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), block_size: 1, metadata: {:lol => 123, "no" => :qwe})
   end
 
   def test_upload_prefix
@@ -28,7 +28,7 @@ class Azure::TestClient < Minitest::Test
     key = "some prefix/inside the prefix #{Random.rand(20)}"
     data = "hello world!"
 
-    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), max_block_size: 1, metadata: {:lol => 123, "no" => :qwe})
+    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), block_size: 1, metadata: {:lol => 123, "no" => :qwe})
   end
 
 
@@ -40,7 +40,7 @@ class Azure::TestClient < Minitest::Test
     key = "multiple"
     data = "hello world!"
 
-    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), max_block_size: 6, metadata: {:lol => 123, "no" => :qwe}, content_type: "lol", content_disposition: "inline")
+    pp "end_result:", client.create_block_blob("dev", key, StringIO.new(data), block_size: 6, metadata: {:lol => 123, "no" => :qwe}, content_type: "lol", content_disposition: "inline")
   end
 
   def test_upload
