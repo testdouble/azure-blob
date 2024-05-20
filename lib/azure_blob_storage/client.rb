@@ -10,8 +10,9 @@ require "base64"
 
 module AzureBlobStorage
   class Client
-    def initialize(account_name:, access_key:)
+    def initialize(account_name:, access_key:, container:)
       @account_name = account_name
+      @container = container
       @api_version = "2024-05-04"
       @signer = Signer.new(account_name:, access_key:)
 
@@ -22,15 +23,15 @@ module AzureBlobStorage
       @http.set_debug_output($stdout)
     end
 
-    def create_block_blob(container, key, content, options = {})
+    def create_block_blob(key, content, options = {})
       if content.size > (options[:block_size] || DEFAULT_BLOCK_SIZE)
-        put_blob_multiple(container, key, content, **options)
+        put_blob_multiple(key, content, **options)
       else
-        put_blob(container, key, content, **options)
+        put_blob(key, content, **options)
       end
     end
 
-    def get_blob(container, key, options = {})
+    def get_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
 
@@ -44,11 +45,11 @@ module AzureBlobStorage
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
-        http.get(uri.path, headers)
+        http.get(uri, headers)
       end.body
     end
 
-    def delete_blob(container, key, options = {})
+    def delete_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
 
@@ -62,11 +63,11 @@ module AzureBlobStorage
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
-        http.delete(uri.path, headers)
+        http.delete(uri, headers)
       end.body
     end
 
-    def list_blobs(container, options = {})
+    def list_blobs(options = {})
       uri = generate_uri(container)
       date = Time.now.httpdate
       query = {
@@ -93,7 +94,7 @@ module AzureBlobStorage
       BlobList.new(response)
     end
 
-    def get_blob_properties(container, key, options = {})
+    def get_blob_properties(key, options = {})
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
 
@@ -107,7 +108,7 @@ module AzureBlobStorage
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       response = http.start do |http|
-        http.head(uri.path, headers)
+        http.head(uri, headers)
       end
       Blob.new(response)
     end
@@ -121,7 +122,7 @@ module AzureBlobStorage
       uri
     end
 
-    def create_append_blob(container, key, options = {})
+    def create_append_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
       headers = {
@@ -142,11 +143,11 @@ module AzureBlobStorage
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
-        http.put(uri.path, nil, headers)
+        http.put(uri, nil, headers)
       end
     end
 
-    def append_blob_block(container, key, content, options = {})
+    def append_blob_block(key, content, options = {})
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(comp: "appendblock")
 
@@ -167,7 +168,7 @@ module AzureBlobStorage
       end
     end
 
-    def put_blob_block(container, key, index, content, options = {})
+    def put_blob_block(key, index, content, options = {})
       block_id = generate_block_id(index)
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
@@ -190,7 +191,7 @@ module AzureBlobStorage
       block_id
     end
 
-    def commit_blob_blocks(container, key, block_ids, options = {})
+    def commit_blob_blocks(key, block_ids, options = {})
       block_list = BlockList.new(block_ids)
       content = block_list.to_s
       uri = generate_uri("#{container}/#{key}")
@@ -224,18 +225,18 @@ module AzureBlobStorage
       Base64.urlsafe_encode64(index.to_s.rjust(6, "0"))
     end
 
-    def put_blob_multiple(container, key, content, options = {})
+    def put_blob_multiple(key, content, options = {})
       content = StringIO.new(content) if content.is_a? String
       block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
       block_count = (content.size.to_f / block_size).ceil
       block_ids = block_count.times.map do |i|
-        put_blob_block(container, key, i, content.read(block_size))
+        put_blob_block(key, i, content.read(block_size))
       end
 
-      commit_blob_blocks(container, key, block_ids, options)
+      commit_blob_blocks(key, block_ids, options)
     end
 
-    def put_blob(container, key, content, options = {})
+    def put_blob(key, content, options = {})
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
       headers = {
@@ -256,7 +257,7 @@ module AzureBlobStorage
       headers[:Authorization] = "SharedKey #{account_name}:#{signature}"
 
       http.start do |http|
-        http.put(uri.path, content.read, headers)
+        http.put(uri, content.read, headers)
       end
     end
 
