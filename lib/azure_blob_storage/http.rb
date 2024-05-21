@@ -18,8 +18,7 @@ module AzureBlobStorage
       @date = Time.now.httpdate
       @uri = uri
       @signer = signer
-      @headers = headers
-      @headers.merge(Metadata.new(metadata).headers)
+      @headers = headers.merge(Metadata.new(metadata).headers)
       sanitize_headers
 
       @http = Net::HTTP.new(uri.hostname, uri.port)
