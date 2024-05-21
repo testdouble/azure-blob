@@ -6,6 +6,8 @@ require "securerandom"
 class TestClient < TestCase
   attr_reader :client, :key, :content
 
+  EXPIRATION = 120
+
   def setup
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
@@ -175,7 +177,7 @@ class TestClient < TestCase
     uri = client.signed_uri(
       key,
       permissions: "r",
-      expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
+      expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
     )
 
     response = AzureBlobStorage::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).get
@@ -187,7 +189,7 @@ class TestClient < TestCase
     uri = client.signed_uri(
       key,
       permissions: "r",
-      expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
+      expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
     )
     assert_raises(AzureBlobStorage::Http::ForbidenError) do
       AzureBlobStorage::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).put(content)
@@ -202,7 +204,7 @@ class TestClient < TestCase
     uri = client.signed_uri(
       key,
       permissions: "rw",
-      expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
+      expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
     )
 
     checksum = OpenSSL::Digest::MD5.base64digest(content)
