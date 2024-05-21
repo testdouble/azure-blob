@@ -132,16 +132,9 @@ class TestClient < TestCase
       key
     end
 
-    blobs = []
-    marker = nil
-    loop do
-      results = client.list_blobs(max_results: 2, marker:, prefix:)
-      assert_equal 2, results.size
-      blobs += results.to_a
-      break unless marker = results.marker
-    end
+    results = client.list_blobs(max_results: 2, prefix:)
 
-    assert_match_content keys, blobs
+    assert_match_content keys, results.to_a
 
     keys.each do |key|
       client.delete_blob(key)

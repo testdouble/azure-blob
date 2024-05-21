@@ -5,24 +5,25 @@ require "rexml"
 module AzureBlobStorage
   class BlobList
     include REXML
-    def initialize(response)
-      @document = Document.new(response)
-    end
+    include Enumerable
 
-    def marker
-      document && document.get_elements("//EnumerationResults/NextMarker").first.get_text()&.to_s
-    end
-
-    def to_a
-      document.get_elements("//EnumerationResults/Blobs/Blob/Name").map(&:get_text)
+    def initialize(fetcher)
+      @fetcher = fetcher
     end
 
     def size
       to_a.size
     end
 
-    def each(&block)
-      to_a.each(&block)
+    def each
+      loop do
+        fetch
+        current_page.each do |key|
+          yield key
+        end
+
+        break unless marker
+      end
     end
 
     def to_s
@@ -35,6 +36,20 @@ module AzureBlobStorage
 
     private
 
-    attr_reader :document
+    def marker
+      document && document.get_elements("//EnumerationResults/NextMarker").first.get_text()&.to_s
+    end
+
+    def current_page
+      document
+        .get_elements("//EnumerationResults/Blobs/Blob/Name")
+        .map { |element| element.get_text.to_s }
+    end
+
+    def fetch
+      @document = Document.new(fetcher.call(marker))
+    end
+
+    attr_reader :document, :fetcher
   end
 end

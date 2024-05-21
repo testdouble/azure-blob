@@ -51,12 +51,8 @@ module AzureBlobStorage
     end
 
     def delete_prefix(prefix, options = {})
-      marker = nil
-      loop do
-        results = list_blobs(marker:, prefix:)
-        results.each { |key| delete_blob(key) }
-        break unless marker = results.marker
-      end
+      results = list_blobs(prefix:)
+      results.each { |key| delete_blob(key) }
     end
 
     def list_blobs(options = {})
@@ -66,7 +62,6 @@ module AzureBlobStorage
         comp: "list",
         restype: "container",
         prefix: options[:prefix].to_s.gsub(/\\/, "/"),
-        marker: options[:marker].to_s,
       }
       query[:maxresults] = options[:max_results] if options[:max_results]
       uri.query = URI.encode_www_form(**query)
@@ -76,9 +71,15 @@ module AzureBlobStorage
         "x-ms-date": date,
       }.reject { |_, value| value.nil? }
 
-      response = HTTP.new(uri, headers, signer:).get
 
-      BlobList.new(response)
+      fetcher = ->(marker) do
+        query[:marker] = marker
+        query.reject! {|key, value| value.to_s.empty?}
+        uri.query = URI.encode_www_form(**query)
+        response = HTTP.new(uri, headers, signer:).get
+      end
+
+      BlobList.new(fetcher)
     end
 
     def get_blob_properties(key, options = {})
