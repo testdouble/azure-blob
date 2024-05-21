@@ -4,7 +4,7 @@ require "net/http"
 
 module AzureBlobStorage
   class HTTP
-    def initialize(uri, headers, signer:, debug: false)
+    def initialize(uri, headers, signer: nil, debug: false)
       @signer = signer
       @headers = headers
       @uri = uri
@@ -15,7 +15,7 @@ module AzureBlobStorage
     end
 
     def get
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "GET", headers:)
+      sign_request("GET") if signer
       @response = http.start do |http|
         http.get(uri, headers)
       end
@@ -24,7 +24,7 @@ module AzureBlobStorage
     end
 
     def put(content)
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
+      sign_request("PUT") if signer
       @response = http.start do |http|
         http.put(uri, content, headers)
       end
@@ -33,7 +33,7 @@ module AzureBlobStorage
     end
 
     def head
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "HEAD", headers:)
+      sign_request("HEAD") if signer
       @response = http.start do |http|
         http.head(uri, headers)
       end
@@ -42,7 +42,7 @@ module AzureBlobStorage
     end
 
     def delete
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "DELETE", headers:)
+      sign_request("DELETE") if signer
       @response = http.start do |http|
         http.delete(uri, headers)
       end
@@ -55,6 +55,10 @@ module AzureBlobStorage
     end
 
     private
+
+    def sign_request(method)
+      headers[:Authorization] = signer.authorization_header(uri:, verb: method, headers:)
+    end
 
     def raise_error
       raise error_from_status.new(@response.body)
