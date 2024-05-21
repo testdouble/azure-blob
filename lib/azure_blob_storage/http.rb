@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require "net/http"
 require_relative "errors"
+require_relative "metadata"
+require "net/http"
 require "rexml"
 
 module AzureBlobStorage
@@ -18,7 +19,7 @@ module AzureBlobStorage
       @uri = uri
       @signer = signer
       @headers = headers
-      @headers.merge(sanitize_metadata(metadata))
+      @headers.merge(Metadata.new(metadata).headers)
       sanitize_headers
 
       @http = Net::HTTP.new(uri.hostname, uri.port)
@@ -76,12 +77,6 @@ module AzureBlobStorage
     ERROR_CODE_MAPPINGS = {
       "Md5Mismatch" => IntegrityError,
     }
-
-    def sanitize_metadata(metadata)
-      metadata&.each do |key, value|
-        headers[:"x-ms-meta-#{key}"] = value.to_s
-      end || {}
-    end
 
     def sanitize_headers
       headers[:"x-ms-version"] =  API_VERSION
