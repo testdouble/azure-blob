@@ -205,8 +205,19 @@ class TestClient < TestCase
       expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
     )
 
-    AzureBlobStorage::HTTP.new(uri, { "x-ms-blob-type": "BlockBlob" }).put(content)
+    checksum = OpenSSL::Digest::MD5.base64digest(content)
+    headers = {
+      "Content-MD5": checksum,
+      "Content-Type": "fun type",
+      "x-ms-blob-content-disposition": "inline",
+      "x-ms-blob-type": "BlockBlob"
+    }
+    AzureBlobStorage::HTTP.new(uri, headers).put(content)
 
+    properties = client.get_blob_properties(key)
+    assert_equal "fun type", properties.content_type
+    assert_equal "inline", properties.content_disposition
+    assert_equal checksum, properties.checksum
     assert_equal content, client.get_blob(key)
   end
 end

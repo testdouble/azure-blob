@@ -14,6 +14,10 @@ module AzureBlobStorage
       response["content-disposition"]
     end
 
+    def checksum
+      response["content-md5"]
+    end
+
     def size
       response.content_length
     end
