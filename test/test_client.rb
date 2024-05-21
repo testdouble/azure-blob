@@ -55,6 +55,13 @@ class TestClient < TestCase
     assert_equal 'funky content_type', response.content_type
   end
 
+  def test_metadata_persisted
+    client.create_block_blob(key, content, metadata: {hello: "world"})
+    response = client.get_blob_properties(key)
+
+    assert_equal 'world', response.metadata[:hello]
+  end
+
   def test_download
     client.create_block_blob(key, content)
 
