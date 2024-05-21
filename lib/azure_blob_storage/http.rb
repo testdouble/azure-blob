@@ -79,7 +79,7 @@ module AzureBlobStorage
     def sanitize_metadata(metadata)
       metadata&.each do |key, value|
         headers[:"x-ms-meta-#{key}"] = value.to_s
-      end
+      end || {}
     end
 
     def sanitize_headers
