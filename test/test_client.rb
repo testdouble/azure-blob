@@ -48,6 +48,13 @@ class TestClient < TestCase
     assert_raises(AzureBlobStorage::HTTP::IntegrityError) { client.create_block_blob(key, content, content_md5: checksum) }
   end
 
+  def test_content_type_persisted
+    client.create_block_blob(key, content, content_type: 'funky content_type', )
+    response = client.get_blob_properties(key)
+
+    assert_equal 'funky content_type', response.content_type
+  end
+
   def test_download
     client.create_block_blob(key, content)
 

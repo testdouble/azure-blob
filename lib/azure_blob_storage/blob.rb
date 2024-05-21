@@ -6,6 +6,10 @@ module AzureBlobStorage
       @response = response
     end
 
+    def content_type
+      response.content_type
+    end
+
     def size
       response.content_length
     end
