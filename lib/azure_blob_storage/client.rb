@@ -96,8 +96,8 @@ module AzureBlobStorage
 
       headers = {
         "x-ms-blob-type": "AppendBlob",
-        "Content-Length": 0.to_s,
-        "Content-Type": options[:content_type].to_s,
+        "Content-Length": 0,
+        "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
@@ -114,8 +114,8 @@ module AzureBlobStorage
       uri.query = URI.encode_www_form(comp: "appendblock")
 
       headers = {
-        "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s,
+        "Content-Length": content.size,
+        "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
       }
 
@@ -128,8 +128,8 @@ module AzureBlobStorage
       uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
 
       headers = {
-        "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s,
+        "Content-Length": content.size,
+        "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
       }
 
@@ -145,8 +145,8 @@ module AzureBlobStorage
       uri.query = URI.encode_www_form(comp: "blocklist")
 
       headers = {
-        "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s,
+        "Content-Length": content.size,
+        "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
@@ -181,11 +181,11 @@ module AzureBlobStorage
 
       headers = {
         "x-ms-blob-type": "BlockBlob",
-        "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s,
+        "Content-Length": content.size,
+        "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-      }.reject { |_, value| value.nil? }
+      }
 
       options[:metadata]&.each do |key, value|
         headers[:"x-ms-meta-#{key}"] = value.to_s

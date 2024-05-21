@@ -78,6 +78,9 @@ module AzureBlobStorage
     def sanitize_headers
       headers[:"x-ms-version"] =  API_VERSION
       headers[:"x-ms-date"] = date
+      headers[:"Content-Type"] = headers[:"Content-Type"].to_s
+      headers[:"Content-Length"] = headers[:"Content-Length"]&.to_s
+      headers[:"Content-MD5"] = nil if headers[:"Content-MD5"]&.empty?
       headers.reject! { |_, value| value.nil? }
     end
 
