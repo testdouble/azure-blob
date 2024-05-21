@@ -21,7 +21,7 @@ class TestClient < TestCase
 
   def teardown
     client.delete_blob(key)
-  rescue AzureBlobStorage::FileNotFoundError
+  rescue AzureBlobStorage::HTTP::FileNotFoundError
   end
 
   def test_single_block_upload
@@ -51,7 +51,7 @@ class TestClient < TestCase
   end
 
   def test_download_404
-    assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob(key) }
+    assert_raises(AzureBlobStorage::HTTP::FileNotFoundError) { client.get_blob(key) }
   end
 
   def test_delete
@@ -60,7 +60,7 @@ class TestClient < TestCase
 
     client.delete_blob(key)
 
-    assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob(key) }
+    assert_raises(AzureBlobStorage::HTTP::FileNotFoundError) { client.get_blob(key) }
   end
 
   def test_delete_prefix
@@ -74,7 +74,7 @@ class TestClient < TestCase
     client.delete_prefix(prefix)
 
     keys.each do |key|
-      assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob(key) }
+      assert_raises(AzureBlobStorage::HTTP::FileNotFoundError) { client.get_blob(key) }
     end
   end
 
@@ -122,7 +122,7 @@ class TestClient < TestCase
   end
 
   def test_get_blob_properties_404
-    assert_raises(AzureBlobStorage::FileNotFoundError) { client.get_blob_properties(key) }
+    assert_raises(AzureBlobStorage::HTTP::FileNotFoundError) { client.get_blob_properties(key) }
   end
 
   def test_append_blob
@@ -149,32 +149,22 @@ class TestClient < TestCase
       expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
     )
 
-    http = Net::HTTP.new(uri.hostname, uri.port)
-    http.use_ssl = true
-    response = http.start do |http|
-      http.get(uri, { "x-ms-blob-type": "BlockBlob" })
-    end
+    response = AzureBlobStorage::HTTP.new(uri, { "x-ms-blob-type": "BlockBlob" }).get
 
-    assert_equal response.body, content
+    assert_equal response, content
   end
 
   def test_read_only_signed_uri
-    client.create_block_blob(key, content)
-
     uri = client.signed_uri(
       key,
       permissions: "r",
       expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
     )
-
-    http = Net::HTTP.new(uri.hostname, uri.port)
-    http.use_ssl = true
-    response = http.start do |http|
-      http.put(uri, content, { "x-ms-blob-type": "BlockBlob" })
+    assert_raises(AzureBlobStorage::HTTP::ForbidenError) do
+      AzureBlobStorage::HTTP.new(uri, { "x-ms-blob-type": "BlockBlob" }).put(content)
     end
 
-    refute_equal content, response.body
-    assert_equal "403", response.code
+    assert_raises(AzureBlobStorage::HTTP::FileNotFoundError) { client.get_blob(key) }
   end
 
   def test_write_signed_uri
@@ -186,11 +176,7 @@ class TestClient < TestCase
       expiry: Time.at(Time.now.to_i + 3600).utc.iso8601,
     )
 
-    http = Net::HTTP.new(uri.hostname, uri.port)
-    http.use_ssl = true
-    http.start do |http|
-      http.put(uri, content, { "x-ms-blob-type": "BlockBlob" })
-    end
+    AzureBlobStorage::HTTP.new(uri, { "x-ms-blob-type": "BlockBlob" }).put(content)
 
     assert_equal content, client.get_blob(key)
   end
