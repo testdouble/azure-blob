@@ -62,6 +62,16 @@ class TestClient < TestCase
     assert_equal 'world', response.metadata[:hello]
   end
 
+  def test_disposition_persisted
+    client.create_block_blob(key, content, content_disposition: 'inline')
+    response = client.get_blob_properties(key)
+    assert_equal 'inline', response.content_disposition
+
+    client.create_block_blob(key, content, content_disposition: 'attachment')
+    response = client.get_blob_properties(key)
+    assert_equal 'attachment', response.content_disposition
+  end
+
   def test_download
     client.create_block_blob(key, content)
 

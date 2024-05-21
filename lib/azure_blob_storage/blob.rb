@@ -10,6 +10,10 @@ module AzureBlobStorage
       response.content_type
     end
 
+    def content_disposition
+      response["content-disposition"]
+    end
+
     def size
       response.content_length
     end
