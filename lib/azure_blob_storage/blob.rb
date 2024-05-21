@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "rexml"
-
 module AzureBlobStorage
   class Blob
     def initialize(response)

@@ -36,6 +36,18 @@ class TestClient < TestCase
     assert_equal content, client.get_blob(key)
   end
 
+  def test_upload_integrity
+    checksum = OpenSSL::Digest::MD5.base64digest(content)
+    client.create_block_blob(key, content, content_md5: checksum)
+
+    assert_equal checksum, OpenSSL::Digest::MD5.base64digest(client.get_blob(key))
+  end
+
+  def test_upload_raise_on_invalid_checksum
+    checksum = OpenSSL::Digest::MD5.base64digest(content + "a")
+    assert_raises(AzureBlobStorage::HTTP::IntegrityError) { client.create_block_blob(key, content, content_md5: checksum) }
+  end
+
   def test_download
     client.create_block_blob(key, content)
 

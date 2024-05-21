@@ -2,12 +2,15 @@
 
 require "net/http"
 require_relative "errors"
+require "rexml"
 
 module AzureBlobStorage
   class HTTP
     class FileNotFoundError < Error; end
     class ForbidenError < Error; end
     class IntegrityError < Error; end
+
+    include REXML
 
     def initialize(uri, headers, signer: nil, debug: false)
       @signer = signer
@@ -66,20 +69,28 @@ module AzureBlobStorage
       Net::HTTPForbidden => ForbidenError,
     }
 
+    ERROR_CODE_MAPPINGS = {
+      "Md5Mismatch" => IntegrityError,
+    }
+
     def sign_request(method)
       headers[:Authorization] = signer.authorization_header(uri:, verb: method, headers:)
     end
 
     def raise_error
-      raise error_from_status.new(@response.body)
+      raise error_from_response.new(@response.body)
     end
 
     def status
       @status ||= Net::HTTPResponse::CODE_TO_OBJ[response.code]
     end
 
-    def error_from_status
-      ERROR_MAPPINGS[status] || Error
+    def azure_error_code
+      Document.new(response.body).get_elements("//Error/Code").first.get_text.to_s
+    end
+
+    def error_from_response
+      ERROR_MAPPINGS[status] || ERROR_CODE_MAPPINGS[azure_error_code] || Error
     end
 
     attr_accessor :host, :http, :signer, :response, :headers, :uri
