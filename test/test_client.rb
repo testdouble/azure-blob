@@ -21,6 +21,7 @@ class TestClient < TestCase
 
   def teardown
     client.delete_blob(key)
+  rescue AzureBlobStorage::FileNotFoundError
   end
 
   def test_single_block_upload
@@ -125,7 +126,7 @@ class TestClient < TestCase
   end
 
   def test_append_blob
-    client.create_block_blob(key, content)
+    client.create_append_blob(key)
     content.split("", 3).each { |chunk| client.append_blob_block(key, chunk) }
 
     assert_equal content, client.get_blob(key)

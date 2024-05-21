@@ -4,7 +4,7 @@ require_relative "signer"
 require_relative "block_list"
 require_relative "blob_list"
 require_relative "blob"
-require "net/http"
+require_relative "http"
 require "time"
 require "base64"
 
@@ -14,11 +14,6 @@ module AzureBlobStorage
       @account_name = account_name
       @container = container
       @signer = Signer.new(account_name:, access_key:)
-
-      uri = URI(host)
-
-      @http = Net::HTTP.new(uri.hostname, uri.port)
-      @http.use_ssl = true
     end
 
     def create_block_blob(key, content, options = {})
@@ -39,13 +34,7 @@ module AzureBlobStorage
         "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}",
       }.reject { |_, value| value.nil? }
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "GET", headers:)
-
-      response = http.start do |http|
-        http.get(uri, headers)
-      end
-      raise_response(response) unless success?(response)
-      response.body
+      HTTP.new(uri, headers, signer:).get
     end
 
     def delete_blob(key, options = {})
@@ -58,11 +47,7 @@ module AzureBlobStorage
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
       }.reject { |_, value| value.nil? }
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "DELETE", headers:)
-
-      http.start do |http|
-        http.delete(uri, headers)
-      end.body
+      HTTP.new(uri, headers, signer:).delete
     end
 
     def delete_prefix(prefix, options = {})
@@ -91,11 +76,7 @@ module AzureBlobStorage
         "x-ms-date": date,
       }.reject { |_, value| value.nil? }
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "GET", headers:)
-
-      response = http.start do |http|
-        http.get(uri, headers)
-      end.body
+      response = HTTP.new(uri, headers, signer:).get
 
       BlobList.new(response)
     end
@@ -110,12 +91,8 @@ module AzureBlobStorage
         "x-ms-range": options[:start_range] && "bytes=#{options[:start]}-#{options[:end]}",
       }.reject { |_, value| value.nil? }
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "HEAD", headers:)
+      response = HTTP.new(uri, headers, signer:).head
 
-      response = http.start do |http|
-        http.head(uri, headers)
-      end
-      raise_response(response) unless success?(response)
       Blob.new(response)
     end
 
@@ -132,6 +109,7 @@ module AzureBlobStorage
     def create_append_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
       date = Time.now.httpdate
+
       headers = {
         "x-ms-version": API_VERSION,
         "x-ms-date": date,
@@ -146,11 +124,7 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
-
-      http.start do |http|
-        http.put(uri, nil, headers)
-      end
+      HTTP.new(uri, headers, signer:).put(nil)
     end
 
     def append_blob_block(key, content, options = {})
@@ -166,11 +140,7 @@ module AzureBlobStorage
         "Content-MD5": options[:content_md5],
       }.reject { |_, value| value.nil? }
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
-
-      http.start do |http|
-        http.put(uri, content, headers)
-      end
+      HTTP.new(uri, headers, signer:).put(content)
     end
 
     def put_blob_block(key, index, content, options = {})
@@ -187,11 +157,8 @@ module AzureBlobStorage
         "Content-MD5": options[:content_md5],
       }.reject { |_, value| value.nil? }
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
+      HTTP.new(uri, headers, signer:).put(content)
 
-      http.start do |http|
-        http.put(uri, content, headers)
-      end
       block_id
     end
 
@@ -215,22 +182,10 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
-
-      http.start do |http|
-        http.put(uri, content, headers)
-      end
+      HTTP.new(uri, headers, signer:).put(content)
     end
 
     private
-
-    def success?(response)
-       Net::HTTPResponse::CODE_TO_OBJ[response.code] < Net::HTTPSuccess
-    end
-
-    def raise_response(response)
-      raise AzureBlobStorage.error_from_response_type(Net::HTTPResponse::CODE_TO_OBJ[response.code]).new
-    end
 
     def generate_block_id(index)
       Base64.urlsafe_encode64(index.to_s.rjust(6, "0"))
@@ -265,11 +220,7 @@ module AzureBlobStorage
         headers[:"x-ms-meta-#{key}"] = value.to_s
       end
 
-      headers[:Authorization] = signer.authorization_header(uri:, verb: "PUT", headers:)
-
-      http.start do |http|
-        http.put(uri, content.read, headers)
-      end
+      HTTP.new(uri, headers, signer:).put(content.read)
     end
 
     attr_reader :account_name, :signer, :container, :http

@@ -15,10 +15,10 @@ module AzureBlobStorage
     def authorization_header(uri:, verb:, headers: {})
       canonicalized_headers = CanonicalizedHeaders.new(headers)
       canonicalized_resource = CanonicalizedResource.new(uri, account_name)
-      content_length = nil if content_length == 0
+
       to_sign = [
         verb,
-        *headers.fetch_values(
+        *sanitize_headers(headers).fetch_values(
           :"Content-Encoding",
           :"Content-Language",
           :"Content-Length",
@@ -73,6 +73,12 @@ module AzureBlobStorage
 
     private
 
+    def sanitize_headers(headers)
+      headers = headers.dup
+      headers[:"Content-Length"] = nil if headers[:"Content-Length"].to_i == 0
+      headers
+    end
+
     module SAS
       Version = "2024-05-04"
       module Fields
@@ -86,7 +92,6 @@ module AzureBlobStorage
         Blob = :b
       end
     end
-
 
     attr_reader :access_key, :account_name
   end
