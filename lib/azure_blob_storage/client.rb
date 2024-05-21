@@ -116,7 +116,7 @@ module AzureBlobStorage
         "x-ms-date": date,
         "x-ms-blob-type": "AppendBlob",
         "Content-Length": 0.to_s,
-        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
+        "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.reject { |_, value| value.nil? }
@@ -137,7 +137,7 @@ module AzureBlobStorage
         "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
+        "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
       }.reject { |_, value| value.nil? }
 
@@ -154,7 +154,7 @@ module AzureBlobStorage
         "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
+        "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
       }.reject { |_, value| value.nil? }
 
@@ -174,7 +174,7 @@ module AzureBlobStorage
         "x-ms-version": API_VERSION,
         "x-ms-date": date,
         "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
+        "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.reject { |_, value| value.nil? }
@@ -212,7 +212,7 @@ module AzureBlobStorage
         "x-ms-date": date,
         "x-ms-blob-type": "BlockBlob",
         "Content-Length": content.size.to_s,
-        "Content-Type": options[:content_type].to_s, # Net::HTTP doesn't leave this empty if the value is nil
+        "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.reject { |_, value| value.nil? }
