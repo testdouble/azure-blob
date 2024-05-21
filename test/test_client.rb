@@ -12,7 +12,7 @@ class TestClient < TestCase
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
     @container = ENV["AZURE_CONTAINER"]
-    @client = AzureBlobStorage::Client.new(
+    @client = AzureBlob::Client.new(
       account_name: @account_name,
       access_key: @access_key,
       container: @container,
@@ -23,7 +23,7 @@ class TestClient < TestCase
 
   def teardown
     client.delete_blob(key)
-  rescue AzureBlobStorage::Http::FileNotFoundError
+  rescue AzureBlob::Http::FileNotFoundError
   end
 
   def test_single_block_upload
@@ -47,7 +47,7 @@ class TestClient < TestCase
 
   def test_upload_raise_on_invalid_checksum
     checksum = OpenSSL::Digest::MD5.base64digest(content + "a")
-    assert_raises(AzureBlobStorage::Http::IntegrityError) { client.create_block_blob(key, content, content_md5: checksum) }
+    assert_raises(AzureBlob::Http::IntegrityError) { client.create_block_blob(key, content, content_md5: checksum) }
   end
 
   def test_content_type_persisted
@@ -80,6 +80,10 @@ class TestClient < TestCase
     assert_equal content, client.get_blob(key)
   end
 
+  def test_download_big
+    skip
+  end
+
   def test_download_chunk
     client.create_block_blob(key, content)
 
@@ -89,7 +93,7 @@ class TestClient < TestCase
   end
 
   def test_download_404
-    assert_raises(AzureBlobStorage::Http::FileNotFoundError) { client.get_blob(key) }
+    assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob(key) }
   end
 
   def test_delete
@@ -98,7 +102,7 @@ class TestClient < TestCase
 
     client.delete_blob(key)
 
-    assert_raises(AzureBlobStorage::Http::FileNotFoundError) { client.get_blob(key) }
+    assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob(key) }
   end
 
   def test_delete_prefix
@@ -112,7 +116,7 @@ class TestClient < TestCase
     client.delete_prefix(prefix)
 
     keys.each do |key|
-      assert_raises(AzureBlobStorage::Http::FileNotFoundError) { client.get_blob(key) }
+      assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob(key) }
     end
   end
 
@@ -153,7 +157,7 @@ class TestClient < TestCase
   end
 
   def test_get_blob_properties_404
-    assert_raises(AzureBlobStorage::Http::FileNotFoundError) { client.get_blob_properties(key) }
+    assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob_properties(key) }
   end
 
   def test_append_blob
@@ -180,7 +184,7 @@ class TestClient < TestCase
       expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
     )
 
-    response = AzureBlobStorage::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).get
+    response = AzureBlob::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).get
 
     assert_equal response, content
   end
@@ -191,11 +195,11 @@ class TestClient < TestCase
       permissions: "r",
       expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
     )
-    assert_raises(AzureBlobStorage::Http::ForbidenError) do
-      AzureBlobStorage::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).put(content)
+    assert_raises(AzureBlob::Http::ForbidenError) do
+      AzureBlob::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).put(content)
     end
 
-    assert_raises(AzureBlobStorage::Http::FileNotFoundError) { client.get_blob(key) }
+    assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob(key) }
   end
 
   def test_write_signed_uri
@@ -214,7 +218,7 @@ class TestClient < TestCase
       "x-ms-blob-content-disposition": "inline",
       "x-ms-blob-type": "BlockBlob",
     }
-    AzureBlobStorage::Http.new(uri, headers).put(content)
+    AzureBlob::Http.new(uri, headers).put(content)
 
     properties = client.get_blob_properties(key)
     assert_equal "fun type", properties.content_type

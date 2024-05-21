@@ -2,7 +2,7 @@
 
 require "rexml"
 
-module AzureBlobStorage
+module AzureBlob
   class BlobList
     include REXML
     include Enumerable

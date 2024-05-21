@@ -1,4 +1,4 @@
-# AzureBlobStorage
+# AzureBlob
 
 WIP This gem is built as a replacement of azure-storage-blob (deprecated) in Active Storage
 

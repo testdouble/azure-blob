@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
-require "azure_blob_storage"
+require "azure_blob"
 
 require "minitest/autorun"
 require "debug"

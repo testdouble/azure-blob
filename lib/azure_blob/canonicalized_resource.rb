@@ -1,6 +1,6 @@
 require "cgi"
 
-module AzureBlobStorage
+module AzureBlob
   class CanonicalizedResource
     def initialize(uri, account_name, service_name: nil, url_safe: true)
       # This next line is needed because CanonicalizedResource

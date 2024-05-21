@@ -5,9 +5,9 @@ require_relative "metadata"
 require "net/http"
 require "rexml"
 
-module AzureBlobStorage
+module AzureBlob
   class Http
-    class Error < AzureBlobStorage::Error; end
+    class Error < AzureBlob::Error; end
     class FileNotFoundError < Error; end
     class ForbidenError < Error; end
     class IntegrityError < Error; end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module AzureBlobStorage
+module AzureBlob
   class Blob
     def initialize(response)
       @response = response

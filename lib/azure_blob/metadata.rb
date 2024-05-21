@@ -1,4 +1,4 @@
-module AzureBlobStorage
+module AzureBlob
   class Metadata
     def initialize(metadata = nil)
       @metadata = metadata || {}
