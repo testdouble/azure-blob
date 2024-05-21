@@ -26,26 +26,20 @@ module AzureBlobStorage
 
     def get_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
-      date = Time.now.httpdate
 
       headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
         "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}",
-      }.reject { |_, value| value.nil? }
+      }
 
       HTTP.new(uri, headers, signer:).get
     end
 
     def delete_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
-      date = Time.now.httpdate
 
       headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
-      }.reject { |_, value| value.nil? }
+      }
 
       HTTP.new(uri, headers, signer:).delete
     end
@@ -57,7 +51,6 @@ module AzureBlobStorage
 
     def list_blobs(options = {})
       uri = generate_uri(container)
-      date = Time.now.httpdate
       query = {
         comp: "list",
         restype: "container",
@@ -66,17 +59,11 @@ module AzureBlobStorage
       query[:maxresults] = options[:max_results] if options[:max_results]
       uri.query = URI.encode_www_form(**query)
 
-      headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
-      }.reject { |_, value| value.nil? }
-
-
       fetcher = ->(marker) do
         query[:marker] = marker
         query.reject! {|key, value| value.to_s.empty?}
         uri.query = URI.encode_www_form(**query)
-        response = HTTP.new(uri, headers, signer:).get
+        response = HTTP.new(uri, signer:).get
       end
 
       BlobList.new(fetcher)
@@ -84,13 +71,10 @@ module AzureBlobStorage
 
     def get_blob_properties(key, options = {})
       uri = generate_uri("#{container}/#{key}")
-      date = Time.now.httpdate
 
       headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
         "x-ms-range": options[:start_range] && "bytes=#{options[:start]}-#{options[:end]}",
-      }.reject { |_, value| value.nil? }
+      }
 
       response = HTTP.new(uri, headers, signer:).head
 
@@ -109,17 +93,14 @@ module AzureBlobStorage
 
     def create_append_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
-      date = Time.now.httpdate
 
       headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
         "x-ms-blob-type": "AppendBlob",
         "Content-Length": 0.to_s,
         "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-      }.reject { |_, value| value.nil? }
+      }
 
       options[:metadata]&.each do |key, value|
         headers[:"x-ms-meta-#{key}"] = value.to_s
@@ -132,14 +113,11 @@ module AzureBlobStorage
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(comp: "appendblock")
 
-      date = Time.now.httpdate
       headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
-      }.reject { |_, value| value.nil? }
+      }
 
       HTTP.new(uri, headers, signer:).put(content)
     end
@@ -149,14 +127,11 @@ module AzureBlobStorage
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
 
-      date = Time.now.httpdate
       headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
-      }.reject { |_, value| value.nil? }
+      }
 
       HTTP.new(uri, headers, signer:).put(content)
 
@@ -169,15 +144,12 @@ module AzureBlobStorage
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(comp: "blocklist")
 
-      date = Time.now.httpdate
       headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s,
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-      }.reject { |_, value| value.nil? }
+      }
 
       options[:metadata]&.each do |key, value|
         headers[:"x-ms-meta-#{key}"] = value.to_s
@@ -206,10 +178,8 @@ module AzureBlobStorage
     def put_blob_single(key, content, options = {})
       content = StringIO.new(content) if content.is_a? String
       uri = generate_uri("#{container}/#{key}")
-      date = Time.now.httpdate
+
       headers = {
-        "x-ms-version": API_VERSION,
-        "x-ms-date": date,
         "x-ms-blob-type": "BlockBlob",
         "Content-Length": content.size.to_s,
         "Content-Type": options[:content_type].to_s,

@@ -12,10 +12,12 @@ module AzureBlobStorage
 
     include REXML
 
-    def initialize(uri, headers, signer: nil, debug: false)
+    def initialize(uri, headers = {}, signer: nil, debug: false)
+      @date = Time.now.httpdate
+      @uri = uri
       @signer = signer
       @headers = headers
-      @uri = uri
+      sanitize_headers
 
       @http = Net::HTTP.new(uri.hostname, uri.port)
       @http.use_ssl = uri.port == 443
@@ -73,6 +75,12 @@ module AzureBlobStorage
       "Md5Mismatch" => IntegrityError,
     }
 
+    def sanitize_headers
+      headers[:"x-ms-version"] =  API_VERSION
+      headers[:"x-ms-date"] = date
+      headers.reject! { |_, value| value.nil? }
+    end
+
     def sign_request(method)
       headers[:Authorization] = signer.authorization_header(uri:, verb: method, headers:)
     end
@@ -93,6 +101,6 @@ module AzureBlobStorage
       ERROR_MAPPINGS[status] || ERROR_CODE_MAPPINGS[azure_error_code] || Error
     end
 
-    attr_accessor :host, :http, :signer, :response, :headers, :uri
+    attr_accessor :host, :http, :signer, :response, :headers, :uri, :date
   end
 end
