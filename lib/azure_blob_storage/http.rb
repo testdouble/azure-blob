@@ -12,11 +12,12 @@ module AzureBlobStorage
 
     include REXML
 
-    def initialize(uri, headers = {}, signer: nil, debug: false)
+    def initialize(uri, headers = {}, signer: nil, metadata: {}, debug: false)
       @date = Time.now.httpdate
       @uri = uri
       @signer = signer
       @headers = headers
+      @headers.merge(sanitize_metadata(metadata))
       sanitize_headers
 
       @http = Net::HTTP.new(uri.hostname, uri.port)
@@ -74,6 +75,12 @@ module AzureBlobStorage
     ERROR_CODE_MAPPINGS = {
       "Md5Mismatch" => IntegrityError,
     }
+
+    def sanitize_metadata(metadata)
+      metadata&.each do |key, value|
+        headers[:"x-ms-meta-#{key}"] = value.to_s
+      end
+    end
 
     def sanitize_headers
       headers[:"x-ms-version"] =  API_VERSION

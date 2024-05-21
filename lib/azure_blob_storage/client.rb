@@ -102,11 +102,7 @@ module AzureBlobStorage
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      options[:metadata]&.each do |key, value|
-        headers[:"x-ms-meta-#{key}"] = value.to_s
-      end
-
-      HTTP.new(uri, headers, signer:).put(nil)
+      HTTP.new(uri, headers, metadata: options[:metadata], signer:).put(nil)
     end
 
     def append_blob_block(key, content, options = {})
@@ -151,11 +147,7 @@ module AzureBlobStorage
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      options[:metadata]&.each do |key, value|
-        headers[:"x-ms-meta-#{key}"] = value.to_s
-      end
-
-      HTTP.new(uri, headers, signer:).put(content)
+      HTTP.new(uri, headers, metadata: options[:metadata], signer:).put(content)
     end
 
     private
@@ -187,11 +179,7 @@ module AzureBlobStorage
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      options[:metadata]&.each do |key, value|
-        headers[:"x-ms-meta-#{key}"] = value.to_s
-      end
-
-      HTTP.new(uri, headers, signer:).put(content.read)
+      HTTP.new(uri, headers, metadata: options[:metadata], signer:).put(content.read)
     end
 
     attr_reader :account_name, :signer, :container, :http
