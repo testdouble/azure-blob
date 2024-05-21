@@ -38,7 +38,7 @@ module AzureBlobStorage
       "SharedKey #{account_name}:#{sign(to_sign)}"
     end
 
-    def sas_token(uri, options)
+    def sas_token(uri, options = {})
       to_sign = [
         options[:permissions],
         options[:start],
@@ -52,19 +52,23 @@ module AzureBlobStorage
         nil,
         nil,
         nil,
+        options[:content_disposition],
         nil,
         nil,
-        nil,
-        nil,
+        options[:content_type],
       ].join("\n")
 
-      URI.encode_www_form(
+      query = {
         SAS::Fields::Permissions => options[:permissions],
         SAS::Fields::Version => SAS::Version,
         SAS::Fields::Expiry => options[:expiry],
         SAS::Fields::Resource => SAS::Resources::Blob,
+        SAS::Fields::Disposition => options[:content_disposition],
+        SAS::Fields::Type => options[:content_type],
         SAS::Fields::Signature => sign(to_sign)
-      )
+      }.reject {|_,value| value.nil? }
+
+      URI.encode_www_form(**query)
     end
 
     def sign(body)
@@ -87,6 +91,8 @@ module AzureBlobStorage
         Expiry = :se
         Resource = :sr
         Signature = :sig
+        Disposition = :rscd
+        Type = :rsct
       end
       module Resources
         Blob = :b

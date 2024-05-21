@@ -222,4 +222,32 @@ class TestClient < TestCase
     assert_equal checksum, properties.checksum
     assert_equal content, client.get_blob(key)
   end
+
+  def test_signed_uri_disposition_override
+    client.create_block_blob(key, content, content_disposition: "attachement")
+
+    uri = client.signed_uri(
+      key,
+      permissions: "r",
+      expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
+      content_disposition: "inline",
+    )
+
+    response = Net::HTTP.get_response(uri)
+    assert_equal "inline", response["Content-Disposition"]
+  end
+
+  def test_signed_uri_type_override
+    client.create_block_blob(key, content, content_type: "some type")
+
+    uri = client.signed_uri(
+      key,
+      permissions: "r",
+      expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
+      content_type: "another type",
+    )
+
+    response = Net::HTTP.get_response(uri)
+    assert_equal "another type", response["Content-Type"]
+  end
 end
