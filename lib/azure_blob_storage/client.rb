@@ -72,11 +72,7 @@ module AzureBlobStorage
     def get_blob_properties(key, options = {})
       uri = generate_uri("#{container}/#{key}")
 
-      headers = {
-        "x-ms-range": options[:start_range] && "bytes=#{options[:start]}-#{options[:end]}",
-      }
-
-      response = Http.new(uri, headers, signer:).head
+      response = Http.new(uri, signer:).head
 
       Blob.new(response)
     end
