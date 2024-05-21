@@ -6,6 +6,7 @@ require "rexml"
 
 module AzureBlobStorage
   class Http
+    class Error < AzureBlobStorage::Error; end
     class FileNotFoundError < Error; end
     class ForbidenError < Error; end
     class IntegrityError < Error; end
