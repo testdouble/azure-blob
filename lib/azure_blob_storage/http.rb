@@ -5,7 +5,7 @@ require_relative "errors"
 require "rexml"
 
 module AzureBlobStorage
-  class HTTP
+  class Http
     class FileNotFoundError < Error; end
     class ForbidenError < Error; end
     class IntegrityError < Error; end

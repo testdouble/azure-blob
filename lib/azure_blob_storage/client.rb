@@ -31,7 +31,7 @@ module AzureBlobStorage
         "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}",
       }
 
-      HTTP.new(uri, headers, signer:).get
+      Http.new(uri, headers, signer:).get
     end
 
     def delete_blob(key, options = {})
@@ -41,7 +41,7 @@ module AzureBlobStorage
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
       }
 
-      HTTP.new(uri, headers, signer:).delete
+      Http.new(uri, headers, signer:).delete
     end
 
     def delete_prefix(prefix, options = {})
@@ -63,7 +63,7 @@ module AzureBlobStorage
         query[:marker] = marker
         query.reject! {|key, value| value.to_s.empty?}
         uri.query = URI.encode_www_form(**query)
-        response = HTTP.new(uri, signer:).get
+        response = Http.new(uri, signer:).get
       end
 
       BlobList.new(fetcher)
@@ -76,7 +76,7 @@ module AzureBlobStorage
         "x-ms-range": options[:start_range] && "bytes=#{options[:start]}-#{options[:end]}",
       }
 
-      response = HTTP.new(uri, headers, signer:).head
+      response = Http.new(uri, headers, signer:).head
 
       Blob.new(response)
     end
@@ -102,7 +102,7 @@ module AzureBlobStorage
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      HTTP.new(uri, headers, metadata: options[:metadata], signer:).put(nil)
+      Http.new(uri, headers, metadata: options[:metadata], signer:).put(nil)
     end
 
     def append_blob_block(key, content, options = {})
@@ -115,7 +115,7 @@ module AzureBlobStorage
         "Content-MD5": options[:content_md5],
       }
 
-      HTTP.new(uri, headers, signer:).put(content)
+      Http.new(uri, headers, signer:).put(content)
     end
 
     def put_blob_block(key, index, content, options = {})
@@ -129,7 +129,7 @@ module AzureBlobStorage
         "Content-MD5": options[:content_md5],
       }
 
-      HTTP.new(uri, headers, signer:).put(content)
+      Http.new(uri, headers, signer:).put(content)
 
       block_id
     end
@@ -147,7 +147,7 @@ module AzureBlobStorage
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      HTTP.new(uri, headers, metadata: options[:metadata], signer:).put(content)
+      Http.new(uri, headers, metadata: options[:metadata], signer:).put(content)
     end
 
     private
@@ -179,7 +179,7 @@ module AzureBlobStorage
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      HTTP.new(uri, headers, metadata: options[:metadata], signer:).put(content.read)
+      Http.new(uri, headers, metadata: options[:metadata], signer:).put(content.read)
     end
 
     attr_reader :account_name, :signer, :container, :http
