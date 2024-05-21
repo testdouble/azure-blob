@@ -10,7 +10,7 @@ module AzureBlobStorage
     end
 
     def marker
-      document.get_elements("//EnumerationResults/NextMarker").first.get_text()
+      document && document.get_elements("//EnumerationResults/NextMarker").first.get_text()&.to_s
     end
 
     def to_a
