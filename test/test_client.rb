@@ -51,27 +51,27 @@ class TestClient < TestCase
   end
 
   def test_content_type_persisted
-    client.create_block_blob(key, content, content_type: 'funky content_type', )
+    client.create_block_blob(key, content, content_type: "funky content_type",)
     response = client.get_blob_properties(key)
 
-    assert_equal 'funky content_type', response.content_type
+    assert_equal "funky content_type", response.content_type
   end
 
   def test_metadata_persisted
-    client.create_block_blob(key, content, metadata: {hello: "world"})
+    client.create_block_blob(key, content, metadata: { hello: "world" })
     response = client.get_blob_properties(key)
 
-    assert_equal 'world', response.metadata[:hello]
+    assert_equal "world", response.metadata[:hello]
   end
 
   def test_disposition_persisted
-    client.create_block_blob(key, content, content_disposition: 'inline')
+    client.create_block_blob(key, content, content_disposition: "inline")
     response = client.get_blob_properties(key)
-    assert_equal 'inline', response.content_disposition
+    assert_equal "inline", response.content_disposition
 
-    client.create_block_blob(key, content, content_disposition: 'attachment')
+    client.create_block_blob(key, content, content_disposition: "attachment")
     response = client.get_blob_properties(key)
-    assert_equal 'attachment', response.content_disposition
+    assert_equal "attachment", response.content_disposition
   end
 
   def test_download
@@ -212,7 +212,7 @@ class TestClient < TestCase
       "Content-MD5": checksum,
       "Content-Type": "fun type",
       "x-ms-blob-content-disposition": "inline",
-      "x-ms-blob-type": "BlockBlob"
+      "x-ms-blob-type": "BlockBlob",
     }
     AzureBlobStorage::Http.new(uri, headers).put(content)
 

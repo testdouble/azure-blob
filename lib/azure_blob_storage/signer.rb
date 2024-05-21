@@ -65,8 +65,8 @@ module AzureBlobStorage
         SAS::Fields::Resource => SAS::Resources::Blob,
         SAS::Fields::Disposition => options[:content_disposition],
         SAS::Fields::Type => options[:content_type],
-        SAS::Fields::Signature => sign(to_sign)
-      }.reject {|_,value| value.nil? }
+        SAS::Fields::Signature => sign(to_sign),
+      }.reject { |_, value| value.nil? }
 
       URI.encode_www_form(**query)
     end

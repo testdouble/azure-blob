@@ -61,7 +61,7 @@ module AzureBlobStorage
 
       fetcher = ->(marker) do
         query[:marker] = marker
-        query.reject! {|key, value| value.to_s.empty?}
+        query.reject! { |key, value| value.to_s.empty? }
         uri.query = URI.encode_www_form(**query)
         response = Http.new(uri, signer:).get
       end
