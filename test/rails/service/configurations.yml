@@ -1,0 +1,14 @@
+DEFAULT: &default
+  service: AzureBlob
+  storage_account_name: <%= ENV["AZURE_ACCOUNT_NAME"] %>
+  storage_access_key: <%= ENV["AZURE_ACCESS_KEY"] %>
+
+azure:
+  <<: *default
+  service: AzureBlob
+  container: "dev"
+
+azure_public:
+  <<: *default
+  public: true
+  container: "dev-public"
