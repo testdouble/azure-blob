@@ -15,7 +15,7 @@ To migrate from azure-storage-blob to azure-blob:
 
 ## Contributing
 
-### dev environment
+### Dev environment
 
 Ensure your version of Ruby fit the minimum version in `azure-blob.gemspec`
 
