@@ -6,9 +6,9 @@ DEFAULT: &default
 azure:
   <<: *default
   service: AzureBlob
-  container: "dev"
+  container: <%= ENV["AZURE_PRIVATE_CONTAINER"] %>
 
 azure_public:
   <<: *default
   public: true
-  container: "dev-public"
+  container: <%= ENV["AZURE_PUBLIC_CONTAINER"] %>
