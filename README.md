@@ -26,7 +26,7 @@ To use the Nix environment:
 
 ### Tests
 
-`bin/rake test`.
+`bin/rake test`
 
 # Active Storage
 
@@ -35,7 +35,7 @@ To migrate from azure-storage-blob to azure-blob:
 
 1. Replace `azure-storage-blob` in your Gemfile with `azure-blob`
 2. Run `bundle install`
-3. change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
+3. Change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
 4. Restart or deploy the app.
 
 ## License
