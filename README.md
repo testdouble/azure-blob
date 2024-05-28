@@ -19,10 +19,10 @@ and setup those Env variables:
 A dev environment setup is also supplied through Nix with [devenv](https://devenv.sh/).
 
 To use the Nix environment:
-1- install [devenv](https://devenv.sh/)
-2- Copy `devenv.local.nix.example` to `devenv.local.nix`
-3- Insert your azure credentials into `devenv.local.nix`
-4- Start the shell with `devenv shell` or with [direnv](https://direnv.net/).
+1. install [devenv](https://devenv.sh/)
+2. Copy `devenv.local.nix.example` to `devenv.local.nix`
+3. Insert your azure credentials into `devenv.local.nix`
+4. Start the shell with `devenv shell` or with [direnv](https://direnv.net/).
 
 ### Tests
 
@@ -33,10 +33,10 @@ To use the Nix environment:
 ## Migration
 To migrate from azure-storage-blob to azure-blob:
 
-1- Replace `azure-storage-blob` in your Gemfile with `azure-blob`
-2- Run `bundle install`
-3- change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
-4- Restart or deploy the app.
+1. Replace `azure-storage-blob` in your Gemfile with `azure-blob`
+2. Run `bundle install`
+3. change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
+4. Restart or deploy the app.
 
 ## License
 
