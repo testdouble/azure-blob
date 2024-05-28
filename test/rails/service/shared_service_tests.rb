@@ -141,7 +141,7 @@ module ActiveStorage::Service::SharedServiceTests
 
     test "compose" do
       keys = 3.times.map { SecureRandom.base58(24) }
-      data = %w(To get her)
+      data = %w[To get her]
       keys.zip(data).each do |key, data|
         @service.upload(
           key,

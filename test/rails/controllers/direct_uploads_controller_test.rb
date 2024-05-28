@@ -17,11 +17,11 @@ class ActiveStorage::AzureBlobDirectUploadsControllerTest < ActionDispatch::Inte
       "my_key_1" => "my_value_1",
       "my_key_2" => "my_value_2",
       "platform" => "my_platform",
-      "library_ID" => "12345"
+      "library_ID" => "12345",
     }
 
     post rails_direct_uploads_url, params: { blob: {
-      filename: "hello.txt", byte_size: 6, checksum: checksum, content_type: "text/plain", metadata: metadata } }
+      filename: "hello.txt", byte_size: 6, checksum: checksum, content_type: "text/plain", metadata: metadata, } }
 
     response.parsed_body.tap do |details|
       assert_equal ActiveStorage::Blob.find(details["id"]), ActiveStorage::Blob.find_signed!(details["signed_id"])

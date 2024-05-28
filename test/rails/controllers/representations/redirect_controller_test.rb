@@ -11,7 +11,7 @@ class ActiveStorage::Representations::RedirectControllerWithOpenRedirectTest < A
       get rails_blob_representation_url(
         filename: blob.filename,
         signed_blob_id: blob.signed_id,
-        variation_key: ActiveStorage::Variation.encode(resize_to_limit: [100, 100]))
+        variation_key: ActiveStorage::Variation.encode(resize_to_limit: [ 100, 100 ]))
 
       assert_redirected_to(/racecar\.jpg/)
     end

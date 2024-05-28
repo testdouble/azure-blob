@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'debug'
+require "debug"
 require "active_support/testing/strict_warnings"
 require "action_view"
 require "action_view/helpers"
@@ -30,7 +30,7 @@ class ActiveSupport::TestCase
 
   include ActiveRecord::TestFixtures
   include ActiveRecord::Assertions::QueryAssertions
-  self.fixture_paths = [File.expand_path("fixtures", __dir__)]
+  self.fixture_paths = [ File.expand_path("fixtures", __dir__) ]
 
   setup do
     ActiveStorage::Current.url_options = { protocol: "https://", host: "example.com", port: nil }
@@ -134,15 +134,15 @@ class User < ActiveRecord::Base
   has_one_attached :avatar
   has_one_attached :cover_photo, dependent: false, service: :local
   has_one_attached :avatar_with_variants do |attachable|
-    attachable.variant :thumb, resize_to_limit: [100, 100]
+    attachable.variant :thumb, resize_to_limit: [ 100, 100 ]
   end
   has_one_attached :avatar_with_preprocessed do |attachable|
-    attachable.variant :bool, resize_to_limit: [1, 1], preprocessed: true
+    attachable.variant :bool, resize_to_limit: [ 1, 1 ], preprocessed: true
   end
   has_one_attached :avatar_with_conditional_preprocessed do |attachable|
-    attachable.variant :proc, resize_to_limit: [2, 2],
+    attachable.variant :proc, resize_to_limit: [ 2, 2 ],
       preprocessed: ->(user) { user.name == "transform via proc" }
-    attachable.variant :method, resize_to_limit: [3, 3],
+    attachable.variant :method, resize_to_limit: [ 3, 3 ],
       preprocessed: :should_preprocessed?
   end
   has_one_attached :intro_video
@@ -151,22 +151,22 @@ class User < ActiveRecord::Base
   has_many_attached :highlights
   has_many_attached :vlogs, dependent: false, service: :local
   has_many_attached :highlights_with_variants do |attachable|
-    attachable.variant :thumb, resize_to_limit: [100, 100]
+    attachable.variant :thumb, resize_to_limit: [ 100, 100 ]
   end
   has_many_attached :highlights_with_preprocessed do |attachable|
-    attachable.variant :bool, resize_to_limit: [1, 1], preprocessed: true
+    attachable.variant :bool, resize_to_limit: [ 1, 1 ], preprocessed: true
   end
   has_many_attached :highlights_with_conditional_preprocessed do |attachable|
-    attachable.variant :proc, resize_to_limit: [2, 2],
+    attachable.variant :proc, resize_to_limit: [ 2, 2 ],
       preprocessed: ->(user) { user.name == "transform via proc" }
-    attachable.variant :method, resize_to_limit: [3, 3],
+    attachable.variant :method, resize_to_limit: [ 3, 3 ],
       preprocessed: :should_preprocessed?
   end
   has_one_attached :resume do |attachable|
-    attachable.variant :preview, resize_to_fill: [400, 400]
+    attachable.variant :preview, resize_to_fill: [ 400, 400 ]
   end
   has_one_attached :resume_with_preprocessing do |attachable|
-    attachable.variant :preview, resize_to_fill: [400, 400], preprocessed: true
+    attachable.variant :preview, resize_to_fill: [ 400, 400 ], preprocessed: true
   end
 
   accepts_nested_attributes_for :highlights_attachments, allow_destroy: true

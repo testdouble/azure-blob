@@ -25,7 +25,7 @@
 require "active_support/core_ext/numeric/bytes"
 require "active_storage/service"
 
-require 'azure_blob'
+require "azure_blob"
 
 module ActiveStorage
   # = Active Storage \Azure Storage \Service
