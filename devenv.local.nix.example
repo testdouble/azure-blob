@@ -1,0 +1,8 @@
+{pkgs, lib, ...}:{
+  env = {
+    AZURE_ACCOUNT_NAME = "";
+    AZURE_ACCESS_KEY = "";
+    AZURE_PRIVATE_CONTAINER = "";
+    AZURE_PUBLIC_CONTAINER = "";
+  };
+}
