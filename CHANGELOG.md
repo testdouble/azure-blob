@@ -1,5 +1,8 @@
 ## [Unreleased]
 
-## [0.1.0] - 2024-04-05
+## [0.4.1] 2024-05-27
 
-- Initial release
+First working release.
+
+- Re-implemented the required parts of the azure-storage-blob API to make Active Storage work.
+- Extracted the AzureStorage adapter from Rails.
