@@ -28,10 +28,10 @@ require "active_storage/service"
 require "azure_blob"
 
 module ActiveStorage
-  # = Active Storage \Azure Storage \Service
+  # = Active Storage \Azure Blob \Service
   #
   # Wraps the Microsoft Azure Storage Blob Service as an Active Storage service.
-  # See ActiveStorage::Service for the generic API documentation that applies to all services.
+  # See {ActiveStorage::Service}[https://api.rubyonrails.org/classes/ActiveStorage/Service.html] for more details.
   class Service::AzureBlobService < Service
     attr_reader :client, :container, :signer
 
