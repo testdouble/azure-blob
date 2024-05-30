@@ -9,13 +9,13 @@ Gem::Specification.new do |spec|
   spec.email = [ "joe@dupuis.io" ]
 
   spec.summary = "Azure blob client"
-  spec.homepage = "https://github.com/JoeDupuis/azure-blob"
+  spec.homepage = "https://github.com/testdouble/azure-blob"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["changelog_uri"] = "https://github.com/JoeDupuis/azure-blob/blob/main/CHANGELOG.md"
+  spec.metadata["changelog_uri"] = "https://github.com/testdouble/azure-blob/blob/main/CHANGELOG.md"
 
   spec.add_dependency "rexml"
 
