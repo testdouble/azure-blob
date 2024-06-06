@@ -1,7 +1,7 @@
 require "cgi"
 
 module AzureBlob
-  class CanonicalizedResource
+  class CanonicalizedResource # :nodoc:
     def initialize(uri, account_name, service_name: nil, url_safe: true)
       # This next line is needed because CanonicalizedResource
       # need to be escaped for auhthorization headers, but not SAS tokens

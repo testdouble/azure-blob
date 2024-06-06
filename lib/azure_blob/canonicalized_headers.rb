@@ -1,5 +1,5 @@
 module AzureBlob
-  class CanonicalizedHeaders
+  class CanonicalizedHeaders # :nodoc:
     STANDARD_HEADERS = [
       :"x-ms-version",
     ]

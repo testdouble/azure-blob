@@ -3,7 +3,9 @@
 require "rexml"
 
 module AzureBlob
-  class BlockList
+  class BlockList # :nodoc:
+    # Internal
+    # BlockList builds the XML list of blocks to commit to a blob
     include REXML
     def initialize(blocks)
       @blocks = blocks

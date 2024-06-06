@@ -6,7 +6,7 @@ require "net/http"
 require "rexml"
 
 module AzureBlob
-  class Http
+  class Http # :nodoc:
     class Error < AzureBlob::Error; end
     class FileNotFoundError < Error; end
     class ForbidenError < Error; end

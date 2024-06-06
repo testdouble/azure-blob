@@ -6,7 +6,7 @@ require_relative "canonicalized_headers"
 require_relative "canonicalized_resource"
 
 module AzureBlob
-  class Signer
+  class Signer # :nodoc:
     def initialize(account_name:, access_key:)
       @account_name = account_name
       @access_key = Base64.decode64(access_key)
@@ -83,9 +83,9 @@ module AzureBlob
       headers
     end
 
-    module SAS
+    module SAS # :nodoc:
       Version = "2024-05-04"
-      module Fields
+      module Fields # :nodoc:
         Permissions = :sp
         Version = :sv
         Expiry = :se
@@ -94,7 +94,7 @@ module AzureBlob
         Disposition = :rscd
         Type = :rsct
       end
-      module Resources
+      module Resources # :nodoc:
         Blob = :b
       end
     end

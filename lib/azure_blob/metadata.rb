@@ -1,5 +1,5 @@
 module AzureBlob
-  class Metadata
+  class Metadata # :nodoc:
     def initialize(metadata = nil)
       @metadata = metadata || {}
       @headers = @metadata.map do |key, value|
