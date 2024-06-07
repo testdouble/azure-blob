@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+## [0.4.2] 2024-06-06
+
+- Documentation
+- Fix an issue with integrity check on multi block upload
+
+
 ## [0.4.1] 2024-05-27
 
 First working release.
