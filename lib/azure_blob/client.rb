@@ -35,6 +35,8 @@ module AzureBlob
     #   Will be saved on the blob in Azure.
     # [+:content_md5+]
     #   Will ensure integrity of the upload. The checksum must be a base64 digest. Can be produced with +OpenSSL::Digest::MD5.base64digest+.
+    #   The checksum is only checked on a single upload! To verify checksum when uploading multiple blocks, call directly put_blob_block with
+    #   a checksum for each block, then commit the blocks with commit_blob_blocks.
     # [+:block_size+]
     #   Block size in bytes, can be used to force the method to split the upload in smaller chunk. Defaults to +AzureBlob::DEFAULT_BLOCK_SIZE+ and cannot be bigger than +AzureBlob::MAX_UPLOAD_SIZE+
     def create_block_blob(key, content, options = {})
@@ -213,6 +215,11 @@ module AzureBlob
     # Calls to {Put Block}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-block]
     #
     # Returns the id of the block. Required to commit the list of blocks to a blob.
+    #
+    # Options:
+    #
+    # [+:content_md5+]
+    #   Must be the checksum for the block not the blob. The checksum must be a base64 digest. Can be produced with +OpenSSL::Digest::MD5.base64digest+.
     def put_blob_block(key, index, content, options = {})
       block_id = generate_block_id(index)
       uri = generate_uri("#{container}/#{key}")
@@ -234,6 +241,12 @@ module AzureBlob
     # Calls to {Put Block List}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-block-list]
     #
     # Takes a key (path) and an array of block ids
+    #
+    # Options:
+    #
+    # [+:content_md5+]
+    #   This is the checksum for the whole blob. The checksum is saved on the blob, but it is not validated!
+    #   Add a checksum for each block if you want Azure to validate integrity.
     def commit_blob_blocks(key, block_ids, options = {})
       block_list = BlockList.new(block_ids)
       content = block_list.to_s
@@ -243,7 +256,7 @@ module AzureBlob
       headers = {
         "Content-Length": content.size,
         "Content-Type": options[:content_type],
-        "Content-MD5": options[:content_md5],
+        "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
@@ -275,7 +288,7 @@ module AzureBlob
         "x-ms-blob-type": "BlockBlob",
         "Content-Length": content.size,
         "Content-Type": options[:content_type],
-        "Content-MD5": options[:content_md5],
+        "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 

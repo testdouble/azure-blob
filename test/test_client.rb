@@ -32,22 +32,47 @@ class TestClient < TestCase
     assert_equal content, client.get_blob(key)
   end
 
+  def test_io_upload
+    client.create_block_blob(key, StringIO.new(content))
+
+    assert_equal content, client.get_blob(key)
+  end
+
   def test_multi_block_upload
     client.create_block_blob(key, content, block_size: 1)
 
     assert_equal content, client.get_blob(key)
   end
 
-  def test_upload_integrity
+  def test_upload_integrity_blob
     checksum = OpenSSL::Digest::MD5.base64digest(content)
     client.create_block_blob(key, content, content_md5: checksum)
 
     assert_equal checksum, OpenSSL::Digest::MD5.base64digest(client.get_blob(key))
   end
 
-  def test_upload_raise_on_invalid_checksum
+  def test_upload_integrity_block
+    checksum = OpenSSL::Digest::MD5.base64digest(content + "a") # commit blob checksum is not validated
+
+    block_ids = content.split("", 3).map.with_index do |chunk, i|
+      block_checksum = OpenSSL::Digest::MD5.base64digest(chunk)
+      client.put_blob_block(key, i, chunk, content_md5: block_checksum)
+    end
+
+    client.commit_blob_blocks(key, block_ids, content_md5: checksum)
+
+    # The checksum is not validated, but saved on the blob
+    assert_equal checksum, client.get_blob_properties(key).checksum
+  end
+
+  def test_upload_raise_on_invalid_checksum_blob
     checksum = OpenSSL::Digest::MD5.base64digest(content + "a")
     assert_raises(AzureBlob::Http::IntegrityError) { client.create_block_blob(key, content, content_md5: checksum) }
+  end
+
+  def test_upload_raise_on_invalid_checksum_block
+    checksum = OpenSSL::Digest::MD5.base64digest(content + "a")
+    assert_raises(AzureBlob::Http::IntegrityError) { client.put_blob_block(key, 0, content, content_md5: checksum) }
   end
 
   def test_content_type_persisted
