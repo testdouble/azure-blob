@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.4.2] 2024-06-06
+
+Documentation
+
 ## [0.4.1] 2024-05-27
 
 First working release.
