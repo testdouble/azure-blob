@@ -13,6 +13,31 @@ To migrate from azure-storage-blob to azure-blob:
 4. Restart or deploy the app.
 
 
+## Standalone
+
+Instantiate a client with your account name, an access key and the container name:
+
+```ruby
+client = AzureBlob::Client.new(
+      account_name: @account_name,
+      access_key: @access_key,
+      container: @container,
+    )
+
+path = "some/new/file"
+
+# Upload
+client.create_block_blob(path, "Hello world!")
+
+# Download
+client.get_blob(path) #=> "Hello world!"
+
+# Delete
+client.delete_blob(path)
+```
+
+For the full list of methods: https://www.rubydoc.info/gems/azure-blob/AzureBlob/Client
+
 ## Contributing
 
 ### Dev environment
