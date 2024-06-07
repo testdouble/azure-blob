@@ -12,6 +12,17 @@ To migrate from azure-storage-blob to azure-blob:
 3. Change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
 4. Restart or deploy the app.
 
+## Authenricate using Managed Identity
+
+Get an access token for Azure Storage from the  the local Managed Identity endpoint.
+```bash
+curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fstorage.azure.com%2F' -H Metadata:true
+```
+
+Now use the access token to access Azure Storage.
+```bash
+curl 'https://<STORAGE ACCOUNT>.blob.core.windows.net/<CONTAINER NAME>/<FILE NAME>' -H "x-ms-version: 2017-11-09" -H "Authorization: Bearer <ACCESS TOKEN>"
+```
 
 ## Standalone
 

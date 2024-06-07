@@ -71,11 +71,11 @@ module AzureBlob
       URI.encode_www_form(**query)
     end
 
+    private
+
     def sign(body)
       Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", access_key, body))
     end
-
-    private
 
     def sanitize_headers(headers)
       headers = headers.dup
