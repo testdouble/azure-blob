@@ -12,7 +12,7 @@ To migrate from azure-storage-blob to azure-blob:
 3. Change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
 4. Restart or deploy the app.
 
-## Authenricate using Managed Identity
+## Authenticate using Managed Identity
 
 As of 04/04/2018, there are 2 supported ways to get MSI Token.
 

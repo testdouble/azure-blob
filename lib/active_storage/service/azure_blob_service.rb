@@ -50,7 +50,8 @@ module ActiveStorage
         AzureBlob::EntraIdSigner.new(
           AzureBlob::Auth::MsiTokenProvider.new(
             resource_uri: AzureBlob::Auth::MsiTokenProvider::RESOURCE_URI_STORAGE
-          )
+          ),
+          account_name: storage_account_name
         )
 
       @client = AzureBlob::Client.new(

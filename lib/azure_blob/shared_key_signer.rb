@@ -9,6 +9,7 @@ module AzureBlob
   # 
   # This implementatio uses a Shared Key to
   # - generate the authorisation header
+  #   See https://learn.microsoft.com/en-us/rest/api/storageservices/authorize-with-shared-key
   # - generate SAS for download and upload URLs
   # 
   class SharedKeySigner
@@ -44,7 +45,7 @@ module AzureBlob
     end
 
     # 
-    # Generate a Shared Access Signature.
+    # Generate a service Shared Access Signature.
     # See https://learn.microsoft.com/en-us/rest/api/storageservices/create-service-sas
     # See https://learn.microsoft.com/en-us/rest/api/storageservices/delegate-access-with-shared-access-signature
     # 
