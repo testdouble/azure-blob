@@ -34,10 +34,11 @@ curl 'https://<STORAGE ACCOUNT>.blob.core.windows.net/<CONTAINER NAME>/<FILE NAM
 Instantiate a client with your account name, an access key and the container name:
 
 ```ruby
+signer = AzureBlob::SharedKeySigner.new(account_name: @account_name, access_key: @access_key)
 client = AzureBlob::Client.new(
       account_name: @account_name,
-      storage_access_key: @access_key,
       container: @container,
+      signer: signer
     )
 
 path = "some/new/file"

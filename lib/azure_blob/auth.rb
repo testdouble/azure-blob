@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "auth/token_credentials"
-require_relative "auth/token_provider"
+require_relative "auth/msi_token_provider"
 
 module AzureBlob
   module Auth

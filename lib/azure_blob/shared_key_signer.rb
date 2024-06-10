@@ -6,7 +6,12 @@ require_relative "canonicalized_headers"
 require_relative "canonicalized_resource"
 
 module AzureBlob
-  class Signer # :nodoc:
+  # 
+  # This implementatio uses a Shared Key to
+  # - generate the authorisation header
+  # - generate SAS for download and upload URLs
+  # 
+  class SharedKeySigner
     def initialize(account_name:, access_key:)
       @account_name = account_name
       @access_key = Base64.decode64(access_key)
@@ -38,6 +43,11 @@ module AzureBlob
       "SharedKey #{account_name}:#{sign(to_sign)}"
     end
 
+    # 
+    # Generate a Shared Access Signature.
+    # See https://learn.microsoft.com/en-us/rest/api/storageservices/create-service-sas
+    # See https://learn.microsoft.com/en-us/rest/api/storageservices/delegate-access-with-shared-access-signature
+    # 
     def sas_token(uri, options = {})
       to_sign = [
         options[:permissions],
