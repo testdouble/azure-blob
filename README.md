@@ -14,6 +14,11 @@ To migrate from azure-storage-blob to azure-blob:
 
 ## Authenricate using Managed Identity
 
+As of 04/04/2018, there are 2 supported ways to get MSI Token.
+
+- Using the extension installed locally and accessing http://localhost:50342/oauth2/token to get the MSI Token
+- Accessing the http://169.254.169.254/metadata/identity/oauth2/token to get the MSI Token (default)
+
 Get an access token for Azure Storage from the  the local Managed Identity endpoint.
 ```bash
 curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fstorage.azure.com%2F' -H Metadata:true
@@ -31,7 +36,7 @@ Instantiate a client with your account name, an access key and the container nam
 ```ruby
 client = AzureBlob::Client.new(
       account_name: @account_name,
-      access_key: @access_key,
+      storage_access_key: @access_key,
       container: @container,
     )
 

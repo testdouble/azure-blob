@@ -12,10 +12,10 @@ module AzureBlob
   # AzureBlob Client class. You interact with the Azure Blob api
   # through an instance of this class.
   class Client
-    def initialize(account_name:, access_key:, container:)
+    def initialize(account_name:, storage_access_key:, container:)
       @account_name = account_name
       @container = container
-      @signer = Signer.new(account_name:, access_key:)
+      @signer = Signer.new(account_name:, access_key: storage_access_key)
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.

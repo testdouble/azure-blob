@@ -36,13 +36,33 @@ module ActiveStorage
     attr_reader :client, :container, :signer
 
     def initialize(storage_account_name:, storage_access_key:, container:, public: false, **options)
+      # Either use storage_access_key or msi authentication
+      access_key_options = options.slice(
+        :storage_access_key,
+      )
+
+      msi_options = options.slice(
+        :subscription_id,
+        :tenant_id,
+        :resource_group_name,
+        :msi_identity_uri,
+      )
+
+      rest_options = options.except(
+        :storage_access_key,
+        :subscription_id,
+        :tenant_id,
+        :resource_group_name,
+        :msi_identity_uri,
+      )
+
       @container = container
       @public = public
       @client = AzureBlob::Client.new(
         account_name: storage_account_name,
-        access_key: storage_access_key,
         container: container,
-        **options)
+        **access_key_options,
+        **rest_options)
     end
 
     def upload(key, io, checksum: nil, filename: nil, content_type: nil, disposition: nil, custom_metadata: {}, **)

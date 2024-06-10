@@ -11,12 +11,12 @@ task default: %i[test]
 task :flush_test_container do |t|
   AzureBlob::Client.new(
     account_name: ENV["AZURE_ACCOUNT_NAME"],
-    access_key: ENV["AZURE_ACCESS_KEY"],
+    storage_access_key: ENV["AZURE_ACCESS_KEY"],
     container: ENV["AZURE_PRIVATE_CONTAINER"],
   ).delete_prefix ''
   AzureBlob::Client.new(
     account_name: ENV["AZURE_ACCOUNT_NAME"],
-    access_key: ENV["AZURE_ACCESS_KEY"],
+    storage_access_key: ENV["AZURE_ACCESS_KEY"],
     container: ENV["AZURE_PUBLIC_CONTAINER"],
   ).delete_prefix ''
 end

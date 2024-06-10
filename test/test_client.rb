@@ -14,7 +14,7 @@ class TestClient < TestCase
     @container = ENV["AZURE_PRIVATE_CONTAINER"]
     @client = AzureBlob::Client.new(
       account_name: @account_name,
-      access_key: @access_key,
+      storage_access_key: @access_key,
       container: @container,
     )
     @key = "test client##{name}"
