@@ -35,7 +35,7 @@ module ActiveStorage
   class Service::AzureBlobService < Service
     attr_reader :client, :container, :signer
 
-    def initialize(storage_account_name:, storage_access_key:, container:, public: false, **options)
+    def initialize(storage_account_name:, container:, public: false, **options)
       # Either use storage_access_key or msi authentication
       access_key_options = options.slice(
         :storage_access_key,
