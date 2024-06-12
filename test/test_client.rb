@@ -12,12 +12,10 @@ class TestClient < TestCase
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
     @container = ENV["AZURE_PRIVATE_CONTAINER"]
-
-    signer = AzureBlob::SharedKeySigner.new(account_name: @account_name, access_key: @access_key)
     @client = AzureBlob::Client.new(
       account_name: @account_name,
+      access_key: @access_key,
       container: @container,
-      signer: signer
     )
     @key = "test client##{name}"
     @content = "Some random content #{Random.rand(200)}"

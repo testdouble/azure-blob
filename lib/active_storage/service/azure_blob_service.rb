@@ -24,8 +24,6 @@
 
 require "active_support/core_ext/numeric/bytes"
 require "active_storage/service"
-require "azure_blob/shared_key_signer"
-require "azure_blob/entra_id_signer"
 require "azure_blob/auth/msi_token_provider.rb"
 
 require "azure_blob"
@@ -38,27 +36,14 @@ module ActiveStorage
   class Service::AzureBlobService < Service
     attr_reader :client, :container, :signer
 
-    def initialize(storage_account_name:, container:, public: false, **options)
-      # Either use storage_access_key or msi authentication
-      storage_access_key = options[:storage_access_key]
-
+    def initialize(storage_account_name:, storage_access_key: nil, container:, public: false, **options)
       @container = container
       @public = public
-
-      signer = storage_access_key.present? ?
-        AzureBlob::SharedKeySigner.new(account_name: storage_account_name, access_key: storage_access_key) :
-        AzureBlob::EntraIdSigner.new(
-          AzureBlob::Auth::MsiTokenProvider.new(
-            resource_uri: AzureBlob::Auth::MsiTokenProvider::RESOURCE_URI_STORAGE
-          ),
-          account_name: storage_account_name
-        )
-
       @client = AzureBlob::Client.new(
         account_name: storage_account_name,
-        container:,
-        signer:
-      )
+        access_key: storage_access_key,
+        container: container,
+        **options)
     end
 
     def upload(key, io, checksum: nil, filename: nil, content_type: nil, disposition: nil, custom_metadata: {}, **)

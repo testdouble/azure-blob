@@ -12,16 +12,16 @@ To migrate from azure-storage-blob to azure-blob:
 3. Change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
 4. Restart or deploy the app.
 
+
 ## Standalone
 
 Instantiate a client with your account name, an access key and the container name:
 
 ```ruby
-signer = AzureBlob::SharedKeySigner.new(account_name: @account_name, access_key: @access_key)
 client = AzureBlob::Client.new(
       account_name: @account_name,
+      access_key: @access_key,
       container: @container,
-      signer: signer
     )
 
 path = "some/new/file"
