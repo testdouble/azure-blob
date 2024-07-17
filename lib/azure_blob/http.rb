@@ -44,6 +44,15 @@ module AzureBlob
       true
     end
 
+    def post(content)
+      sign_request("POST") if signer
+      @response = http.start do |http|
+        http.post(uri, content, headers)
+      end
+      raise_error  unless success?
+      response.body
+    end
+
     def head
       sign_request("HEAD") if signer
       @response = http.start do |http|

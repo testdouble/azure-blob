@@ -1,10 +1,11 @@
 # frozen_string_literal: true
 
-require_relative "signer"
 require_relative "block_list"
 require_relative "blob_list"
 require_relative "blob"
 require_relative "http"
+require_relative "shared_key_signer"
+require_relative "entra_id_signer"
 require "time"
 require "base64"
 
@@ -15,7 +16,15 @@ module AzureBlob
     def initialize(account_name:, access_key:, container:)
       @account_name = account_name
       @container = container
-      @signer = Signer.new(account_name:, access_key:)
+
+      @signer = access_key.present? ?
+        AzureBlob::SharedKeySigner.new(account_name:, access_key:) :
+        AzureBlob::EntraIdSigner.new(
+          AzureBlob::Auth::MsiTokenProvider.new(
+            resource_uri: AzureBlob::Auth::MsiTokenProvider::RESOURCE_URI_STORAGE
+          ),
+          account_name:
+        )
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.

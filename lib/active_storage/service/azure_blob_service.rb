@@ -24,6 +24,7 @@
 
 require "active_support/core_ext/numeric/bytes"
 require "active_storage/service"
+require "azure_blob/auth/msi_token_provider.rb"
 
 require "azure_blob"
 
@@ -35,7 +36,7 @@ module ActiveStorage
   class Service::AzureBlobService < Service
     attr_reader :client, :container, :signer
 
-    def initialize(storage_account_name:, storage_access_key:, container:, public: false, **options)
+    def initialize(storage_account_name:, storage_access_key: nil, container:, public: false, **options)
       @container = container
       @public = public
       @client = AzureBlob::Client.new(
