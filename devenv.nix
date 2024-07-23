@@ -4,6 +4,8 @@
   packages = with pkgs; [
     git
     libyaml
+    terraform
+    azure-cli
   ];
 
 

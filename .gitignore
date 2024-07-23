@@ -18,3 +18,7 @@ devenv.local.nix
 .pre-commit-config.yaml
 
 *.gem
+
+/.terraform
+terraform.tfstate
+terraform.tfstate.backup
