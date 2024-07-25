@@ -42,6 +42,18 @@ For the full list of methods: https://www.rubydoc.info/gems/azure-blob/AzureBlob
 
 ### Dev environment
 
+A dev environment is supplied through Nix with [devenv](https://devenv.sh/).
+
+1. Install [devenv](https://devenv.sh/).
+2. Enter the dev environment by cd into the repo and running `devenv shell` (or `direnv allow` if you are a direnv user).
+3. Log into azure CLI with `az login`
+4. `terraform init`
+5. `terraform apply` This will generate the necessary infrastructure on azure
+6. Generate devenv.local.nix with your private key and container information: `terraform output -raw devenv_local_nix > devenv.local.nix`
+7. If you are using direnv, the environment will reload automatically. If not, exit the shell and reopen it by hitting <C-d> and running `devenv shell` again.
+
+If you prefer not using devenv/nix:
+
 Ensure your version of Ruby fit the minimum version in `azure-blob.gemspec`
 
 and setup those Env variables:
@@ -51,14 +63,6 @@ and setup those Env variables:
 - `AZURE_PRIVATE_CONTAINER`
 - `AZURE_PUBLIC_CONTAINER`
 
-
-A dev environment setup is also supplied through Nix with [devenv](https://devenv.sh/).
-
-To use the Nix environment:
-1. install [devenv](https://devenv.sh/)
-2. Copy `devenv.local.nix.example` to `devenv.local.nix`
-3. Insert your azure credentials into `devenv.local.nix`
-4. Start the shell with `devenv shell` or with [direnv](https://direnv.net/).
 
 ### Tests
 
