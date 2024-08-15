@@ -30,7 +30,7 @@ variable "vm_username" {
 
 variable "vm_password" {
   type = string
-  default = "azureblob"
+  default = "qwe123QWE!@#"
 }
 
 variable "ssh_key" {
