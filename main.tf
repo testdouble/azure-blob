@@ -11,8 +11,8 @@ provider "azurerm" {
   features {}
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = "azure-blob"
+resource "azurerm_resource_group" "main" {
+  name     = var.prefix
   location = var.location
   tags = {
     source = "Terraform"
@@ -20,9 +20,9 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_storage_account" "main" {
-  name                     = "azureblobrubygemdev"
-  resource_group_name      = azurerm_resource_group.rg.name
-  location                 = azurerm_resource_group.rg.location
+  name                     = var.storage_account_name
+  resource_group_name      = azurerm_resource_group.main.name
+  location                 = azurerm_resource_group.main.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 
@@ -43,16 +43,94 @@ resource "azurerm_storage_container" "public" {
   container_access_type = "blob"
 }
 
-output "devenv_local_nix" {
-  sensitive = true
-  value = <<EOT
-{pkgs, lib, ...}:{
-  env = {
-    AZURE_ACCOUNT_NAME = "${azurerm_storage_account.main.name}";
-    AZURE_ACCESS_KEY = "${azurerm_storage_account.main.primary_access_key}";
-    AZURE_PRIVATE_CONTAINER = "${azurerm_storage_container.private.name}";
-    AZURE_PUBLIC_CONTAINER = "${azurerm_storage_container.public.name}";
-  };
+
+resource "azurerm_virtual_network" "main" {
+  count = var.create_vm ? 1 : 0
+  name                = "${var.prefix}-network"
+  address_space       = ["10.0.0.0/16"]
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  tags = {
+    source = "Terraform"
+  }
 }
-EOT
+
+resource "azurerm_subnet" "main" {
+  count = var.create_vm ? 1 : 0
+  name                 = "${var.prefix}-main"
+  resource_group_name  = azurerm_resource_group.main.name
+  virtual_network_name = azurerm_virtual_network.main[0].name
+  address_prefixes     = ["10.0.2.0/24"]
+}
+
+resource "azurerm_network_interface" "main" {
+  count = var.create_vm ? 1 : 0
+  name                = "${var.prefix}-nic"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  ip_configuration {
+    name                          = "${var.prefix}-ip-config"
+    subnet_id                     = azurerm_subnet.main[0].id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id = azurerm_public_ip.main[0].id
+  }
+
+  tags = {
+    source = "Terraform"
+  }
+}
+
+resource "azurerm_public_ip" "main" {
+  count = var.create_vm ? 1 : 0
+  name                = "${var.prefix}-public-ip"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  allocation_method   = "Static"
+
+  tags = {
+    source = "Terraform"
+  }
+}
+
+
+resource "azurerm_virtual_machine" "main" {
+  count = var.create_vm ? 1 : 0
+  name                  = "${var.prefix}-vm"
+  location              = azurerm_resource_group.main.location
+  resource_group_name   = azurerm_resource_group.main.name
+  network_interface_ids = [azurerm_network_interface.main[0].id]
+  vm_size               = var.vm_size
+  delete_os_disk_on_termination = true
+  delete_data_disks_on_termination = true
+
+  storage_image_reference {
+    publisher = "Canonical"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
+    version   = "latest"
+  }
+  storage_os_disk {
+    name              = "myosdisk1"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
+  }
+  os_profile {
+    computer_name  = var.prefix
+    admin_username = var.vm_username
+    admin_password = var.vm_password
+  }
+  os_profile_linux_config {
+    disable_password_authentication = true
+    ssh_keys {
+      path = "/home/${var.vm_username}/.ssh/authorized_keys"
+      key_data = var.ssh_key != "" ? var.ssh_key : file("~/.ssh/id_rsa.pub")
+    }
+  }
+
+  tags = {
+    source = "Terraform"
+  }
 }
