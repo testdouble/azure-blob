@@ -17,7 +17,7 @@ module AzureBlob
       @account_name = account_name
       @container = container
 
-      @signer = access_key.present? ?
+      @signer = !access_key.nil? && !access_key.empty?  ?
         AzureBlob::SharedKeySigner.new(account_name:, access_key:) :
         AzureBlob::EntraIdSigner.new(
           AzureBlob::Auth::MsiTokenProvider.new(
