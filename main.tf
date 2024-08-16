@@ -94,6 +94,25 @@ resource "azurerm_public_ip" "main" {
   }
 }
 
+resource "azurerm_user_assigned_identity" "vm" {
+  location              = azurerm_resource_group.main.location
+  name                  = "${var.prefix}-vm"
+  resource_group_name   = azurerm_resource_group.main.name
+}
+
+resource "azurerm_role_assignment" "vm-private" {
+  scope                = azurerm_storage_container.private.resource_manager_id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.vm.principal_id
+}
+
+resource "azurerm_role_assignment" "vm-public" {
+  scope                = azurerm_storage_container.public.resource_manager_id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.vm.principal_id
+}
+
+
 resource "azurerm_linux_virtual_machine" "main" {
   count = var.create_vm ? 1 : 0
   name                  = "${var.prefix}-vm"
@@ -106,6 +125,11 @@ resource "azurerm_linux_virtual_machine" "main" {
   custom_data = base64encode(templatefile("./cloudinit.cfg", { vm_username = var.vm_username}))
   disable_password_authentication = true
   network_interface_ids = [azurerm_network_interface.main[0].id]
+
+  identity {
+    type = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.vm.id]
+  }
 
   admin_ssh_key {
     username = var.vm_username
