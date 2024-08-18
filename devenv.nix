@@ -7,9 +7,7 @@
     terraform
     azure-cli
     ruby
-
     glib
-    glibc
     vips
   ];
 
