@@ -1,6 +1,10 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 
 {
+  env = {
+    LD_LIBRARY_PATH = "${config.devenv.profile}/lib";
+  };
+
   packages = with pkgs; [
     git
     libyaml
