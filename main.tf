@@ -100,18 +100,12 @@ resource "azurerm_user_assigned_identity" "vm" {
   resource_group_name   = azurerm_resource_group.main.name
 }
 
-resource "azurerm_role_assignment" "vm-private" {
-  scope                = azurerm_storage_container.private.resource_manager_id
+
+resource "azurerm_role_assignment" "vm" {
+  scope                = azurerm_storage_account.main.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.vm.principal_id
 }
-
-resource "azurerm_role_assignment" "vm-public" {
-  scope                = azurerm_storage_container.public.resource_manager_id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_user_assigned_identity.vm.principal_id
-}
-
 
 resource "azurerm_linux_virtual_machine" "main" {
   count = var.create_vm ? 1 : 0
