@@ -6,13 +6,7 @@ require "rexml/document"
 require_relative "canonicalized_resource"
 
 module AzureBlob
-  #
-  # This implementatio uses Microsoft Entra ID to
-  # - generate the authorisation header
-  #   See https://learn.microsoft.com/en-us/rest/api/storageservices/authorize-with-azure-active-directory
-  # - generate SAS for download and upload URLs
-  #
-  class EntraIdSigner
+  class EntraIdSigner # :nodoc:
     attr_reader :token_provider
     attr_reader :account_name
 
@@ -25,12 +19,6 @@ module AzureBlob
       "Bearer #{token_provider.token}"
     end
 
-    #
-    # Generate a user delegation Shared Access Signature.
-    # See https://learn.microsoft.com/en-us/rest/api/storageservices/create-user-delegation-sas
-    # See https://learn.microsoft.com/en-us/rest/api/storageservices/delegate-access-with-shared-access-signature
-    # See https://learn.microsoft.com/en-us/rest/api/storageservices/get-user-delegation-key
-    #
     def sas_token(uri, options = {})
       # 1. Acquire an OAuth 2.0 token from Microsoft Entra ID.
       # 2. Use the token to request the user delegation key by calling the Get User Delegation Key operation.
@@ -46,8 +34,8 @@ module AzureBlob
       key_expiry = (now + 7.hours).iso8601
 
       content = <<-XML.squish
-        <?xml version="1.0" encoding="utf-8"?>  
-        <KeyInfo>  
+        <?xml version="1.0" encoding="utf-8"?>
+        <KeyInfo>
             <Start>#{key_start}</Start>
             <Expiry>#{key_expiry}</Expiry>
         </KeyInfo>
@@ -74,7 +62,7 @@ module AzureBlob
       signed_service = doc.get_elements("/UserDelegationKey/SignedService").first.get_text.to_s
       signed_version = doc.get_elements("/UserDelegationKey/SignedVersion").first.get_text.to_s
       user_delegation_key = Base64.decode64(doc.get_elements("/UserDelegationKey/Value").first.get_text.to_s)
-      
+
       # :start and :expiry, if present, are already in iso8601 format
       start = options[:start] || now.iso8601
       expiry = options[:expiry] ||  (now + 5.minutes).iso8601
@@ -106,7 +94,7 @@ module AzureBlob
         nil,                           # rscl + "\n" +
         options[:content_type],        # rsct
       ].join("\n")
-      
+
       query = {
         SAS::Fields::Permissions => options[:permissions],
         SAS::Fields::Start => start,
