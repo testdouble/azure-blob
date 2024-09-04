@@ -27,4 +27,8 @@
   scripts.generate-env-file.exec = ''
     terraform output -raw devenv_local_nix > devenv.local.nix
   '';
+
+  scripts.proxy-vps.exec = ''
+    sshuttle -r "$(terraform output --raw vm_username)@$(terraform output --raw vm_ip)" 0/0
+  '';
 }
