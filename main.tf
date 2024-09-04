@@ -116,7 +116,6 @@ resource "azurerm_linux_virtual_machine" "main" {
   size               = var.vm_size
   admin_username = var.vm_username
   admin_password = var.vm_password
-  custom_data = base64encode(templatefile("./cloudinit.cfg", { vm_username = var.vm_username}))
   disable_password_authentication = true
   network_interface_ids = [azurerm_network_interface.main[0].id]
 
