@@ -8,6 +8,11 @@ Minitest::TestTask.create
 
 task default: %i[test]
 
+task :test_entra_id do |t|
+  ENV["AZURE_ACCESS_KEY"] = nil
+  Rake::Task["test"].execute
+end
+
 task :flush_test_container do |t|
   AzureBlob::Client.new(
     account_name: ENV["AZURE_ACCOUNT_NAME"],
