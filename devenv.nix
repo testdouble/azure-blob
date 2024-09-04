@@ -12,6 +12,7 @@
     azure-cli
     glib
     vips
+    sshuttle
   ];
 
   languages.ruby.enable = true;
