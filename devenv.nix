@@ -10,10 +10,12 @@
     libyaml
     terraform
     azure-cli
-    ruby
     glib
     vips
   ];
+
+  languages.ruby.enable = true;
+  languages.ruby.version = "3.2.1";
 
   scripts.sync-vm.exec = ''
     vm_username=$(terraform output --raw "vm_username")

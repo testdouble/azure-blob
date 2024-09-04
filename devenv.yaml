@@ -1,3 +1,4 @@
+allowUnfree: true
 inputs:
   nix2container:
     url: github:nlewo/nix2container
@@ -7,5 +8,6 @@ inputs:
   mk-shell-bin:
     url: github:rrbutani/nix-mk-shell-bin
   nixpkgs:
-    url: github:NixOS/nixpkgs/nixos-23.11
-allowUnfree: true
+    url: github:NixOS/nixpkgs/nixos-24.05
+  nixpkgs-ruby:
+    url: github:bobvanderlinden/nixpkgs-ruby
