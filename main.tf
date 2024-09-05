@@ -145,3 +145,37 @@ resource "azurerm_linux_virtual_machine" "main" {
     source = "Terraform"
   }
 }
+
+
+resource "azurerm_service_plan" "main" {
+  count = var.create_app_service ? 1 : 0
+  name                = "${var.prefix}-appserviceplan"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  os_type             = "Linux"
+  sku_name            = "B1"
+}
+
+
+resource "azurerm_linux_web_app" "main" {
+  count = var.create_app_service ? 1 : 0
+  name                = "${var.prefix}-app"
+  service_plan_id     = azurerm_service_plan.main[0].id
+  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+
+  site_config {
+    application_stack {
+      node_version = "20-lts"
+    }
+  }
+}
+
+resource "azurerm_app_service_source_control" "main" {
+  count = var.create_app_service ? 1 : 0
+  app_id   = azurerm_linux_web_app.main[0].id
+  repo_url           = "https://github.com/Azure-Samples/nodejs-docs-hello-world"
+  branch             = "master"
+  use_manual_integration = true
+  use_mercurial      = false
+}

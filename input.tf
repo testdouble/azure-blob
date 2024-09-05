@@ -33,6 +33,11 @@ variable "vm_password" {
   default = "qwe123QWE!@#"
 }
 
+variable "create_app_service" {
+  type = bool
+  default = false
+}
+
 variable "ssh_key" {
   type = string
   default = ""
