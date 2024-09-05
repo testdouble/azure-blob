@@ -11,6 +11,10 @@ provider "azurerm" {
   features {}
 }
 
+locals {
+  public_ssh_key = var.ssh_key != "" ? var.ssh_key : file("~/.ssh/id_rsa.pub")
+}
+
 resource "azurerm_resource_group" "main" {
   name     = var.prefix
   location = var.location
@@ -126,7 +130,7 @@ resource "azurerm_linux_virtual_machine" "main" {
 
   admin_ssh_key {
     username = var.vm_username
-    public_key = var.ssh_key != "" ? var.ssh_key : file("~/.ssh/id_rsa.pub")
+    public_key = local.public_ssh_key
   }
 
   source_image_reference {
