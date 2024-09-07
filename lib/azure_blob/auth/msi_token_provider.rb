@@ -29,8 +29,8 @@ module AzureBlob
 
       RESOURCE_URI_STORAGE = 'https://storage.azure.com/'
 
-      IMDS_URI = 'http://169.254.169.254/metadata/identity/oauth2/token'
-      IMDS_API_VERSION = '2018-02-01'
+      IMDS_URI = ENV["IDENTITY_ENDPOINT"] || 'http://169.254.169.254/metadata/identity/oauth2/token'
+      IMDS_API_VERSION = ENV["IDENTITY_ENDPOINT"] ? '2019-08-01' : '2018-02-01'
 
       attr_reader :token
       attr_reader :token_expires_on
@@ -64,7 +64,7 @@ module AzureBlob
 
       def get_new_token_from_imds
         # curl 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://storage.azure.com/' -H Metadata:true
-        response = Net::HTTP.get_response(msi_identity_uri, {'Metadata' => 'true'})
+        response = Net::HTTP.get_response(msi_identity_uri, {'Metadata' => 'true', 'X-IDENTITY-HEADER' => ENV['IDENTITY_HEADER']})
 
         # TODO implement some retry strategies as per the documentation.
         # https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-use-vm-token#error-handling
