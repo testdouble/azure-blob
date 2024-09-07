@@ -168,6 +168,11 @@ resource "azurerm_linux_web_app" "main" {
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
 
+  identity {
+    type = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.vm.id]
+  }
+
   site_config {
     application_stack {
       node_version = "20-lts"

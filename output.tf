@@ -19,3 +19,11 @@ output "vm_ip" {
 output "vm_username" {
   value = var.vm_username
 }
+
+output "app_service_app_name" {
+  value = var.create_app_service ? azurerm_linux_web_app.main[0].name : ""
+}
+
+output "resource_group" {
+  value = azurerm_resource_group.main.name
+}

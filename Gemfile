@@ -19,3 +19,8 @@ gem "rails", github: "rails/rails", branch: "main"
 gem "propshaft", ">= 0.1.7"
 gem "image_processing", "~> 1.2"
 gem "sqlite3", ">= 1.6.6"
+
+
+gem "net-ssh"
+gem "ed25519"
+gem "bcrypt_pbkdf"
