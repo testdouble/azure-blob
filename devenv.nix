@@ -31,7 +31,7 @@
   '';
 
   scripts.proxy-vps.exec = ''
-    sshuttle -r "$(terraform output --raw vm_username)@$(terraform output --raw vm_ip)" 0/0
+    sshuttle -e "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -r "$(terraform output --raw vm_username)@$(terraform output --raw vm_ip)" 0/0
   '';
 
   scripts.start-app-service-ssh.exec = ''

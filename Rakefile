@@ -4,15 +4,22 @@ require "bundler/gem_tasks"
 require "minitest/test_task"
 require 'azure_blob'
 require_relative 'test/support/app_service_vpn'
+require_relative 'test/support/azure_vm_vpn'
 
 Minitest::TestTask.create
 
 task default: %i[test]
 
 task :test_app_service do |t|
-  vpn = AppServiceVPN.new(verbose: true)
+  vpn = AppServiceVpn.new
   ENV["IDENTITY_ENDPOINT"] = vpn.endpoint
   ENV["IDENTITY_HEADER"] = vpn.header
+  Rake::Task["test_entra_id"].execute
+  vpn.kill
+end
+
+task :test_azure_vm do |t|
+  vpn = AzureVmVpn.new
   Rake::Task["test_entra_id"].execute
   vpn.kill
 end

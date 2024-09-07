@@ -2,7 +2,7 @@ require 'open3'
 require 'net/ssh'
 require 'shellwords'
 
-class AppServiceVPN
+class AppServiceVpn
   HOST = '127.0.0.1'
 
   attr_reader :header, :endpoint
