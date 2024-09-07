@@ -12,6 +12,11 @@ class AppServiceVPN
     establish_vpn_connection
   end
 
+  def kill
+    Process.kill("KILL", tunnel_wait_thread.pid)
+    Process.kill("KILL", connection_wait_thread.pid)
+  end
+
   private
 
   def establish_vpn_connection
@@ -20,7 +25,7 @@ class AppServiceVPN
 
     puts "Establishing VPN connection..."
 
-    tunnel_stdin, tunnel_stdout, tunnel_wait_thread = Open3.popen2e(["sshuttle", "-e", "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}:#{password}@#{HOST}:#{port}", "0/0"].shelljoin)
+    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e(["sshuttle", "-e", "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}:#{password}@#{HOST}:#{port}", "0/0"].shelljoin)
 
     connection_successful = false
     tunnel_stdout.each do |line|
@@ -37,7 +42,7 @@ class AppServiceVPN
 
   def establish_app_service_tunnel
     puts 'Establishing tunnel connection to app service...'
-    connection_stdin, connection_stdout, connection_wait_thread = Open3.popen2e("start-app-service-ssh")
+    connection_stdin, connection_stdout, @connection_wait_thread = Open3.popen2e("start-app-service-ssh")
 
     port = nil
     username = nil
@@ -78,5 +83,5 @@ class AppServiceVPN
     @header = header
   end
 
-  attr_reader :port, :username, :password, :verbose
+  attr_reader :port, :username, :password, :verbose, :tunnel_wait_thread, :connection_wait_thread
 end

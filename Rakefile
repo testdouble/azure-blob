@@ -14,6 +14,7 @@ task :test_app_service do |t|
   ENV["IDENTITY_ENDPOINT"] = vpn.endpoint
   ENV["IDENTITY_HEADER"] = vpn.header
   Rake::Task["test_entra_id"].execute
+  vpn.kill
 end
 
 task :test_entra_id do |t|
