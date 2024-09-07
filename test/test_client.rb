@@ -12,10 +12,12 @@ class TestClient < TestCase
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
     @container = ENV["AZURE_PRIVATE_CONTAINER"]
+    @principal_id = ENV["AZURE_PRINCIPAL_ID"]
     @client = AzureBlob::Client.new(
       account_name: @account_name,
       access_key: @access_key,
       container: @container,
+      principal_id: @principal_id,
     )
     @key = "test client##{name}"
     @content = "Some random content #{Random.rand(200)}"

@@ -7,6 +7,7 @@ output "devenv_local_nix" {
     AZURE_ACCESS_KEY = "${azurerm_storage_account.main.primary_access_key}";
     AZURE_PRIVATE_CONTAINER = "${azurerm_storage_container.private.name}";
     AZURE_PUBLIC_CONTAINER = "${azurerm_storage_container.public.name}";
+    AZURE_PRINCIPAL_ID = "${azurerm_user_assigned_identity.vm.principal_id}";
   };
 }
 EOT

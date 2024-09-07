@@ -13,7 +13,7 @@ module AzureBlob
   # AzureBlob Client class. You interact with the Azure Blob api
   # through an instance of this class.
   class Client
-    def initialize(account_name:, access_key:, container:)
+    def initialize(account_name:, access_key:, container:, **options)
       @account_name = account_name
       @container = container
 
@@ -21,7 +21,8 @@ module AzureBlob
         AzureBlob::SharedKeySigner.new(account_name:, access_key:) :
         AzureBlob::EntraIdSigner.new(
           AzureBlob::Auth::MsiTokenProvider.new(
-            resource_uri: AzureBlob::Auth::MsiTokenProvider::RESOURCE_URI_STORAGE
+            resource_uri: AzureBlob::Auth::MsiTokenProvider::RESOURCE_URI_STORAGE,
+            **options.slice(:principal_id)
           ),
           account_name:
         )

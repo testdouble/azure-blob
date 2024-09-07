@@ -2,6 +2,7 @@ DEFAULT: &default
   service: AzureBlob
   storage_account_name: <%= ENV["AZURE_ACCOUNT_NAME"] %>
   storage_access_key: <%= ENV["AZURE_ACCESS_KEY"] %>
+  principal_id: <%= ENV["AZURE_PRINCIPAL_ID"]%>
 
 azure:
   <<: *default

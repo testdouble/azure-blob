@@ -38,13 +38,14 @@ module AzureBlob
       attr_reader :expiration_threshold
       attr_reader :msi_identity_uri
 
-      def initialize(resource_uri:, expiration_threshold: 10.minutes)
+      def initialize(resource_uri:, expiration_threshold: 10.minutes, principal_id: nil)
         # TODO Decide if we are going to use the IMDS uri or the localhost URI
         @msi_identity_uri = URI.parse(AzureBlob::Auth::MsiTokenProvider::IMDS_URI)
         params = {
           :'api-version' => AzureBlob::Auth::MsiTokenProvider::IMDS_API_VERSION,
           :resource => resource_uri,
         }
+        params[:principal_id] = principal_id if principal_id
         @msi_identity_uri.query = URI.encode_www_form(params)
         @expiration_threshold = expiration_threshold
       end
