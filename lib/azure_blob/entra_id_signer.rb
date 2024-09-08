@@ -4,14 +4,15 @@ require "net/http"
 require "rexml/document"
 
 require_relative "canonicalized_resource"
+require_relative "msi_token_provider"
 
 module AzureBlob
   class EntraIdSigner # :nodoc:
     attr_reader :token_provider
     attr_reader :account_name
 
-    def initialize(token_provider, account_name:)
-      @token_provider = token_provider
+    def initialize(account_name:, principal_id: nil)
+      @token_provider = AzureBlob::MsiTokenProvider.new(principal_id:)
       @account_name = account_name
     end
 

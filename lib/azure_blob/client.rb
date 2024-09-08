@@ -19,13 +19,7 @@ module AzureBlob
 
       @signer = !access_key.nil? && !access_key.empty?  ?
         AzureBlob::SharedKeySigner.new(account_name:, access_key:) :
-        AzureBlob::EntraIdSigner.new(
-          AzureBlob::Auth::MsiTokenProvider.new(
-            resource_uri: AzureBlob::Auth::MsiTokenProvider::RESOURCE_URI_STORAGE,
-            **options.slice(:principal_id)
-          ),
-          account_name:
-        )
+        AzureBlob::EntraIdSigner.new(account_name:, **options.slice(:principal_id))
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.
