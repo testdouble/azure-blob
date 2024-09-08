@@ -8,6 +8,7 @@ gemspec
 gem "rake"
 
 gem "minitest"
+gem "minitest-fail-fast"
 
 gem "rubocop-rails-omakase"
 

@@ -145,6 +145,8 @@ GEM
     mini_magick (4.12.0)
     mini_mime (1.1.5)
     minitest (5.23.1)
+    minitest-fail-fast (0.1.0)
+      minitest (~> 5)
     net-imap (0.4.11)
       date
       net-protocol
@@ -255,6 +257,7 @@ DEPENDENCIES
   ed25519
   image_processing (~> 1.2)
   minitest
+  minitest-fail-fast
   net-ssh
   propshaft (>= 0.1.7)
   rails!
