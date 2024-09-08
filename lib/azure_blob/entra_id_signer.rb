@@ -23,17 +23,11 @@ module AzureBlob
     end
 
     def sas_token(uri, options = {})
-      delegation_key = UserDelegationKey.new(account_name:, signer: self)
-      now = Time.now.utc
-      start = options[:start] || now.iso8601
-      expiry = options[:expiry] ||  (now + 5.minutes).iso8601
-
-      canonicalized_resource = CanonicalizedResource.new(uri, account_name, url_safe: false, service_name: :blob)
       to_sign = [
         options[:permissions],
-        start,
-        expiry,
-        canonicalized_resource,
+        options[:start],
+        options[:expiry],
+        CanonicalizedResource.new(uri, account_name, url_safe: false, service_name: :blob),
         delegation_key.signed_oid,
         delegation_key.signed_tid,
         delegation_key.signed_start,
@@ -58,8 +52,8 @@ module AzureBlob
 
       query = {
         SAS::Fields::Permissions => options[:permissions],
-        SAS::Fields::Start => start,
-        SAS::Fields::Expiry => expiry,
+        SAS::Fields::Start => options[:start],
+        SAS::Fields::Expiry => options[:expiry],
 
         SAS::Fields::SignedObjectId => delegation_key.signed_oid,
         SAS::Fields::SignedTenantId => delegation_key.signed_tid,
@@ -84,6 +78,10 @@ module AzureBlob
     end
 
     private
+
+    def delegation_key
+      @delegation_key ||= UserDelegationKey.new(account_name:, signer: self)
+    end
 
     def sign(body, key:)
       Base64.strict_encode64(OpenSSL::HMAC.digest("sha256", key, body))
