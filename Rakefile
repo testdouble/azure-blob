@@ -15,12 +15,14 @@ task :test_app_service do |t|
   ENV["IDENTITY_ENDPOINT"] = vpn.endpoint
   ENV["IDENTITY_HEADER"] = vpn.header
   Rake::Task["test_entra_id"].execute
+ensure
   vpn.kill
 end
 
 task :test_azure_vm do |t|
   vpn = AzureVmVpn.new
   Rake::Task["test_entra_id"].execute
+ensure
   vpn.kill
 end
 
