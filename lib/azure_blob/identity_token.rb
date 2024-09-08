@@ -28,7 +28,7 @@ module AzureBlob
     private
 
     def expired?
-      token.nil? || Time.now >= (expiration + EXPIRATION_BUFFER)
+      token.nil? || Time.now >= (expiry + EXPIRATION_BUFFER)
     end
 
     def refresh
@@ -39,9 +39,9 @@ module AzureBlob
       response = JSON.parse(Http.new(identity_uri, headers).get)
 
       @token = response['access_token']
-      @expiration = Time.at(response['expires_on'].to_i)
+      @expiry = Time.at(response['expires_on'].to_i)
     end
 
-    attr_reader :identity_uri, :expiration, :token
+    attr_reader :identity_uri, :expiry, :token
   end
 end
