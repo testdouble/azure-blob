@@ -11,7 +11,7 @@ class AzureVmVpn
   end
 
   def kill
-    Process.kill("KILL", wait_thread.pid)
+    Process.kill("INT", wait_thread.pid)
   end
 
   private

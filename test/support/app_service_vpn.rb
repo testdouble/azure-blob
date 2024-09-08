@@ -13,8 +13,8 @@ class AppServiceVpn
   end
 
   def kill
-    Process.kill("KILL", tunnel_wait_thread.pid)
-    Process.kill("KILL", connection_wait_thread.pid)
+    Process.kill("INT", tunnel_wait_thread.pid)
+    Process.kill("INT", connection_wait_thread.pid)
   end
 
   private
