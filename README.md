@@ -4,7 +4,7 @@ This gem was built to replace azure-storage-blob (deprecated) in Active Storage,
 
 ## Active Storage
 
-## Migration
+### Migration
 To migrate from azure-storage-blob to azure-blob:
 
 1. Replace `azure-storage-blob` in your Gemfile with `azure-blob`
@@ -12,6 +12,29 @@ To migrate from azure-storage-blob to azure-blob:
 3. Change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
 4. Restart or deploy the app.
 
+### Managed Identity (Entra ID)
+
+AzureBlob supports managed identities on :
+- Azure VM
+- App Service
+- Azure Functions (Untested but should work)
+- Azure Containers (Untested but should work)
+
+AKS support will likely require more work. Contributions are welcome.
+
+To authenticate through managed identities instead of a shared key, omit `storage_access_key` from your  `storage.yml` file.
+
+It is recommended to add the role `principal_id` to the config.
+
+ActiveStorage config example:
+
+```
+prod:
+  service: AzureBlob
+  container: container_name
+  storage_account_name: account_name
+  principal_id: 71b34410-4c50-451d-b456-95ead1b18cce
+```
 
 ## Standalone
 
