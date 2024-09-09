@@ -1,13 +1,13 @@
-require 'open3'
-require 'net/ssh'
-require 'shellwords'
+require "open3"
+require "net/ssh"
+require "shellwords"
 
 class AppServiceVpn
-  HOST = '127.0.0.1'
+  HOST = "127.0.0.1"
 
   attr_reader :header, :endpoint
 
-  def initialize verbose: false
+  def initialize(verbose: false)
     @verbose = verbose
     establish_vpn_connection
   end
@@ -25,7 +25,7 @@ class AppServiceVpn
 
     puts "Establishing VPN connection..."
 
-    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e(["sshuttle", "-e", "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}:#{password}@#{HOST}:#{port}", "0/0"].shelljoin)
+    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e([ "sshuttle", "-e", "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}:#{password}@#{HOST}:#{port}", "0/0" ].shelljoin)
 
     connection_successful = false
     tunnel_stdout.each do |line|
@@ -41,7 +41,7 @@ class AppServiceVpn
   end
 
   def establish_app_service_tunnel
-    puts 'Establishing tunnel connection to app service...'
+    puts "Establishing tunnel connection to app service..."
     connection_stdin, connection_stdout, @connection_wait_thread = Open3.popen2e("start-app-service-ssh")
 
     port = nil
@@ -75,8 +75,8 @@ class AppServiceVpn
     endpoint = nil
     header = nil
     Net::SSH.start(HOST, username, password:, port:) do |ssh|
-      endpoint = ssh.exec! ["bash", "-l", "-c", "echo -n $IDENTITY_ENDPOINT"].shelljoin
-      header = ssh.exec! ["bash", "-l", "-c", "echo -n $IDENTITY_HEADER"].shelljoin
+      endpoint = ssh.exec! [ "bash", "-l", "-c", "echo -n $IDENTITY_ENDPOINT" ].shelljoin
+      header = ssh.exec! [ "bash", "-l", "-c", "echo -n $IDENTITY_HEADER" ].shelljoin
     end
     raise "Could not extract MSI endpoint information" unless endpoint && header
     @endpoint = endpoint

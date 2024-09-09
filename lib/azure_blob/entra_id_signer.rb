@@ -6,7 +6,7 @@ require "rexml/document"
 require_relative "canonicalized_resource"
 require_relative "identity_token"
 
-require_relative 'user_delegation_key'
+require_relative "user_delegation_key"
 
 module AzureBlob
   class EntraIdSigner # :nodoc:

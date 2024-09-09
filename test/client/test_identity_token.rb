@@ -12,7 +12,7 @@ class TestIdentityToken < TestCase
     http_mock = Minitest::Mock.new
     now = Time.now
     expiration = now.to_i + 3600 # Expire in 1 hour
-    http_mock.expect :get, JSON.generate({access_token: '123', expires_on: expiration})
+    http_mock.expect :get, JSON.generate({ access_token: "123", expires_on: expiration })
 
     token = nil
     new_token = nil
@@ -24,22 +24,22 @@ class TestIdentityToken < TestCase
         token = identity_token.to_s
       end
 
-      http_mock.expect :get, JSON.generate({access_token: '321', expires_on: expiration})
+      http_mock.expect :get, JSON.generate({ access_token: "321", expires_on: expiration })
 
       Time.stub :now,  Time.at(now.to_i + 1000) do
         new_token = identity_token.to_s
       end
     end
 
-    assert_equal '123', token
-    assert_equal '123', new_token
+    assert_equal "123", token
+    assert_equal "123", new_token
   end
 
   def test_refresh_when_over_expiration_buffer
     http_mock = Minitest::Mock.new
     now = Time.now
     expiration = now.to_i + 3600 # Expire in 1 hour
-    http_mock.expect :get, JSON.generate({access_token: '123', expires_on: expiration})
+    http_mock.expect :get, JSON.generate({ access_token: "123", expires_on: expiration })
 
     token = nil
     new_token = nil
@@ -51,32 +51,31 @@ class TestIdentityToken < TestCase
         token = identity_token.to_s
       end
 
-      http_mock.expect :get, JSON.generate({access_token: '321', expires_on: expiration})
+      http_mock.expect :get, JSON.generate({ access_token: "321", expires_on: expiration })
 
       Time.stub :now,  Time.at(expiration - 10) do
         new_token = identity_token.to_s
       end
     end
 
-    assert_equal '123', token
-    assert_equal '321', new_token
+    assert_equal "123", token
+    assert_equal "321", new_token
   end
 
   def test_exponential_backoff
-    #https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-use-vm-token#error-handling
+    # https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-use-vm-token#error-handling
     http_mock = Minitest::Mock.new
     def http_mock.get; raise AzureBlob::Http::Error.new(status: 404) end
     slept = []
-    sleep_lambda = ->(time){ slept << time}
+    sleep_lambda = ->(time) { slept << time }
     AzureBlob::Http.stub :new, http_mock do
       Kernel.stub :sleep, sleep_lambda do
-
         @identity_token = AzureBlob::IdentityToken.new(principal_id: @principal_id)
-        assert_raises(AzureBlob::Http::Error){ identity_token.to_s }
+        assert_raises(AzureBlob::Http::Error) { identity_token.to_s }
       end
     end
 
-    assert_equal [2,6,14,30], slept
+    assert_equal [ 2, 6, 14, 30 ], slept
   end
 
 
@@ -94,12 +93,11 @@ class TestIdentityToken < TestCase
     end
     AzureBlob::Http.stub :new, http_mock do
       Kernel.stub :sleep, sleep_lambda do
-
         @identity_token = AzureBlob::IdentityToken.new(principal_id: @principal_id)
-        assert_raises(AzureBlob::Http::Error){ identity_token.to_s }
+        assert_raises(AzureBlob::Http::Error) { identity_token.to_s }
       end
     end
 
-    assert_equal [2, 2, 2, 2, 6, 14, 30], slept
+    assert_equal [ 2, 2, 2, 2, 6, 14, 30 ], slept
   end
 end

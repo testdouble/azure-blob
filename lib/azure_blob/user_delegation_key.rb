@@ -1,4 +1,4 @@
-require_relative 'http'
+require_relative "http"
 
 module AzureBlob
   class UserDelegationKey # :nodoc:

@@ -7,13 +7,13 @@ require_relative 'test/support/app_service_vpn'
 require_relative 'test/support/azure_vm_vpn'
 
 Minitest::TestTask.create(:test_rails) do
-  self.test_globs = ["test/rails/**/test_*.rb",
-                     "test/rails/**/*_test.rb"]
+  self.test_globs = [ "test/rails/**/test_*.rb",
+                     "test/rails/**/*_test.rb", ]
 end
 
 Minitest::TestTask.create(:test_client) do
-  self.test_globs = ["test/client/**/test_*.rb",
-                     "test/client/**/*_test.rb"]
+  self.test_globs = [ "test/client/**/test_*.rb",
+                     "test/client/**/*_test.rb", ]
 end
 
 task default: %i[test]

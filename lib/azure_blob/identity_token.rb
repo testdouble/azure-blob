@@ -2,12 +2,11 @@ require "json"
 
 module AzureBlob
   class IdentityToken
-
-    RESOURCE_URI = 'https://storage.azure.com/'
+    RESOURCE_URI = "https://storage.azure.com/"
     EXPIRATION_BUFFER = 600 # 10 minutes
 
-    IDENTITY_ENDPOINT = ENV["IDENTITY_ENDPOINT"] || 'http://169.254.169.254/metadata/identity/oauth2/token'
-    API_VERSION = ENV["IDENTITY_ENDPOINT"] ? '2019-08-01' : '2018-02-01'
+    IDENTITY_ENDPOINT = ENV["IDENTITY_ENDPOINT"] || "http://169.254.169.254/metadata/identity/oauth2/token"
+    API_VERSION = ENV["IDENTITY_ENDPOINT"] ? "2019-08-01" : "2018-02-01"
 
     def initialize(principal_id: nil)
       @identity_uri = URI.parse(IDENTITY_ENDPOINT)
@@ -31,8 +30,8 @@ module AzureBlob
     end
 
     def refresh
-      headers =  {'Metadata' => 'true'}
-      headers['X-IDENTITY-HEADER'] = ENV['IDENTITY_HEADER'] if ENV['IDENTITY_HEADER']
+      headers =  { "Metadata" => "true" }
+      headers["X-IDENTITY-HEADER"] = ENV["IDENTITY_HEADER"] if ENV["IDENTITY_HEADER"]
 
       attempt = 0
       begin
@@ -47,20 +46,20 @@ module AzureBlob
         end
         raise
       end
-      @token = response['access_token']
-      @expiration = Time.at(response['expires_on'].to_i)
+      @token = response["access_token"]
+      @expiration = Time.at(response["expires_on"].to_i)
     end
 
 
     def should_retry?(error, attempt)
       is_500 = error.status/500 == 1
-      (is_500 || [404, 408, 410, 429 ].include?(error.status)) && attempt < 5
+      (is_500 || [ 404, 408, 410, 429 ].include?(error.status)) && attempt < 5
     end
 
     def exponential_backoff(error, attempt)
       EXPONENTIAL_BACKOFF[attempt -1] || raise(AzureBlob::Error.new("Exponential backoff out of bounds!"))
     end
-    EXPONENTIAL_BACKOFF = [2, 6, 14, 30]
+    EXPONENTIAL_BACKOFF = [ 2, 6, 14, 30 ]
 
     attr_reader :identity_uri, :expiration, :token
   end

@@ -9,7 +9,7 @@ module AzureBlob
   class Http # :nodoc:
     class Error < AzureBlob::Error
       attr_reader :body, :status
-      def initialize body: nil, status: nil
+      def initialize(body: nil, status: nil)
         @body = body
         @status = status
         super(body)
