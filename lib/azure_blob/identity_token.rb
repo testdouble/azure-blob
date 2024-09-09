@@ -28,7 +28,7 @@ module AzureBlob
     private
 
     def expired?
-      token.nil? || Time.now >= (expiry + EXPIRATION_BUFFER)
+      token.nil? || Time.now >= (expiration - EXPIRATION_BUFFER)
     end
 
     def refresh
