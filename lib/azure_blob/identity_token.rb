@@ -1,4 +1,3 @@
-require "net/http"
 require "json"
 
 module AzureBlob
@@ -36,12 +35,12 @@ module AzureBlob
       headers['X-IDENTITY-HEADER'] = ENV['IDENTITY_HEADER'] if ENV['IDENTITY_HEADER']
       # TODO implement some retry strategies as per the documentation.
       # https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-use-vm-token#error-handling
-      response = JSON.parse(Http.new(identity_uri, headers).get)
+      response = JSON.parse(AzureBlob::Http.new(identity_uri, headers).get)
 
       @token = response['access_token']
-      @expiry = Time.at(response['expires_on'].to_i)
+      @expiration = Time.at(response['expires_on'].to_i)
     end
 
-    attr_reader :identity_uri, :expiry, :token
+    attr_reader :identity_uri, :expiration, :token
   end
 end

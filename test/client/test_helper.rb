@@ -13,4 +13,8 @@ class TestCase < Minitest::Test
       assert received.include?(element)
     end
   end
+
+  def using_shared_key
+    !(ENV["AZURE_ACCESS_KEY"].nil? || ENV["AZURE_ACCESS_KEY"].empty?)
+  end
 end
