@@ -75,8 +75,8 @@ class AppServiceVpn
     endpoint = nil
     header = nil
     Net::SSH.start(HOST, username, password:, port:) do |ssh|
-      endpoint = ssh.exec! [ "bash", "-l", "-c", "echo -n $IDENTITY_ENDPOINT" ].shelljoin
-      header = ssh.exec! [ "bash", "-l", "-c", "echo -n $IDENTITY_HEADER" ].shelljoin
+      endpoint = ssh.exec! [ "bash", "-l", "-c", %(printf "%s" "$IDENTITY_ENDPOINT") ].shelljoin
+      header = ssh.exec! [ "bash", "-l", "-c", %(printf "%s" "$IDENTITY_HEADER") ].shelljoin
     end
     raise "Could not extract MSI endpoint information" unless endpoint && header
     @endpoint = endpoint
