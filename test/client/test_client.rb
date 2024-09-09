@@ -28,6 +28,10 @@ class TestClient < TestCase
   rescue AzureBlob::Http::FileNotFoundError
   end
 
+  def test_rails_is_not_loaded
+    assert_raises(NoMethodError) { 10.minutes }
+  end
+
   def test_single_block_upload
     client.create_block_blob(key, content)
 
