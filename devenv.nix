@@ -18,7 +18,7 @@
   ];
 
   languages.ruby.enable = true;
-  languages.ruby.version = "3.2.1";
+  languages.ruby.version = "3.1.6";
 
   scripts.sync-vm.exec = ''
     vm_username=$(terraform output --raw "vm_username")
