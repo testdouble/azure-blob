@@ -33,13 +33,34 @@ module AzureBlob
     def refresh
       headers =  {'Metadata' => 'true'}
       headers['X-IDENTITY-HEADER'] = ENV['IDENTITY_HEADER'] if ENV['IDENTITY_HEADER']
-      # TODO implement some retry strategies as per the documentation.
-      # https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-use-vm-token#error-handling
-      response = JSON.parse(AzureBlob::Http.new(identity_uri, headers).get)
 
+      attempt = 0
+      begin
+        attempt += 1
+        response = JSON.parse(AzureBlob::Http.new(identity_uri, headers).get)
+      rescue AzureBlob::Http::Error => error
+        if should_retry?(error, attempt)
+          attempt = 1 if error.status == 410
+          delay = exponential_backoff(error, attempt)
+          Kernel.sleep(delay)
+          retry
+        end
+        raise
+      end
       @token = response['access_token']
       @expiration = Time.at(response['expires_on'].to_i)
     end
+
+
+    def should_retry?(error, attempt)
+      is_500 = error.status/500 == 1
+      (is_500 || [404, 408, 410, 429 ].include?(error.status)) && attempt < 5
+    end
+
+    def exponential_backoff(error, attempt)
+      EXPONENTIAL_BACKOFF[attempt -1] || raise(AzureBlob::Error.new("Exponential backoff out of bounds!"))
+    end
+    EXPONENTIAL_BACKOFF = [2, 6, 14, 30]
 
     attr_reader :identity_uri, :expiration, :token
   end

@@ -61,4 +61,45 @@ class TestIdentityToken < TestCase
     assert_equal '123', token
     assert_equal '321', new_token
   end
+
+  def test_exponential_backoff
+    #https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-use-vm-token#error-handling
+    http_mock = Minitest::Mock.new
+    def http_mock.get; raise AzureBlob::Http::Error.new(status: 404) end
+    slept = []
+    sleep_lambda = ->(time){ slept << time}
+    AzureBlob::Http.stub :new, http_mock do
+      Kernel.stub :sleep, sleep_lambda do
+
+        @identity_token = AzureBlob::IdentityToken.new(principal_id: @principal_id)
+        assert_raises(AzureBlob::Http::Error){ identity_token.to_s }
+      end
+    end
+
+    assert_equal [2,6,14,30], slept
+  end
+
+
+  def test_410_retry
+    http_mock = Minitest::Mock.new
+    def http_mock.get; raise AzureBlob::Http::Error.new(status: 410) end
+    attempt = 0
+    slept = []
+    sleep_lambda = ->(time) do
+      attempt += 1
+      slept << time
+      if attempt > 3
+        def http_mock.get; raise AzureBlob::Http::Error.new(status: 404) end
+      end
+    end
+    AzureBlob::Http.stub :new, http_mock do
+      Kernel.stub :sleep, sleep_lambda do
+
+        @identity_token = AzureBlob::IdentityToken.new(principal_id: @principal_id)
+        assert_raises(AzureBlob::Http::Error){ identity_token.to_s }
+      end
+    end
+
+    assert_equal [2, 2, 2, 2, 6, 14, 30], slept
+  end
 end

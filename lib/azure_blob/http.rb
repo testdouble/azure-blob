@@ -7,7 +7,14 @@ require "rexml"
 
 module AzureBlob
   class Http # :nodoc:
-    class Error < AzureBlob::Error; end
+    class Error < AzureBlob::Error
+      attr_reader :body, :status
+      def initialize body: nil, status: nil
+        @body = body
+        @status = status
+        super(body)
+      end
+    end
     class FileNotFoundError < Error; end
     class ForbidenError < Error; end
     class IntegrityError < Error; end
@@ -100,7 +107,7 @@ module AzureBlob
     end
 
     def raise_error
-      raise error_from_response.new(@response.body)
+      raise error_from_response.new(body: @response.body, status: @response.code&.to_i)
     end
 
     def status

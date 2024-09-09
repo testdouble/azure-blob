@@ -5,7 +5,6 @@ module AzureBlob
     EXPIRATION = 25200 # 7 hours
     EXPIRATION_BUFFER = 3600 # 1 hours
     def initialize(account_name:, signer:)
-      # TODO: reuse the same key if not expired
       @uri = URI.parse(
         "https://#{account_name}.blob.core.windows.net/?restype=service&comp=userdelegationkey"
       )
