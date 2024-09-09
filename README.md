@@ -24,7 +24,7 @@ AKS support will likely require more work. Contributions are welcome.
 
 To authenticate through managed identities instead of a shared key, omit `storage_access_key` from your  `storage.yml` file.
 
-It is recommended to add the role `principal_id` to the config.
+It is recommended to add the identity `principal_id` to the config.
 
 ActiveStorage config example:
 
