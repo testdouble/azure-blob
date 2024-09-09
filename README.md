@@ -87,17 +87,15 @@ create_vm = true
 ```
 and re-apply terraform: `terraform apply -var-file=var.tfvars`.
 
-This will create the VPS and required roles.
+This will create the VPS and required managed identities.
 
-Use `proxy-vps` to proxy all network requests through the vps with sshuttle. sshuttle will likely ask for a sudo password.
+`bin/rake test_azure_vm` and `bin/rake test_app_service` will establish a VPN connection to the VM or App service container and run the test suite. You might be prompted for a sudo password when the VPN starts (sshuttle).
 
-Then use `bin/rake test_entra_id` to run the tests with Entra ID.
-
-After you are done, running terraform again without the var file (`terraform apply`) it should destroy the VPS.
+After you are done, run terraform again without the var file (`terraform apply`) to destroy the VPS and App service application.
 
 #### Cleanup
 
-Some test copied over from Rails codebase don't clean after themselves. A rake task is provided to empty your containers and keep cost low: `bin/rake flush_test_container`
+Some tests copied over from Rails don't clean after themselves. A rake task is provided to empty your containers and keep cost low: `bin/rake flush_test_container`
 
 #### Run without devenv/nix
 
