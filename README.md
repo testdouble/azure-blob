@@ -72,7 +72,7 @@ A dev environment is supplied through Nix with [devenv](https://devenv.sh/).
 3. Log into azure CLI with `az login`
 4. `terraform init`
 5. `terraform apply` This will generate the necessary infrastructure on azure.
-6. Generate devenv.local.nix with your private key and container information: `terraform output -raw devenv_local_nix > devenv.local.nix`
+6. Generate devenv.local.nix with your private key and container information: `generate-env-file`
 7. If you are using direnv, the environment will reload automatically. If not, exit the shell and reopen it by hitting <C-d> and running `devenv shell` again.
 
 #### Entra ID
