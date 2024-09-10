@@ -2,9 +2,9 @@
 
 require "bundler/gem_tasks"
 require "minitest/test_task"
-require 'azure_blob'
-require_relative 'test/support/app_service_vpn'
-require_relative 'test/support/azure_vm_vpn'
+require "azure_blob"
+require_relative "test/support/app_service_vpn"
+require_relative "test/support/azure_vm_vpn"
 
 Minitest::TestTask.create(:test_rails) do
   self.test_globs = [ "test/rails/**/test_*.rb",
@@ -49,10 +49,10 @@ task :flush_test_container do |t|
     account_name: ENV["AZURE_ACCOUNT_NAME"],
     access_key: ENV["AZURE_ACCESS_KEY"],
     container: ENV["AZURE_PRIVATE_CONTAINER"],
-  ).delete_prefix ''
+  ).delete_prefix ""
   AzureBlob::Client.new(
     account_name: ENV["AZURE_ACCOUNT_NAME"],
     access_key: ENV["AZURE_ACCESS_KEY"],
     container: ENV["AZURE_PUBLIC_CONTAINER"],
-  ).delete_prefix ''
+  ).delete_prefix ""
 end
