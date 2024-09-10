@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.5.0] 2024-09-09
+
+- Added support for Managed Identities (Entra ID)
+
 ## [0.4.2] 2024-06-06
 
 - Documentation
