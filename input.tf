@@ -14,31 +14,31 @@ variable "storage_account_name" {
 }
 
 variable "create_vm" {
-  type = bool
+  type    = bool
   default = false
 }
 
 variable "vm_size" {
-  type = string
+  type    = string
   default = "Standard_B2s"
 }
 
 variable "vm_username" {
-  type = string
+  type    = string
   default = "azureblob"
 }
 
 variable "vm_password" {
-  type = string
+  type    = string
   default = "qwe123QWE!@#"
 }
 
 variable "create_app_service" {
-  type = bool
+  type    = bool
   default = false
 }
 
 variable "ssh_key" {
-  type = string
+  type    = string
   default = ""
 }

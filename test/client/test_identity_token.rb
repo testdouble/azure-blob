@@ -17,7 +17,6 @@ class TestIdentityToken < TestCase
     token = nil
     new_token = nil
 
-
     AzureBlob::Http.stub :new, http_mock do
       @identity_token = AzureBlob::IdentityToken.new(principal_id: @principal_id)
       Time.stub :now, Time.now do
@@ -43,7 +42,6 @@ class TestIdentityToken < TestCase
 
     token = nil
     new_token = nil
-
 
     AzureBlob::Http.stub :new, http_mock do
       @identity_token = AzureBlob::IdentityToken.new(principal_id: @principal_id)

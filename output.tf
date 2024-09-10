@@ -1,6 +1,6 @@
 output "devenv_local_nix" {
   sensitive = true
-  value = <<EOT
+  value     = <<EOT
 {pkgs, lib, ...}:{
   env = {
     AZURE_ACCOUNT_NAME = "${azurerm_storage_account.main.name}";

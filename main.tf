@@ -47,9 +47,8 @@ resource "azurerm_storage_container" "public" {
   container_access_type = "blob"
 }
 
-
 resource "azurerm_virtual_network" "main" {
-  count = var.create_vm ? 1 : 0
+  count               = var.create_vm ? 1 : 0
   name                = "${var.prefix}-network"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.main.location
@@ -61,7 +60,7 @@ resource "azurerm_virtual_network" "main" {
 }
 
 resource "azurerm_subnet" "main" {
-  count = var.create_vm ? 1 : 0
+  count                = var.create_vm ? 1 : 0
   name                 = "${var.prefix}-main"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main[0].name
@@ -69,7 +68,7 @@ resource "azurerm_subnet" "main" {
 }
 
 resource "azurerm_network_interface" "main" {
-  count = var.create_vm ? 1 : 0
+  count               = var.create_vm ? 1 : 0
   name                = "${var.prefix}-nic"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
@@ -78,7 +77,7 @@ resource "azurerm_network_interface" "main" {
     name                          = "${var.prefix}-ip-config"
     subnet_id                     = azurerm_subnet.main[0].id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id = azurerm_public_ip.main[0].id
+    public_ip_address_id          = azurerm_public_ip.main[0].id
   }
 
   tags = {
@@ -87,7 +86,7 @@ resource "azurerm_network_interface" "main" {
 }
 
 resource "azurerm_public_ip" "main" {
-  count = var.create_vm ? 1 : 0
+  count               = var.create_vm ? 1 : 0
   name                = "${var.prefix}-public-ip"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
@@ -99,9 +98,9 @@ resource "azurerm_public_ip" "main" {
 }
 
 resource "azurerm_user_assigned_identity" "vm" {
-  location              = azurerm_resource_group.main.location
-  name                  = "${var.prefix}-vm"
-  resource_group_name   = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.main.location
+  name                = "${var.prefix}-vm"
+  resource_group_name = azurerm_resource_group.main.name
 }
 
 
@@ -112,24 +111,24 @@ resource "azurerm_role_assignment" "vm" {
 }
 
 resource "azurerm_linux_virtual_machine" "main" {
-  count = var.create_vm ? 1 : 0
-  name                  = "${var.prefix}-vm"
-  computer_name  = var.prefix
-  resource_group_name   = azurerm_resource_group.main.name
-  location              = azurerm_resource_group.main.location
-  size               = var.vm_size
-  admin_username = var.vm_username
-  admin_password = var.vm_password
+  count                           = var.create_vm ? 1 : 0
+  name                            = "${var.prefix}-vm"
+  computer_name                   = var.prefix
+  resource_group_name             = azurerm_resource_group.main.name
+  location                        = azurerm_resource_group.main.location
+  size                            = var.vm_size
+  admin_username                  = var.vm_username
+  admin_password                  = var.vm_password
   disable_password_authentication = true
-  network_interface_ids = [azurerm_network_interface.main[0].id]
+  network_interface_ids           = [azurerm_network_interface.main[0].id]
 
   identity {
-    type = "UserAssigned"
+    type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.vm.id]
   }
 
   admin_ssh_key {
-    username = var.vm_username
+    username   = var.vm_username
     public_key = local.public_ssh_key
   }
 
@@ -150,9 +149,8 @@ resource "azurerm_linux_virtual_machine" "main" {
   }
 }
 
-
 resource "azurerm_service_plan" "main" {
-  count = var.create_app_service ? 1 : 0
+  count               = var.create_app_service ? 1 : 0
   name                = "${var.prefix}-appserviceplan"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
@@ -160,16 +158,15 @@ resource "azurerm_service_plan" "main" {
   sku_name            = "B1"
 }
 
-
 resource "azurerm_linux_web_app" "main" {
-  count = var.create_app_service ? 1 : 0
+  count               = var.create_app_service ? 1 : 0
   name                = "${var.prefix}-app"
   service_plan_id     = azurerm_service_plan.main[0].id
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
 
   identity {
-    type = "UserAssigned"
+    type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.vm.id]
   }
 
@@ -181,10 +178,10 @@ resource "azurerm_linux_web_app" "main" {
 }
 
 resource "azurerm_app_service_source_control" "main" {
-  count = var.create_app_service ? 1 : 0
-  app_id   = azurerm_linux_web_app.main[0].id
-  repo_url           = "https://github.com/Azure-Samples/nodejs-docs-hello-world"
-  branch             = "master"
+  count                  = var.create_app_service ? 1 : 0
+  app_id                 = azurerm_linux_web_app.main[0].id
+  repo_url               = "https://github.com/Azure-Samples/nodejs-docs-hello-world"
+  branch                 = "master"
   use_manual_integration = true
-  use_mercurial      = false
+  use_mercurial          = false
 }
