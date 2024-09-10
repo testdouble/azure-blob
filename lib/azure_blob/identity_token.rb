@@ -50,7 +50,6 @@ module AzureBlob
       @expiration = Time.at(response["expires_on"].to_i)
     end
 
-
     def should_retry?(error, attempt)
       is_500 = error.status/500 == 1
       (is_500 || [ 404, 408, 410, 429 ].include?(error.status)) && attempt < 5
