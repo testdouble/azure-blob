@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.5.1] 2024-09-09
+
+- Remove dev files from the release
+
 ## [0.5.0] 2024-09-09
 
 - Added support for Managed Identities (Entra ID)
