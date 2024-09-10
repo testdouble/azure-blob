@@ -12,6 +12,16 @@ To migrate from azure-storage-blob to azure-blob:
 3. Change the `AzureStorage` service to `AzureBlob`  in your Active Storage config (`config/storage.yml`)
 4. Restart or deploy the app.
 
+Example config:
+
+```
+microsoft:
+  service: AzureBlob
+  storage_account_name: account_name
+  storage_access_key: SECRET_KEY
+  container: container_name
+```
+
 ### Managed Identity (Entra ID)
 
 AzureBlob supports managed identities on :
