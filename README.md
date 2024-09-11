@@ -1,6 +1,8 @@
 # AzureBlob
 
-This gem was built to replace azure-storage-blob (deprecated) in Active Storage, but was written to be Rails agnostic.
+Azure Blob client and Active Storage adapter to replace the now abandoned azure-storage-blob
+
+An Active Storage is supplied, but the gem is Rails agnostic and can be used in any Ruby project.
 
 ## Active Storage
 
