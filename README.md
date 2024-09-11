@@ -91,11 +91,12 @@ A dev environment is supplied through Nix with [devenv](https://devenv.sh/).
 
 To test with Entra ID, the `AZURE_ACCESS_KEY` environment variable must be unset and the code must be ran or proxied through a VPS with the proper roles.
 
-For cost saving, the terraform variable `create_vm` is false by default.
-To create the VPS, Create a var file `var.tfvars` containing:
+For cost saving, the terraform variable `create_vm` and `create_app_service` are false by default.
+To create the VPS and App service, Create a var file `var.tfvars` containing:
 
 ```
 create_vm = true
+create_app_service = true
 ```
 and re-apply terraform: `terraform apply -var-file=var.tfvars`.
 
