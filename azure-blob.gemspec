@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = [ "Joé Dupuis" ]
   spec.email = [ "joe@dupuis.io" ]
 
-  spec.summary = "Azure blob client"
+  spec.summary = "Azure Blob client and Active Storage adapter"
   spec.homepage = "https://github.com/testdouble/azure-blob"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1"
