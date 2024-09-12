@@ -21,7 +21,8 @@ module AzureBlob
 
     include REXML
 
-    def initialize(uri, headers = {}, signer: nil, metadata: {}, debug: false)
+    def initialize(uri, headers = {}, signer: nil, metadata: {}, debug: false, raise_on_error: true)
+      @raise_on_error = raise_on_error
       @date = Time.now.httpdate
       @uri = uri
       @signer = signer
@@ -107,6 +108,7 @@ module AzureBlob
     end
 
     def raise_error
+      return unless raise_on_error
       raise error_from_response.new(body: @response.body, status: @response.code&.to_i)
     end
 
@@ -122,6 +124,6 @@ module AzureBlob
       ERROR_MAPPINGS[status] || ERROR_CODE_MAPPINGS[azure_error_code] || Error
     end
 
-    attr_accessor :host, :http, :signer, :response, :headers, :uri, :date
+    attr_accessor :host, :http, :signer, :response, :headers, :uri, :date, :raise_on_error
   end
 end
