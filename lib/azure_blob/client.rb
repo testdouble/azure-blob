@@ -139,7 +139,7 @@ module AzureBlob
     #
     # Calls to {Get Blob Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob-properties]
     #
-    # This can be used to see if the blob exist or obtain metada such as content type, disposition, checksum or Azure custom metadata.
+    # This can be used to see if the blob exist or obtain metadata such as content type, disposition, checksum or Azure custom metadata.
     def get_blob_properties(key, options = {})
       uri = generate_uri("#{container}/#{key}")
 
