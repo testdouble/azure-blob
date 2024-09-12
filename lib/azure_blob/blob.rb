@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module AzureBlob
-  # AzureBlob::Blob holds the metada for a given Blob.
+  # AzureBlob::Blob holds the metadata for a given Blob.
   class Blob
     # You should not instanciate this object directly,
     # but obtain one when calling relevant methods of AzureBlob::Client.
@@ -32,7 +32,7 @@ module AzureBlob
       response.code == "200"
     end
 
-    # Returns the custom Azure metada tagged on the blob.
+    # Returns the custom Azure metadata tagged on the blob.
     def metadata
       @metadata || response
         .to_hash
