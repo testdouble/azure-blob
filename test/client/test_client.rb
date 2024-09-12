@@ -285,4 +285,18 @@ class TestClient < TestCase
     response = Net::HTTP.get_response(uri)
     assert_equal "another type", response["Content-Type"]
   end
+
+  def test_get_container_properties
+    container = client.get_container_properties
+    assert container.present?
+
+    client = AzureBlob::Client.new(
+      account_name: @account_name,
+      access_key: @access_key,
+      container: "missingcontainer",
+      principal_id: @principal_id,
+    )
+    container = client.get_container_properties
+    refute container.present?
+  end
 end

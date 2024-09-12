@@ -3,6 +3,7 @@
 require_relative "block_list"
 require_relative "blob_list"
 require_relative "blob"
+require_relative "container"
 require_relative "http"
 require_relative "shared_key_signer"
 require_relative "entra_id_signer"
@@ -145,6 +146,14 @@ module AzureBlob
       response = Http.new(uri, signer:).head
 
       Blob.new(response)
+    end
+
+    def get_container_properties(options = {})
+      uri = generate_uri(container)
+      uri.query = URI.encode_www_form(restype: 'container')
+      response = Http.new(uri, signer:, raise_on_error: false).head
+
+      Container.new(response)
     end
 
     # Return a URI object to a resource in the container. Takes a path.
