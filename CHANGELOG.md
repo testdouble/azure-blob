@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Add get_container_properties
+
 ## [0.5.1] 2024-09-09
 
 - Remove dev files from the release

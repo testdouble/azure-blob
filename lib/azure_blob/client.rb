@@ -148,6 +148,11 @@ module AzureBlob
       Blob.new(response)
     end
 
+    # Returns a Container object.
+    #
+    # Calls to {Get Container Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-container-properties]
+    #
+    # This can be used to see if the container exist or obtain metadata.
     def get_container_properties(options = {})
       uri = generate_uri(container)
       uri.query = URI.encode_www_form(restype: 'container')
