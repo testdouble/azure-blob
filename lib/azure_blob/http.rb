@@ -117,7 +117,7 @@ module AzureBlob
     end
 
     def azure_error_code
-      Document.new(response.body).get_elements("//Error/Code").first.get_text.to_s
+      Document.new(response.body).get_elements("//Error/Code").first.get_text.to_s if response.body
     end
 
     def error_from_response
