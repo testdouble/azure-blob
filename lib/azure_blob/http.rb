@@ -43,7 +43,7 @@ module AzureBlob
       response.body
     end
 
-    def put(content)
+    def put(content = "")
       sign_request("PUT") if signer
       @response = http.start do |http|
         http.put(uri, content, headers)
@@ -52,7 +52,7 @@ module AzureBlob
       true
     end
 
-    def post(content)
+    def post(content = "")
       sign_request("POST") if signer
       @response = http.start do |http|
         http.post(uri, content, headers)
