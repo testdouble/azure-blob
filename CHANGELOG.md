@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+
+## [0.5.2] 2024-09-12
+
 - Add get_container_properties
 - Add create_container
 - Add delete_container
