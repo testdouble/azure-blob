@@ -12,6 +12,7 @@ module AzureBlob
   class EntraIdSigner # :nodoc:
     attr_reader :token
     attr_reader :account_name
+    attr_reader :host
 
     def initialize(account_name:, host:, principal_id: nil)
       @token = AzureBlob::IdentityToken.new(principal_id:)
