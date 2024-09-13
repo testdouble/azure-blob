@@ -161,6 +161,24 @@ module AzureBlob
       Container.new(response)
     end
 
+    # Create the container
+    #
+    # Calls to {Create Container}[https://learn.microsoft.com/en-us/rest/api/storageservices/create-container]
+    def create_container(options = {})
+      uri = generate_uri(container)
+      uri.query = URI.encode_www_form(restype: 'container')
+      response = Http.new(uri, signer:).put
+    end
+
+    # Delete the container
+    #
+    # Calls to {Delete Container}[https://learn.microsoft.com/en-us/rest/api/storageservices/delete-container]
+    def delete_container(options = {})
+      uri = generate_uri(container)
+      uri.query = URI.encode_www_form(restype: 'container')
+      response = Http.new(uri, signer:).delete
+    end
+
     # Return a URI object to a resource in the container. Takes a path.
     #
     # Example: +generate_uri("#{container}/#{key}")+

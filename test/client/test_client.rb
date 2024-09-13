@@ -299,4 +299,23 @@ class TestClient < TestCase
     container = client.get_container_properties
     refute container.present?
   end
+
+  def test_create_container
+    client = AzureBlob::Client.new(
+      account_name: @account_name,
+      access_key: @access_key,
+      container: Random.alphanumeric(20).tr("0-9", "").downcase,
+      principal_id: @principal_id,
+    )
+    container = client.get_container_properties
+    refute container.present?
+
+    client.create_container
+    container = client.get_container_properties
+    assert container.present?
+
+    client.delete_container
+    container = client.get_container_properties
+    refute container.present?
+  end
 end
