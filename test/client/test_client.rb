@@ -32,6 +32,38 @@ class TestClient < TestCase
     assert_raises(NoMethodError) { 10.minutes }
   end
 
+  def test_without_credentials
+    assert_raises(AzureBlob::Error) do
+      AzureBlob::Client.new(
+        account_name: @account_name,
+        container: @container,
+      )
+    end
+
+    assert_raises(AzureBlob::Error) do
+      AzureBlob::Client.new(
+        access_key: "",
+        account_name: @account_name,
+        container: @container,
+      )
+    end
+
+    AzureBlob::Client.new(
+      access_key: "",
+      use_managed_identities: true,
+      account_name: @account_name,
+      container: @container,
+    )
+
+
+    AzureBlob::Client.new(
+      access_key: "",
+      principal_id: "123",
+      account_name: @account_name,
+      container: @container,
+    )
+  end
+
   def test_single_block_upload
     client.create_block_blob(key, content)
 

@@ -14,14 +14,22 @@ module AzureBlob
   # AzureBlob Client class. You interact with the Azure Blob api
   # through an instance of this class.
   class Client
-    def initialize(account_name:, access_key:, container:, **options)
+    def initialize(account_name:, access_key: nil, principal_id: nil, container:, **options)
       @account_name = account_name
       @container = container
       @cloud_regions = options[:cloud_regions]&.to_sym || :global
 
-      @signer = !access_key.nil? && !access_key.empty?  ?
-        AzureBlob::SharedKeySigner.new(account_name:, access_key:) :
-        AzureBlob::EntraIdSigner.new(account_name:, host:, **options.slice(:principal_id))
+      no_access_key = access_key.nil? || access_key&.empty?
+      using_managed_identities = no_access_key && !principal_id.nil? || options[:use_managed_identities]
+
+      if !using_managed_identities && no_access_key
+        raise AzureBlob::Error.new(
+          "`access_key` cannot be empty. To use managed identities instead, pass a `principal_id` or set `use_managed_identities` to true."
+        )
+      end
+      @signer = using_managed_identities ?
+        AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id: ) :
+        AzureBlob::SharedKeySigner.new(account_name:, access_key:)
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.

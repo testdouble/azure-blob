@@ -34,9 +34,7 @@ AzureBlob supports managed identities on :
 
 AKS support will likely require more work. Contributions are welcome.
 
-To authenticate through managed identities instead of a shared key, omit `storage_access_key` from your `storage.yml` file.
-
-It is recommended to add the identity's `principal_id` to the config.
+To authenticate through managed identities instead of a shared key, omit `storage_access_key` from your `storage.yml` file and pass in the identity `principal_id`.
 
 ActiveStorage config example:
 
