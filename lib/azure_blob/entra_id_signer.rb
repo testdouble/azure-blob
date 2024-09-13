@@ -13,9 +13,10 @@ module AzureBlob
     attr_reader :token
     attr_reader :account_name
 
-    def initialize(account_name:, principal_id: nil)
+    def initialize(account_name:, host:, principal_id: nil)
       @token = AzureBlob::IdentityToken.new(principal_id:)
       @account_name = account_name
+      @host = host
     end
 
     def authorization_header(uri:, verb:, headers: {})

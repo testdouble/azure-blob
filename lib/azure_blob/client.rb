@@ -17,10 +17,11 @@ module AzureBlob
     def initialize(account_name:, access_key:, container:, **options)
       @account_name = account_name
       @container = container
+      @cloud_regions = options[:cloud_regions]&.to_sym || :global
 
       @signer = !access_key.nil? && !access_key.empty?  ?
         AzureBlob::SharedKeySigner.new(account_name:, access_key:) :
-        AzureBlob::EntraIdSigner.new(account_name:, **options.slice(:principal_id))
+        AzureBlob::EntraIdSigner.new(account_name:, host:, **options.slice(:principal_id))
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.
@@ -331,10 +332,10 @@ module AzureBlob
       Http.new(uri, headers, metadata: options[:metadata], signer:).put(content.read)
     end
 
-    attr_reader :account_name, :signer, :container, :http
-
     def host
-      "https://#{account_name}.blob.core.windows.net"
+      @host ||= "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
     end
+
+    attr_reader :account_name, :signer, :container, :http, :cloud_regions
   end
 end

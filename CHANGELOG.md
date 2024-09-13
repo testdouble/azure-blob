@@ -3,6 +3,7 @@
 - Add get_container_properties
 - Add create_container
 - Add delete_container
+- Support for Azure China, US Gov and Germany
 
 ## [0.5.1] 2024-09-09
 
