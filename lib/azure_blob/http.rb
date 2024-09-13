@@ -12,7 +12,10 @@ module AzureBlob
       def initialize(body: nil, status: nil)
         @body = body
         @status = status
-        super(body)
+      end
+
+      def inspect
+        @body
       end
     end
     class FileNotFoundError < Error; end
