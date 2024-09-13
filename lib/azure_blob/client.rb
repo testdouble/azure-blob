@@ -155,7 +155,7 @@ module AzureBlob
     # This can be used to see if the container exist or obtain metadata.
     def get_container_properties(options = {})
       uri = generate_uri(container)
-      uri.query = URI.encode_www_form(restype: 'container')
+      uri.query = URI.encode_www_form(restype: "container")
       response = Http.new(uri, signer:, raise_on_error: false).head
 
       Container.new(response)
@@ -166,7 +166,7 @@ module AzureBlob
     # Calls to {Create Container}[https://learn.microsoft.com/en-us/rest/api/storageservices/create-container]
     def create_container(options = {})
       uri = generate_uri(container)
-      uri.query = URI.encode_www_form(restype: 'container')
+      uri.query = URI.encode_www_form(restype: "container")
       response = Http.new(uri, signer:).put
     end
 
@@ -175,7 +175,7 @@ module AzureBlob
     # Calls to {Delete Container}[https://learn.microsoft.com/en-us/rest/api/storageservices/delete-container]
     def delete_container(options = {})
       uri = generate_uri(container)
-      uri.query = URI.encode_www_form(restype: 'container')
+      uri.query = URI.encode_www_form(restype: "container")
       response = Http.new(uri, signer:).delete
     end
 
