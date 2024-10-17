@@ -156,6 +156,20 @@ module AzureBlob
 
       Blob.new(response)
     end
+    
+    # Returns the tags associated with a blob
+    #
+    # Calls to the {Get Blob Tags}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob-tags] endpoint.
+    #
+    # Takes a key (path) of the blob.
+    #
+    # Returns a hash of the blob's tags.
+    def get_blob_tags(key)
+      uri = generate_uri("#{container}/#{key}?comp=tags")
+      response = Http.new(uri, signer:).get
+
+      Tags.new(response).to_hash
+    end
 
     # Returns a Container object.
     #
