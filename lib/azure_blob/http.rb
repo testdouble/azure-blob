@@ -24,12 +24,16 @@ module AzureBlob
 
     include REXML
 
-    def initialize(uri, headers = {}, signer: nil, metadata: {}, debug: false, raise_on_error: true)
+    def initialize(uri, headers = {}, signer: nil, metadata: {}, tags: {}, debug: false, raise_on_error: true)
       @raise_on_error = raise_on_error
       @date = Time.now.httpdate
       @uri = uri
       @signer = signer
-      @headers = headers.merge(Metadata.new(metadata).headers)
+      @headers = headers.merge(
+        Metadata.new(metadata).headers,
+        Tags.new(tags).headers,
+      )
+
       sanitize_headers
 
       @http = Net::HTTP.new(uri.hostname, uri.port)
