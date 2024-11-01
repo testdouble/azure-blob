@@ -1,13 +1,13 @@
-require 'rexml/document'
+require "rexml/document"
 
 module AzureBlob
   class Tags # :nodoc:
-    def self.from_response response
+    def self.from_response(response)
       document = REXML::Document.new(response)
       tags = {}
-      document.elements.each('Tags/TagSet/Tag') do |tag|
-        key = tag.elements['Key'].text
-        value = tag.elements['Value'].text
+      document.elements.each("Tags/TagSet/Tag") do |tag|
+        key = tag.elements["Key"].text
+        value = tag.elements["Value"].text
         tags[key] = value
       end
       new(tags)
@@ -23,8 +23,8 @@ module AzureBlob
       {
         "x-ms-tags":
         @tags.map do |key, value|
-          %{#{key}=#{value}}
-        end.join("&")
+          %(#{key}=#{value})
+        end.join("&"),
       }
     end
 

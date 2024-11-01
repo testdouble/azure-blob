@@ -29,7 +29,7 @@ module AzureBlob
         )
       end
       @signer = using_managed_identities ?
-        AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id: ) :
+        AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id:) :
         AzureBlob::SharedKeySigner.new(account_name:, access_key:)
     end
 
