@@ -4,6 +4,7 @@ require_relative "block_list"
 require_relative "blob_list"
 require_relative "blob"
 require_relative "container"
+require_relative "tags"
 require_relative "http"
 require_relative "shared_key_signer"
 require_relative "entra_id_signer"
@@ -28,7 +29,7 @@ module AzureBlob
         )
       end
       @signer = using_managed_identities ?
-        AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id: ) :
+        AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id:) :
         AzureBlob::SharedKeySigner.new(account_name:, access_key:)
     end
 
@@ -157,6 +158,20 @@ module AzureBlob
       Blob.new(response)
     end
 
+    # Returns the tags associated with a blob
+    #
+    # Calls to the {Get Blob Tags}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob-tags] endpoint.
+    #
+    # Takes a key (path) of the blob.
+    #
+    # Returns a hash of the blob's tags.
+    def get_blob_tags(key)
+      uri = generate_uri("#{container}/#{key}?comp=tags")
+      response = Http.new(uri, signer:).get
+
+      Tags.from_response(response).to_h
+    end
+
     # Returns a Container object.
     #
     # Calls to {Get Container Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-container-properties]
@@ -230,7 +245,7 @@ module AzureBlob
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      Http.new(uri, headers, metadata: options[:metadata], signer:).put(nil)
+      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(nil)
     end
 
     # Append a block to an Append Blob
@@ -305,7 +320,7 @@ module AzureBlob
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      Http.new(uri, headers, metadata: options[:metadata], signer:).put(content)
+      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content)
     end
 
     private
@@ -337,7 +352,7 @@ module AzureBlob
         "x-ms-blob-content-disposition": options[:content_disposition],
       }
 
-      Http.new(uri, headers, metadata: options[:metadata], signer:).put(content.read)
+      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content.read)
     end
 
     def host

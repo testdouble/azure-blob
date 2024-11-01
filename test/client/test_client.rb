@@ -350,4 +350,12 @@ class TestClient < TestCase
     container = client.get_container_properties
     refute container.present?
   end
+
+  def test_get_blob_tags
+    client.create_block_blob(key, content, tags: { tag1: "value 1", "tag 2": "value 2" })
+
+    tags = client.get_blob_tags(key)
+
+    assert_equal({ "tag1" => "value 1", "tag 2" => "value 2" }, tags)
+  end
 end
