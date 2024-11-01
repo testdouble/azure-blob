@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+
+## [0.5.3] 2024-10-31
+
 - Add support for setting tags when uploading a blob
 - Add get_blob_tags
 
