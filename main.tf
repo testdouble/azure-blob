@@ -106,7 +106,7 @@ resource "azurerm_user_assigned_identity" "vm" {
 
 resource "azurerm_role_assignment" "vm" {
   scope                = azurerm_storage_account.main.id
-  role_definition_name = "Storage Blob Data Contributor"
+  role_definition_name = "Storage Blob Data Owner"
   principal_id         = azurerm_user_assigned_identity.vm.principal_id
 }
 
