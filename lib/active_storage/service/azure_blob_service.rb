@@ -35,13 +35,14 @@ module ActiveStorage
   class Service::AzureBlobService < Service
     attr_reader :client, :container, :signer
 
-    def initialize(storage_account_name:, storage_access_key: nil, container:, public: false, **options)
+    def initialize(storage_account_name:, storage_access_key: nil, container:, storage_blob_host: nil, public: false, **options)
       @container = container
       @public = public
       @client = AzureBlob::Client.new(
         account_name: storage_account_name,
         access_key: storage_access_key,
         container: container,
+        storage_blob_host: storage_blob_host,
         **options)
     end
 
