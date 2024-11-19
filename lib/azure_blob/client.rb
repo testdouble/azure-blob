@@ -15,10 +15,10 @@ module AzureBlob
   # AzureBlob Client class. You interact with the Azure Blob api
   # through an instance of this class.
   class Client
-    def initialize(account_name:, access_key: nil, principal_id: nil, container:, storage_blob_host: nil, **options)
+    def initialize(account_name:, access_key: nil, principal_id: nil, container:, host: nil, **options)
       @account_name = account_name
       @container = container
-      @storage_blob_host = storage_blob_host
+      @host = host
       @cloud_regions = options[:cloud_regions]&.to_sym || :global
 
       no_access_key = access_key.nil? || access_key&.empty?
@@ -30,8 +30,8 @@ module AzureBlob
         )
       end
       @signer = using_managed_identities ?
-        AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id:) :
-        AzureBlob::SharedKeySigner.new(account_name:, access_key:)
+        AzureBlob::EntraIdSigner.new(account_name:, host: self.host, principal_id:) :
+        AzureBlob::SharedKeySigner.new(account_name:, access_key:, host: self.host)
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.
@@ -357,7 +357,7 @@ module AzureBlob
     end
 
     def host
-      @host ||= @storage_blob_host || "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
+      @host ||= "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
     end
 
     attr_reader :account_name, :signer, :container, :http, :cloud_regions
