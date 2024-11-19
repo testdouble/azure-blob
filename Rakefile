@@ -5,6 +5,7 @@ require "minitest/test_task"
 require "azure_blob"
 require_relative "test/support/app_service_vpn"
 require_relative "test/support/azure_vm_vpn"
+require_relative "test/support/azurite"
 
 Minitest::TestTask.create(:test_rails) do
   self.test_globs = [ "test/rails/**/test_*.rb",
@@ -37,6 +38,29 @@ task :test_azure_vm do |t|
   Rake::Task["test_entra_id"].execute
 ensure
   vpn.kill
+end
+
+task :test_azurite do |t|
+  azurite = Azurite.new
+  # Azurite well-known credentials
+  # https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio%2Cblob-storage#well-known-storage-account-and-key
+  account_name = ENV["AZURE_ACCOUNT_NAME"] = "devstoreaccount1"
+  access_key = ENV["AZURE_ACCESS_KEY"] = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
+  host = ENV["STORAGE_BLOB_HOST"] = "http://127.0.0.1:10000/devstoreaccount1"
+  ENV["TESTING_AZURITE"] = "true"
+
+  # Create containers
+  private_container = AzureBlob::Client.new(account_name:, access_key:, host:, container: ENV["AZURE_PRIVATE_CONTAINER"])
+  public_container = AzureBlob::Client.new(account_name:, access_key:, host:, container: ENV["AZURE_PUBLIC_CONTAINER"])
+  # public_container.delete_container
+  private_container.delete_container
+  private_container.create_container unless private_container.get_container_properties.present?
+  public_container.create_container(public_access: true) unless public_container.get_container_properties.present?
+
+  Rake::Task["test_client"].execute
+  Rake::Task["test_rails"].execute
+ensure
+  azurite.kill
 end
 
 task :test_entra_id do |t|
