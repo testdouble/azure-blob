@@ -104,11 +104,13 @@ class TestClient < TestCase
   end
 
   def test_upload_raise_on_invalid_checksum_blob
+    skip if ENV["TESTING_AZURITE"]
     checksum = OpenSSL::Digest::MD5.base64digest(content + "a")
     assert_raises(AzureBlob::Http::IntegrityError) { client.create_block_blob(key, content, content_md5: checksum) }
   end
 
   def test_upload_raise_on_invalid_checksum_block
+    skip if ENV["TESTING_AZURITE"]
     checksum = OpenSSL::Digest::MD5.base64digest(content + "a")
     assert_raises(AzureBlob::Http::IntegrityError) { client.put_blob_block(key, 0, content, content_md5: checksum) }
   end
