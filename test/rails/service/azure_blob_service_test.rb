@@ -21,7 +21,8 @@ class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
     @service.headers_for_direct_upload(key, checksum: checksum, content_type: content_type, filename: ActiveStorage::Filename.new("test.txt")).each do |k, v|
       request.add_field k, v
     end
-    Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+
+    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.port == 443) do |http|
       http.request request
     end
 
@@ -42,7 +43,7 @@ class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
     @service.headers_for_direct_upload(key, checksum: checksum, content_type: "text/plain", filename: ActiveStorage::Filename.new("test.txt"), disposition: :attachment).each do |k, v|
       request.add_field k, v
     end
-    Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.port == 443) do |http|
       http.request request
     end
 

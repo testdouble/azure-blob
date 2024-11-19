@@ -23,6 +23,8 @@ class ActiveStorage::AzureBlobDirectUploadsControllerTest < ActionDispatch::Inte
     post rails_direct_uploads_url, params: { blob: {
       filename: "hello.txt", byte_size: 6, checksum: checksum, content_type: "text/plain", metadata: metadata, } }
 
+    host = @config[:host] || "https://#{@config[:storage_account_name]}.blob.core.windows.net"
+
     response.parsed_body.tap do |details|
       assert_equal ActiveStorage::Blob.find(details["id"]), ActiveStorage::Blob.find_signed!(details["signed_id"])
       assert_equal "hello.txt", details["filename"]
@@ -30,7 +32,7 @@ class ActiveStorage::AzureBlobDirectUploadsControllerTest < ActionDispatch::Inte
       assert_equal checksum, details["checksum"]
       assert_equal metadata, details["metadata"]
       assert_equal "text/plain", details["content_type"]
-      assert_match %r{#{@config[:storage_account_name]}\.blob\.core\.windows\.net/#{@config[:container]}}, details["direct_upload"]["url"]
+      assert details["direct_upload"]["url"].start_with?("#{host}/#{@config[:container]}")
       assert_equal({ "Content-Type" => "text/plain", "Content-MD5" => checksum, "x-ms-blob-content-disposition" => "inline; filename=\"hello.txt\"; filename*=UTF-8''hello.txt", "x-ms-blob-type" => "BlockBlob" }, details["direct_upload"]["headers"])
     end
   end
