@@ -3,7 +3,7 @@ DEFAULT: &default
   storage_account_name: <%= ENV["AZURE_ACCOUNT_NAME"] %>
   storage_access_key: <%= ENV["AZURE_ACCESS_KEY"] %>
   principal_id: <%= ENV["AZURE_PRINCIPAL_ID"]%>
-  host: <%= ENV["STORAGE_BLOB_HOST"] %>
+  storage_blob_host: <%= ENV["STORAGE_BLOB_HOST"] %>
 
 azure:
   <<: *default
