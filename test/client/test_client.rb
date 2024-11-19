@@ -13,11 +13,13 @@ class TestClient < TestCase
     @access_key = ENV["AZURE_ACCESS_KEY"]
     @container = ENV["AZURE_PRIVATE_CONTAINER"]
     @principal_id = ENV["AZURE_PRINCIPAL_ID"]
+    @host = ENV["STORAGE_BLOB_HOST"]
     @client = AzureBlob::Client.new(
       account_name: @account_name,
       access_key: @access_key,
       container: @container,
       principal_id: @principal_id,
+      host: @host,
     )
     @key = "test client##{name}"
     @content = "Some random content #{Random.rand(200)}"
@@ -340,6 +342,7 @@ class TestClient < TestCase
       access_key: @access_key,
       container: Random.alphanumeric(20).tr("0-9", "").downcase,
       principal_id: @principal_id,
+      host: @host,
     )
     container = client.get_container_properties
     refute container.present?
