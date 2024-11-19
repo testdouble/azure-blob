@@ -191,8 +191,12 @@ module AzureBlob
     # Calls to {Create Container}[https://learn.microsoft.com/en-us/rest/api/storageservices/create-container]
     def create_container(options = {})
       uri = generate_uri(container)
+      headers = {}
+      headers[:"x-ms-blob-public-access"] = "blob" if options[:public_access]
+      headers[:"x-ms-blob-public-access"] = options[:public_access] if ["container","blob"].include?(options[:public_access])
+
       uri.query = URI.encode_www_form(restype: "container")
-      response = Http.new(uri, signer:).put
+      response = Http.new(uri, headers, signer:).put
     end
 
     # Delete the container
