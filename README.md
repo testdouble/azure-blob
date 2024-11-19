@@ -65,21 +65,9 @@ dev:
 You'll have to create the container before you can start uploading files.
 You can do so using Azure CLI, Azure Storage Explorer, or by running:
 
+`bin/rails runner "ActiveStorage::Blob.service.client.tap{|client| client.create_container unless client.get_container_properties.present?}.tap { |client| puts 'done!' if client.get_container_properties.present?}"`
 
-```
-bin/rails runner "
-container_name = 'CONTAINER_NAME_REPLACE_ME'
-require %{azure_blob}
-AzureBlob::Client.new(
-account_name: %{devstoreaccount1},
-access_key: %{Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==},
-host: %{http://127.0.0.1:10000/devstoreaccount1},
-container: container_name)
-.tap{|container| container.create_container unless container.get_container_properties.present?}
-.tap{|container| puts 'done!' if container.get_container_properties.present?}"
-```
-
-Replace `CONTAINER_NAME_REPLACE_ME` with your container name.
+Make sure that `config.active_storage.service = :dev` is set to your azurite configuration.
 Container names can't have any special characters, or you'll get an error.
 
 ## Standalone
