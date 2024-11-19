@@ -46,6 +46,42 @@ prod:
   principal_id: 71b34410-4c50-451d-b456-95ead1b18cce
 ```
 
+### Azurite
+
+To use Azurite, pass the `storage_blob_host` config key with the Azurite URL (`http://127.0.0.1:10000/devstoreaccount1` by default)
+and the Azurite credentials (`devstoreaccount1` and `Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==` by default).
+
+Example:
+
+```
+dev:
+  service: AzureBlob
+  container: container_name
+  storage_account_name: devstoreaccount1
+  storage_access_key: "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
+  storage_blob_host: http://127.0.0.1:10000/devstoreaccount1
+```
+
+You'll have to create the container before you can start uploading files.
+You can do so using Azure CLI, Azure Storage Explorer, or by running:
+
+
+```
+bin/rails runner "
+container_name = 'CONTAINER_NAME_REPLACE_ME'
+require %{azure_blob}
+AzureBlob::Client.new(
+account_name: %{devstoreaccount1},
+access_key: %{Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==},
+host: %{http://127.0.0.1:10000/devstoreaccount1},
+container: container_name)
+.tap{|container| container.create_container unless container.get_container_properties.present?}
+.tap{|container| puts 'done!' if container.get_container_properties.present?}"
+```
+
+Replace `CONTAINER_NAME_REPLACE_ME` with your container name.
+Container names can't have any special characters, or you'll get an error.
+
 ## Standalone
 
 Instantiate a client with your account name, an access key and the container name:
