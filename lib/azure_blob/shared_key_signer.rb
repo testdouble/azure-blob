@@ -7,9 +7,11 @@ require_relative "canonicalized_resource"
 
 module AzureBlob
   class SharedKeySigner # :nodoc:
-    def initialize(account_name:, access_key:)
+    def initialize(account_name:, access_key:, host:)
       @account_name = account_name
       @access_key = Base64.decode64(access_key)
+      @host = host
+      @remove_prefix = @host.include?("/#{@account_name}")
     end
 
     def authorization_header(uri:, verb:, headers: {})
@@ -39,6 +41,11 @@ module AzureBlob
     end
 
     def sas_token(uri, options = {})
+      if remove_prefix
+        uri = uri.clone
+        uri.path = uri.path.delete_prefix("/#{account_name}")
+      end
+
       to_sign = [
         options[:permissions],
         options[:start],
@@ -99,6 +106,6 @@ module AzureBlob
       end
     end
 
-    attr_reader :access_key, :account_name
+    attr_reader :access_key, :account_name, :remove_prefix
   end
 end
