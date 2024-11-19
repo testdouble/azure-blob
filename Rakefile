@@ -53,7 +53,6 @@ task :test_azurite do |t|
   private_container = AzureBlob::Client.new(account_name:, access_key:, host:, container: ENV["AZURE_PRIVATE_CONTAINER"])
   public_container = AzureBlob::Client.new(account_name:, access_key:, host:, container: ENV["AZURE_PUBLIC_CONTAINER"])
   # public_container.delete_container
-  private_container.delete_container
   private_container.create_container unless private_container.get_container_properties.present?
   public_container.create_container(public_access: true) unless public_container.get_container_properties.present?
 
