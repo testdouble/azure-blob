@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Allow creating public container
+- Add Azurite support
 
 ## [0.5.3] 2024-10-31
 
