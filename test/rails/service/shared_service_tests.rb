@@ -30,6 +30,7 @@ module ActiveStorage::Service::SharedServiceTests
     end
 
     test "uploading without integrity" do
+      skip if ENV["TESTING_AZURITE"]
       key  = SecureRandom.base58(24)
       data = "Something else entirely!"
 
@@ -39,7 +40,7 @@ module ActiveStorage::Service::SharedServiceTests
 
       assert_not @service.exist?(key)
     ensure
-      @service.delete key
+      @service.delete key unless ENV["TESTING_AZURITE"]
     end
 
     test "uploading with integrity and multiple keys" do

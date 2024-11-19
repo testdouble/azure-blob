@@ -15,6 +15,7 @@
     sshuttle
     sshpass
     rsync
+    azurite
   ];
 
   languages.ruby.enable = true;

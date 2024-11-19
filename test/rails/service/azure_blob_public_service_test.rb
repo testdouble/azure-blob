@@ -8,10 +8,15 @@ class ActiveStorage::Service::AzureBlobPublicServiceTest < ActiveSupport::TestCa
 
   include ActiveStorage::Service::SharedServiceTests
 
+  setup do
+    @config = SERVICE_CONFIGURATIONS[:azure_public]
+  end
+
   test "public URL generation" do
     url = @service.url(@key, filename: ActiveStorage::Filename.new("avatar.png"))
+    host = @config[:host] || "https://#{@config[:storage_account_name]}.blob.core.windows.net"
 
-    assert_match(/.*\.blob\.core\.windows\.net\/.*\/#{@key}/, url)
+    assert url.start_with?("#{host}/#{@config[:container]}/#{@key}")
 
     response = Net::HTTP.get_response(URI(url))
     assert_equal "200", response.code
@@ -30,7 +35,7 @@ class ActiveStorage::Service::AzureBlobPublicServiceTest < ActiveSupport::TestCa
     @service.headers_for_direct_upload(key, checksum: checksum, content_type: content_type, filename: ActiveStorage::Filename.new("test.txt")).each do |k, v|
       request.add_field k, v
     end
-    Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.port == 443) do |http|
       http.request request
     end
 

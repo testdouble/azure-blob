@@ -15,9 +15,10 @@ module AzureBlob
   # AzureBlob Client class. You interact with the Azure Blob api
   # through an instance of this class.
   class Client
-    def initialize(account_name:, access_key: nil, principal_id: nil, container:, **options)
+    def initialize(account_name:, access_key: nil, principal_id: nil, container:, host: nil, **options)
       @account_name = account_name
       @container = container
+      @host = host
       @cloud_regions = options[:cloud_regions]&.to_sym || :global
 
       no_access_key = access_key.nil? || access_key&.empty?
@@ -29,8 +30,8 @@ module AzureBlob
         )
       end
       @signer = using_managed_identities ?
-        AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id:) :
-        AzureBlob::SharedKeySigner.new(account_name:, access_key:)
+        AzureBlob::EntraIdSigner.new(account_name:, host: self.host, principal_id:) :
+        AzureBlob::SharedKeySigner.new(account_name:, access_key:, host: self.host)
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.
@@ -190,8 +191,12 @@ module AzureBlob
     # Calls to {Create Container}[https://learn.microsoft.com/en-us/rest/api/storageservices/create-container]
     def create_container(options = {})
       uri = generate_uri(container)
+      headers = {}
+      headers[:"x-ms-blob-public-access"] = "blob" if options[:public_access]
+      headers[:"x-ms-blob-public-access"] = options[:public_access] if ["container","blob"].include?(options[:public_access])
+
       uri.query = URI.encode_www_form(restype: "container")
-      response = Http.new(uri, signer:).put
+      response = Http.new(uri, headers, signer:).put
     end
 
     # Delete the container
