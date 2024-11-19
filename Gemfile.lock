@@ -97,7 +97,7 @@ GIT
 PATH
   remote: .
   specs:
-    azure-blob (0.5.3)
+    azure-blob (0.5.4)
       rexml
 
 GEM
