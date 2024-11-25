@@ -20,18 +20,9 @@ module AzureBlob
       @container = container
       @host = host
       @cloud_regions = options[:cloud_regions]&.to_sym || :global
-
-      no_access_key = access_key.nil? || access_key&.empty?
-      using_managed_identities = no_access_key && !principal_id.nil? || options[:use_managed_identities]
-
-      if !using_managed_identities && no_access_key
-        raise AzureBlob::Error.new(
-          "`access_key` cannot be empty. To use managed identities instead, pass a `principal_id` or set `use_managed_identities` to true."
-        )
-      end
-      @signer = using_managed_identities ?
-        AzureBlob::EntraIdSigner.new(account_name:, host: self.host, principal_id:) :
-        AzureBlob::SharedKeySigner.new(account_name:, access_key:, host: self.host)
+      @access_key = access_key
+      @principal_id = principal_id
+      @use_managed_identities = options[:use_managed_identities]
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.
@@ -364,6 +355,24 @@ module AzureBlob
       @host ||= "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
     end
 
-    attr_reader :account_name, :signer, :container, :http, :cloud_regions
+    def signer
+      @signer ||=
+        begin
+          no_access_key = access_key.nil? || access_key&.empty?
+          using_managed_identities = no_access_key && !principal_id.nil? || use_managed_identities
+
+          if !using_managed_identities && no_access_key
+            raise AzureBlob::Error.new(
+              "`access_key` cannot be empty. To use managed identities instead, pass a `principal_id` or set `use_managed_identities` to true."
+            )
+          end
+
+          using_managed_identities ?
+            AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id:) :
+            AzureBlob::SharedKeySigner.new(account_name:, access_key:, host:)
+        end
+    end
+
+    attr_reader :account_name, :container, :http, :cloud_regions, :access_key, :principal_id, :use_managed_identities
   end
 end
