@@ -323,6 +323,7 @@ module AzureBlob
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
+        **(options[:headers] || {}).map { |k, v| [ :"x-ms-#{k}", v.to_s ] }.to_h
       }
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content)
@@ -355,6 +356,7 @@ module AzureBlob
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
+        **(options[:headers] || {}).map { |k, v| [ :"x-ms-#{k}", v.to_s ] }.to_h
       }
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content.read)
