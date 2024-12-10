@@ -1,6 +1,8 @@
 ## [Unreleased]
 
 - Allow lazy loading the signer
+- Add `blob_exist?`
+- Add `container_exist?`
 
 ## [0.5.4] 2024-11-18
 

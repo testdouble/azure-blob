@@ -142,13 +142,23 @@ module AzureBlob
     #
     # Calls to {Get Blob Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob-properties]
     #
-    # This can be used to see if the blob exist or obtain metadata such as content type, disposition, checksum or Azure custom metadata.
+    # This can be used to obtain metadata such as content type, disposition, checksum or Azure custom metadata.
+    # To check for blob presence, look for `blob_exist?` as `get_blob_properties` raises on missing blob.
     def get_blob_properties(key, options = {})
       uri = generate_uri("#{container}/#{key}")
 
       response = Http.new(uri, signer:).head
 
       Blob.new(response)
+    end
+
+    # Returns a boolean indicating if the blob exists.
+    #
+    # Calls to {Get Blob Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob-properties]
+    def blob_exist?(key, options = {})
+      get_blob_properties(key, options).present?
+    rescue AzureBlob::Http::FileNotFoundError
+      false
     end
 
     # Returns the tags associated with a blob
@@ -176,6 +186,13 @@ module AzureBlob
       response = Http.new(uri, signer:, raise_on_error: false).head
 
       Container.new(response)
+    end
+
+    # Returns a boolean indicating if the container exists.
+    #
+    # Calls to {Get Container Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-container-properties]
+    def container_exist?(options = {})
+      get_container_properties(options = {}).present?
     end
 
     # Create the container

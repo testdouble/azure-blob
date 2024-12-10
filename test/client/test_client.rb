@@ -239,6 +239,14 @@ class TestClient < TestCase
     assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob_properties(key) }
   end
 
+  def test_blob_exist?
+    refute client.blob_exist?(key)
+
+    client.create_block_blob(key, content)
+
+    assert client.blob_exist?(key)
+  end
+
   def test_append_blob
     client.create_append_blob(key)
     content.split("", 3).each { |chunk| client.append_blob_block(key, chunk) }
@@ -346,6 +354,19 @@ class TestClient < TestCase
     )
     container = client.get_container_properties
     refute container.present?
+  end
+
+  def test_container_exist?
+    assert client.container_exist?
+
+    client = AzureBlob::Client.new(
+      account_name: @account_name,
+      access_key: @access_key,
+      container: "missingcontainer",
+      principal_id: @principal_id,
+    )
+
+    refute client.container_exist?
   end
 
   def test_create_container
