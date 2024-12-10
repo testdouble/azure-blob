@@ -23,6 +23,7 @@ module AzureBlob
       @access_key = access_key
       @principal_id = principal_id
       @use_managed_identities = options[:use_managed_identities]
+      signer unless options[:lazy]
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.
