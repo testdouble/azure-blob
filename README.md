@@ -95,6 +95,19 @@ client.delete_blob(path)
 
 For the full list of methods: https://www.rubydoc.info/gems/azure-blob/AzureBlob/Client
 
+## options
+
+### Lazy loading
+
+The client is configured to raise an error early for missing credentials, causing it to crash before becoming healthy. This behavior can sometimes be undesirable, such as during assets precompilation.
+
+To enable lazy loading and ignore missing credentials, set the `lazy` option:
+
+`AzureBlob::Client.new(account_name: nil, access_key: nil, container: nil, lazy: true)`
+
+or add `lazy: true` to your `config/storage.yml` for Active Storage.
+
+
 ## Contributing
 
 ### Dev environment

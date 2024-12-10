@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Allow lazy loading the signer
+
 ## [0.5.4] 2024-11-18
 
 - Allow creating public container

@@ -66,6 +66,18 @@ class TestClient < TestCase
     )
   end
 
+  def test_lazy_loading_doesnt_raise_before_querying
+    client = AzureBlob::Client.new(
+      account_name: @account_name,
+      container: @container,
+      lazy: true,
+    )
+
+    assert_raises(AzureBlob::Error) do
+      client.create_block_blob(key, content)
+    end
+  end
+
   def test_single_block_upload
     client.create_block_blob(key, content)
 
