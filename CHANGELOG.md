@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.5.6] 2025-01-17
+
+- Fix user delegation key not refreshing (#14)
+
 ## [0.5.5] 2025-01-10
 
 - Allow lazy loading the signer
