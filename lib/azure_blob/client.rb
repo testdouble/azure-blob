@@ -83,14 +83,14 @@ module AzureBlob
     #
     # Takes a key (path) and a source_key (path).
     #
-    def copy_blob(key, source_key)
+    def copy_blob(key, source_key, options = {})
       uri = generate_uri("#{container}/#{key}")
 
       headers = {
         "x-ms-copy-source": generate_uri("#{container}/#{source_key}").to_s,
       }
 
-      Http.new(uri, headers, signer:).put
+      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
     end
 
     # Delete a blob

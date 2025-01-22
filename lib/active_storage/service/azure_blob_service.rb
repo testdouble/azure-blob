@@ -123,16 +123,21 @@ module ActiveStorage
     def compose(source_keys, destination_key, filename: nil, content_type: nil, disposition: nil, custom_metadata: {})
       content_disposition = content_disposition_with(type: disposition, filename: filename) if disposition && filename
 
-      client.create_append_blob(
-        destination_key,
-        content_type: content_type,
-        content_disposition: content_disposition,
-        metadata: custom_metadata,
-      )
+      # use copy_blob operation if composing a new blob from a single existing blob
+      if source_keys.length == 1
+        client.copy_blob(destination_key, source_keys[0], metadata: custom_metadata)
+      else
+        client.create_append_blob(
+          destination_key,
+          content_type: content_type,
+          content_disposition: content_disposition,
+          metadata: custom_metadata,
+        )
 
-      source_keys.each do |source_key|
-        stream(source_key) do |chunk|
-          client.append_blob_block(destination_key, chunk)
+        source_keys.each do |source_key|
+          stream(source_key) do |chunk|
+            client.append_blob_block(destination_key, chunk)
+          end
         end
       end
     end

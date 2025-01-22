@@ -158,5 +158,24 @@ module ActiveStorage::Service::SharedServiceTests
 
       assert_equal "Together", @service.download(destination_key)
     end
+
+    test "compose from single blob" do
+      keys = [ SecureRandom.base58(24) ]
+      data = %w[Together]
+      keys.zip(data).each do |key, data|
+        @service.upload(
+          key,
+          StringIO.new(data),
+          checksum: Digest::MD5.base64digest(data),
+          disposition: :attachment,
+          filename: ActiveStorage::Filename.new("test.html"),
+          content_type: "text/html",
+        )
+      end
+      destination_key = SecureRandom.base58(24)
+      @service.compose(keys, destination_key)
+
+      assert_equal "Together", @service.download(destination_key)
+    end
   end
 end
