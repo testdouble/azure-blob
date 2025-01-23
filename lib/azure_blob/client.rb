@@ -87,7 +87,7 @@ module AzureBlob
       uri = generate_uri("#{container}/#{key}")
 
       headers = {
-        "Content-Length": "0",
+        "Content-Length": 0,
         "x-ms-copy-source": generate_uri("#{container}/#{source_key}").to_s,
         "x-ms-blob-type": "BlockBlob",
       }
