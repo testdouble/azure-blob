@@ -116,4 +116,25 @@ class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
   ensure
     @service.delete(key)
   end
+
+  test "composing a blob from one source blob" do
+    key  = SecureRandom.base58(24)
+    data = "Something else entirely!"
+
+    Tempfile.open do |file|
+      file.write(data)
+      file.rewind
+      @service.upload(key, file)
+    end
+
+    assert_equal data, @service.download(key)
+
+    copy_key = SecureRandom.base58(24)
+    @service.compose([ key ], copy_key)
+
+    assert_equal data, @service.download(copy_key)
+  ensure
+    @service.delete key
+    @service.delete copy_key
+  end
 end
