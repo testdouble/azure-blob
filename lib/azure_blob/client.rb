@@ -79,7 +79,7 @@ module AzureBlob
 
     # Copy a blob
     #
-    # Calls to {Copy Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url]
+    # Calls to {Put Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-blob-from-url]
     #
     # Takes a key (path) and a source_key (path).
     #
@@ -87,8 +87,9 @@ module AzureBlob
       uri = generate_uri("#{container}/#{key}")
 
       headers = {
+        "Content-Length": "0",
         "x-ms-copy-source": generate_uri("#{container}/#{source_key}").to_s,
-        "x-ms-requires-sync": "true",
+        "x-ms-blob-type": "BlockBlob",
       }
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
