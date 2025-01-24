@@ -86,9 +86,11 @@ module AzureBlob
     def copy_blob(key, source_key, options = {})
       uri = generate_uri("#{container}/#{key}")
 
+      source_uri = signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 300).utc.iso8601)
+
       headers = {
         "Content-Length": 0,
-        "x-ms-copy-source": generate_uri("#{container}/#{source_key}").to_s,
+        "x-ms-copy-source": source_uri.to_s,
         "x-ms-blob-type": "BlockBlob",
       }
 
