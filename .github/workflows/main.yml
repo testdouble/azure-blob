@@ -29,8 +29,8 @@ jobs:
     #needs: deploy-infrastructure
     runs-on: ubuntu-latest
     steps:
-      - name: Install libvips
-        run: sudo apt-get install -y libvips
+      - name: Install dependencies
+        run: sudo apt-get install -y libvips sshuttle
       - name: SSH key
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
