@@ -25,6 +25,28 @@ jobs:
       - name: Terraform apply
         run: terraform plan -var "create_vm=true" -var "create_app_service=true" -var "ssh_key=${{ secrets.SSH_PUBLIC_KEY }}"
         # run: terraform apply -auto-approve -var "create_vm=true" -var "create_app_service=true" -var "ssh_key=${{ secrets.SSH_PUBLIC_KEY }}"
+  app_service_test:
+    #needs: deploy-infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get install -y libvips sshuttle
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-terraform
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1.6"
+          bundler-cache: true
+      - name: Tests
+        env:
+          AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
+          AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
+          AZURE_PRIVATE_CONTAINER: ${{secrets.AZURE_PRIVATE_CONTAINER}}
+          AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
+          AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
+        run: bundle exec rake test_app_service
   azurevm_test:
     #needs: deploy-infrastructure
     runs-on: ubuntu-latest
@@ -57,6 +79,7 @@ jobs:
           AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: bundle exec rake test_azure_vm
+
   teardown-infrastructure:
     runs-on: ubuntu-latest
     #needs: [azurevm_test]
@@ -72,7 +95,7 @@ jobs:
   # test:
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - name: Install libvips
+  #     - name: Install dependencies
   #       run: sudo apt-get install -y libvips
   #     - name: Checkout
   #       uses: actions/checkout@v4
