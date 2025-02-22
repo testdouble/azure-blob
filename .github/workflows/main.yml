@@ -9,6 +9,12 @@ on:
 permissions:
   id-token: write
   contents: read
+env:
+  ARM_SKIP_PROVIDER_REGISTRATION: true
+  ARM_USE_OIDC: true
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
 
 jobs:
   # deploy-infrastructure:
@@ -50,6 +56,11 @@ jobs:
           ssh-add /home/runner/.ssh/id_rsa
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.3
+          terraform_wrapper: false
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
