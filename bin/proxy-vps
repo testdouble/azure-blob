@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+exec sshuttle -e "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -r "$(terraform output --raw vm_username)@$(terraform output --raw vm_ip)" 0/0

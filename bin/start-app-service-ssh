@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+resource_group=$(terraform output --raw "resource_group")
+app_name=$(terraform output --raw "app_service_app_name")
+exec az webapp create-remote-connection --resource-group $resource_group --name $app_name

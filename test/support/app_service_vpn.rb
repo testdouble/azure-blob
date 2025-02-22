@@ -42,7 +42,7 @@ class AppServiceVpn
 
   def establish_app_service_tunnel
     puts "Establishing tunnel connection to app service..."
-    connection_stdin, connection_stdout, @connection_wait_thread = Open3.popen2e("start-app-service-ssh")
+    connection_stdin, connection_stdout, @connection_wait_thread = Open3.popen2e("bin/start-app-service-ssh")
 
     port = nil
     username = nil
