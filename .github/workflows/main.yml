@@ -13,6 +13,11 @@ permissions:
 jobs:
   deploy-infrastructure:
     runs-on: ubuntu-latest
+    env:
+      ARM_SKIP_PROVIDER_REGISTRATION: true
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: azure/login@v2
@@ -20,23 +25,38 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Install libvips
-        run: sudo apt-get install -y libvips
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup ruby
-        uses: ruby/setup-ruby@v1
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          ruby-version: "3.1.6"
-          bundler-cache: true
-      - name: Tests
-        env:
-          AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
-          AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
-          AZURE_PRIVATE_CONTAINER: ${{secrets.AZURE_PRIVATE_CONTAINER}}
-          AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
-          AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
-        run: bundle exec rake test
+          terraform_version: 1.8.3
+          terraform_wrapper: false
+      - name: Dump backend config
+        run: echo "${{secrets.TERRAFORM_BACKEND}}" > backend.hcl
+      - name: checking
+        run: cat backend.hcl
+      - name: Terraform init
+        run: terraform init -backend-config=backend.hcl
+      # - name: Terraform apply
+      #   run: terraform plan
+        # -var "create_vm=true" -var "create_app_service=true"
+
+  # test:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Install libvips
+  #       run: sudo apt-get install -y libvips
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: Setup ruby
+  #       uses: ruby/setup-ruby@v1
+  #       with:
+  #         ruby-version: "3.1.6"
+  #         bundler-cache: true
+  #     - name: Tests
+  #       env:
+  #         AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
+  #         AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
+  #         AZURE_PRIVATE_CONTAINER: ${{secrets.AZURE_PRIVATE_CONTAINER}}
+  #         AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
+  #         AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
+  #       run: bundle exec rake test
