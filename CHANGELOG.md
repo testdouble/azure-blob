@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.5.7] 2025-02-21
+
 - Add `copy_blob`
 - Update `compose` to use `copy_blob` if 1 source key and blob is <= 256MiB
 
