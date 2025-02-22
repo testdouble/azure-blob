@@ -2,10 +2,11 @@ require "open3"
 require "shellwords"
 
 class AzureVmVpn
-  def initialize(verbose: false)
+  def initialize(verbose: true)
     @verbose = verbose
     stdin, stdout, @wait_thread = Open3.popen2e("bin/proxy-vps")
     stdout.each do |line|
+      puts line if @verbose
       break if line.include?("Connected to server")
     end
   end
