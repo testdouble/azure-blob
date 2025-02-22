@@ -79,7 +79,7 @@ module AzureBlob
 
     # Copy a blob
     #
-    # Calls to {Put Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url]
+    # Calls to {Copy Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url]
     #
     # Takes a key (path) and a source_key (path).
     #
