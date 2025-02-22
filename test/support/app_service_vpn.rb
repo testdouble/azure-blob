@@ -7,7 +7,7 @@ class AppServiceVpn
 
   attr_reader :header, :endpoint
 
-  def initialize(verbose: false)
+  def initialize(verbose: true)
     @verbose = verbose
     establish_vpn_connection
   end
