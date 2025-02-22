@@ -1,3 +1,16 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>3.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
 locals {
   public_ssh_key = var.create_vm && var.ssh_key == "" ?  file("~/.ssh/id_rsa.pub") : var.ssh_key
 }
