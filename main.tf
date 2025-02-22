@@ -12,7 +12,7 @@ provider "azurerm" {
 }
 
 locals {
-  public_ssh_key = var.ssh_key != "" ? var.ssh_key : file("~/.ssh/id_rsa.pub")
+  public_ssh_key = var.create_vm && var.ssh_key == "" ?  file("~/.ssh/id_rsa.pub") : var.ssh_key
 }
 
 resource "azurerm_resource_group" "main" {
