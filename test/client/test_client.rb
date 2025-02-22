@@ -175,6 +175,17 @@ class TestClient < TestCase
     assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob(key) }
   end
 
+  def test_copy
+    client.create_block_blob(key, content)
+    assert_equal content, client.get_blob(key)
+
+    copy_key = "#{key}_copy"
+
+    client.copy_blob(copy_key, key)
+
+    assert_equal content, client.get_blob(copy_key)
+  end
+
   def test_delete
     client.create_block_blob(key, content)
     assert_equal content, client.get_blob(key)
