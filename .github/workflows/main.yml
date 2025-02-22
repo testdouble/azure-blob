@@ -3,7 +3,7 @@ name: test gha
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
 
 permissions:
@@ -20,22 +20,23 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-
-  # build:
-  #   runs-on: ubuntu-latest
-  #   name: Ruby ${{ matrix.ruby }}
-  #   strategy:
-  #     matrix:
-  #       ruby:
-  #         - '3.2.0'
-
-  #   steps:
-  #   - uses: actions/checkout@v4
-  #   - name: Set up Ruby
-  #     uses: ruby/setup-ruby@v1
-  #     with:
-  #       ruby-version: ${{ matrix.ruby }}
-  #       bundler-cache: true
-  #   - name: Run the default task
-  #     run: bundle exec rake
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install libvips
+        run: sudo apt-get install -y libvips
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1.6"
+          bundler-cache: true
+      - name: Tests
+        env:
+          AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
+          AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
+          AZURE_PRIVATE_CONTAINER: ${{secrets.AZURE_PRIVATE_CONTAINER}}
+          AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
+          AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
+        run: bundle exec rake test
