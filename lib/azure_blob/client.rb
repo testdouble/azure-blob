@@ -77,6 +77,25 @@ module AzureBlob
       Http.new(uri, headers, signer:).get
     end
 
+    # Copy a blob
+    #
+    # Calls to {Copy Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url]
+    #
+    # Takes a key (path) and a source_key (path).
+    #
+    def copy_blob(key, source_key, options = {})
+      uri = generate_uri("#{container}/#{key}")
+
+      source_uri = signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 300).utc.iso8601)
+
+      headers = {
+        "x-ms-copy-source": source_uri.to_s,
+        "x-ms-requires-sync": "true",
+      }
+
+      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
+    end
+
     # Delete a blob
     #
     # Calls to {Delete Blob}[https://learn.microsoft.com/en-us/rest/api/storageservices/delete-blob]
@@ -202,7 +221,7 @@ module AzureBlob
       uri = generate_uri(container)
       headers = {}
       headers[:"x-ms-blob-public-access"] = "blob" if options[:public_access]
-      headers[:"x-ms-blob-public-access"] = options[:public_access] if ["container","blob"].include?(options[:public_access])
+      headers[:"x-ms-blob-public-access"] = options[:public_access] if [ "container", "blob" ].include?(options[:public_access])
 
       uri.query = URI.encode_www_form(restype: "container")
       response = Http.new(uri, headers, signer:).put

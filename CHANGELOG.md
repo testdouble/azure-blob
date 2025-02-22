@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+- Add `copy_blob`
+- Update `compose` to use `copy_blob` if 1 source key and blob is <= 256MiB
+
 ## [0.5.6] 2025-01-17
 
 - Fix user delegation key not refreshing (#14)
