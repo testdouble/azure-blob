@@ -24,6 +24,7 @@ terraform.tfstate
 terraform.tfstate.backup
 .terraform.tfstate.lock.info
 *.tfvars
+provider.tf
 
 __azurite_db*
 __blobstorage__/
