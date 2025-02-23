@@ -1,7 +1,7 @@
 name: Run tests
 
 on:
-  pull_request_target:
+  pull_request:
 
 permissions:
   id-token: write
@@ -90,11 +90,8 @@ jobs:
     steps:
       - name: Install dependencies
         run: sudo apt-get install -y libvips
-      # - name: Checkout
-      #   uses: actions/checkout@v4
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
