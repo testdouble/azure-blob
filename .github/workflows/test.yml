@@ -44,7 +44,6 @@ jobs:
   #     - name: Setup ruby
   #       uses: ruby/setup-ruby@v1
   #       with:
-  #         ruby-version: "3.1.6"
   #         bundler-cache: true
   #     - name: Tests
   #       env:
@@ -76,7 +75,6 @@ jobs:
   #     - name: Setup ruby
   #       uses: ruby/setup-ruby@v1
   #       with:
-  #         ruby-version: "3.1.6"
   #         bundler-cache: true
   #     - name: Tests
   #       env:
@@ -100,7 +98,6 @@ jobs:
   #     - name: Setup ruby
   #       uses: ruby/setup-ruby@v1
   #       with:
-  #         ruby-version: "3.1.6"
   #         bundler-cache: true
   #     - name: Tests
   #       env:
