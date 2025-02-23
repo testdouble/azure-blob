@@ -33,7 +33,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      - name: Tests
+      - name: flush containers
         env:
           AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
           AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
