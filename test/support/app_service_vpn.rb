@@ -25,7 +25,7 @@ class AppServiceVpn
 
     puts "Establishing VPN connection..."
 
-    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e([ "sshuttle", "-e", "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}:#{password}@#{HOST}:#{port}", "0/0" ].shelljoin)
+    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e([ "sshuttle", "-e", "ssh -o PubkeyAuthentication=no -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}:#{password}@#{HOST}:#{port}", "0/0" ].shelljoin)
 
     connection_successful = false
     tunnel_stdout.each do |line|
@@ -74,7 +74,7 @@ class AppServiceVpn
     puts "Extracting MSI endpoint info..."
     endpoint = nil
     header = nil
-    Net::SSH.start(HOST, username, password:, port:, append_all_supported_algorithms: true) do |ssh|
+    Net::SSH.start(HOST, username, password:, port:, encryption: 'aes256-ctr', hmac: 'hmac-sha1-96', auth_methods: ['password']) do |ssh|
       endpoint = ssh.exec! [ "bash", "-l", "-c", %(printf "%s" "$IDENTITY_ENDPOINT") ].shelljoin
       header = ssh.exec! [ "bash", "-l", "-c", %(printf "%s" "$IDENTITY_HEADER") ].shelljoin
     end
