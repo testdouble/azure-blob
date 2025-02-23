@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: "0 4 * * *"
   workflow_dispatch:
+  pull_request:
+
 
 permissions:
   id-token: write
@@ -16,13 +18,14 @@ env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
 
 jobs:
-  # teardown-infrastructure:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: ./.github/actions/setup-terraform
-  #     - name: Terraform apply
-  #       run: terraform apply -auto-approve
+  teardown-infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-terraform
+      - name: Terraform apply
+        # run: terraform apply -auto-approve
+        run: terraform plan
   clean_storage_containers:
     runs-on: ubuntu-latest
     steps:
