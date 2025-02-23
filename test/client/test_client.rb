@@ -31,6 +31,7 @@ class TestClient < TestCase
   end
 
   def test_rails_is_not_loaded
+    flunk
     assert_raises(NoMethodError) { 10.minutes }
   end
 
