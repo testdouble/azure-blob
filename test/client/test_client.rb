@@ -354,6 +354,7 @@ class TestClient < TestCase
   end
 
   def test_get_container_properties
+    skip if ENV["TESTING_AZURITE"]
     container = client.get_container_properties
     assert container.present?
 
@@ -368,6 +369,7 @@ class TestClient < TestCase
   end
 
   def test_container_exist?
+    skip if ENV["TESTING_AZURITE"]
     assert client.container_exist?
 
     client = AzureBlob::Client.new(
