@@ -47,6 +47,18 @@ resource "azurerm_storage_container" "public" {
   container_access_type = "blob"
 }
 
+resource "azurerm_storage_container" "azureblobrubygemdev_private" {
+  name                  = "azureblobrubygemdev-private"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "private"
+}
+
+resource "azurerm_storage_container" "azureblobrubygemdev_public" {
+  name                  = "azureblobrubygemdev-public"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "blob"
+}
+
 resource "azurerm_virtual_network" "main" {
   count               = var.create_vm ? 1 : 0
   name                = "${var.prefix}-network"
