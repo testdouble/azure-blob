@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.5.7.1] 2025-04-22
+
 - Fixed a bug when reusing the account name in the container name. #22
 
 ## [0.5.7] 2025-02-21
