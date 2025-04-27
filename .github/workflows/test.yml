@@ -89,6 +89,30 @@ jobs:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: bundle exec rake test_azure_vm
 
+  azurite_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Azurite
+        run: npm install -g azurite
+      - name: Install dependencies
+        run: sudo apt-get install -y libvips
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Run Azurite tests
+        env:
+          AZURE_PRIVATE_CONTAINER: ${{ secrets.AZURE_PRIVATE_CONTAINER }}
+          AZURE_PUBLIC_CONTAINER: ${{ secrets.AZURE_PUBLIC_CONTAINER }}
+          AZURE_PRINCIPAL_ID: ${{ secrets.AZURE_PRINCIPAL_ID }}
+        run: bundle exec rake test_azurite
+
   test:
     runs-on: ubuntu-latest
     steps:
