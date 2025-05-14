@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Add support for copying blobs across containers (#24)
+
 ## [0.5.7.1] 2025-04-22
 
 - Fixed a bug when reusing the account name in the container name. #22
