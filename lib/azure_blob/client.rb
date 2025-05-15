@@ -77,16 +77,22 @@ module AzureBlob
       Http.new(uri, headers, signer:).get
     end
 
-    # Copy a blob
+    # Copy a blob between containers or within the same container
     #
     # Calls to {Copy Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url]
     #
-    # Takes a key (path) and a source_key (path).
+    # Parameters:
+    # - key: destination blob path
+    # - source_key: source blob path
+    # - options: additional options
+    #   - source_client: AzureBlob::Client instance for the source container (optional)
+    #     If not provided, copies from within the same container
     #
     def copy_blob(key, source_key, options = {})
+      source_client = options.delete(:source_client) || self
       uri = generate_uri("#{container}/#{key}")
 
-      source_uri = signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 300).utc.iso8601)
+      source_uri = source_client.signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 300).utc.iso8601)
 
       headers = {
         "x-ms-copy-source": source_uri.to_s,

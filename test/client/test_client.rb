@@ -12,6 +12,7 @@ class TestClient < TestCase
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
     @container = ENV["AZURE_PRIVATE_CONTAINER"]
+    @public_container = ENV["AZURE_PUBLIC_CONTAINER"]
     @principal_id = ENV["AZURE_PRINCIPAL_ID"]
     @host = ENV["STORAGE_BLOB_HOST"]
     @client = AzureBlob::Client.new(
@@ -408,5 +409,27 @@ class TestClient < TestCase
     tags = client.get_blob_tags(key)
 
     assert_equal({ "tag1" => "value 1", "tag 2" => "value 2" }, tags)
+  end
+
+  def test_copy_between_containers
+    destination_client = AzureBlob::Client.new(
+      account_name: @account_name,
+      access_key: @access_key,
+      container: @public_container,
+      principal_id: @principal_id,
+      host: @host,
+    )
+    client.create_block_blob(key, content)
+    assert_equal content, client.get_blob(key)
+
+    destination_client.copy_blob(key, key, source_client: client)
+
+
+    assert_equal content, destination_client.get_blob(key)
+
+    begin
+      destination_client.delete_blob(key)
+    rescue AzureBlob::Http::FileNotFoundError
+    end
   end
 end
