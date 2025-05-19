@@ -72,7 +72,7 @@ module AzureBlob
 
       headers = {
         "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}",
-      }
+      }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:).get
     end
@@ -97,7 +97,7 @@ module AzureBlob
       headers = {
         "x-ms-copy-source": source_uri.to_s,
         "x-ms-requires-sync": "true",
-      }
+      }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
     end
@@ -116,7 +116,7 @@ module AzureBlob
 
       headers = {
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
-      }
+      }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:).delete
     end
@@ -157,7 +157,7 @@ module AzureBlob
         query[:marker] = marker
         query.reject! { |key, value| value.to_s.empty? }
         uri.query = URI.encode_www_form(**query)
-        response = Http.new(uri, signer:).get
+        response = Http.new(uri, additional_headers(options), signer:).get
       end
 
       BlobList.new(fetcher)
@@ -172,7 +172,7 @@ module AzureBlob
     def get_blob_properties(key, options = {})
       uri = generate_uri("#{container}/#{key}")
 
-      response = Http.new(uri, signer:).head
+      response = Http.new(uri, additional_headers(options), signer:).head
 
       Blob.new(response)
     end
@@ -193,9 +193,9 @@ module AzureBlob
     # Takes a key (path) of the blob.
     #
     # Returns a hash of the blob's tags.
-    def get_blob_tags(key)
+    def get_blob_tags(key, options = {})
       uri = generate_uri("#{container}/#{key}?comp=tags")
-      response = Http.new(uri, signer:).get
+      response = Http.new(uri, additional_headers(options), signer:).get
 
       Tags.from_response(response).to_h
     end
@@ -208,7 +208,7 @@ module AzureBlob
     def get_container_properties(options = {})
       uri = generate_uri(container)
       uri.query = URI.encode_www_form(restype: "container")
-      response = Http.new(uri, signer:, raise_on_error: false).head
+      response = Http.new(uri, additional_headers(options), signer:, raise_on_error: false).head
 
       Container.new(response)
     end
@@ -228,6 +228,7 @@ module AzureBlob
       headers = {}
       headers[:"x-ms-blob-public-access"] = "blob" if options[:public_access]
       headers[:"x-ms-blob-public-access"] = options[:public_access] if [ "container", "blob" ].include?(options[:public_access])
+      headers.merge!(additional_headers(options))
 
       uri.query = URI.encode_www_form(restype: "container")
       response = Http.new(uri, headers, signer:).put
@@ -239,7 +240,7 @@ module AzureBlob
     def delete_container(options = {})
       uri = generate_uri(container)
       uri.query = URI.encode_www_form(restype: "container")
-      response = Http.new(uri, signer:).delete
+      response = Http.new(uri, additional_headers(options), signer:).delete
     end
 
     # Return a URI object to a resource in the container. Takes a path.
@@ -282,7 +283,7 @@ module AzureBlob
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-      }
+      }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(nil)
     end
@@ -304,7 +305,7 @@ module AzureBlob
         "Content-Length": content.size,
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
-      }
+      }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:).put(content)
     end
@@ -328,7 +329,7 @@ module AzureBlob
         "Content-Length": content.size,
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
-      }
+      }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:).put(content)
 
@@ -357,13 +358,17 @@ module AzureBlob
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-        **(options[:headers] || {}).map { |k, v| [ :"x-ms-#{k}", v.to_s ] }.to_h
-      }
+      }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content)
     end
 
-    private
+  private
+
+    def additional_headers(options)
+      (options[:headers] || {}).transform_keys { |k| "x-ms-#{k}".to_sym }.
+        transform_values(&:to_s)
+    end
 
     def generate_block_id(index)
       Base64.urlsafe_encode64(index.to_s.rjust(6, "0"))
@@ -390,8 +395,7 @@ module AzureBlob
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-        **(options[:headers] || {}).map { |k, v| [ :"x-ms-#{k}", v.to_s ] }.to_h
-      }
+      }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content.read)
     end
