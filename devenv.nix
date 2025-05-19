@@ -18,6 +18,7 @@
     sshpass
     rsync
     azurite
+    sqlite
   ];
 
   languages.ruby.enable = true;

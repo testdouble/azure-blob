@@ -16,7 +16,7 @@ gem "debug"
 
 
 # Dependencies for Rails tests
-gem "rails", github: "rails/rails", branch: "main"
+gem "rails"
 gem "propshaft", ">= 0.1.7"
 gem "image_processing", "~> 1.2"
 gem "sqlite3", ">= 1.6.6"
