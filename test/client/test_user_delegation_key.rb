@@ -42,4 +42,19 @@ class TestUserDelegationKey < TestCase
 
     refute_equal initial_expiry, delegation_key.signed_expiry
   end
+
+  def test_to_s_refresh_automatically
+    now = Time.now
+    after_expiration_buffer = now + 21601
+    Time.stub :now,  now do
+      @delegation_key = AzureBlob::UserDelegationKey.new(account_name:, signer:)
+    end
+
+    initial_expiry = delegation_key.signed_expiry
+    Time.stub :now,  after_expiration_buffer do
+      delegation_key.to_s
+    end
+
+    refute_equal initial_expiry, delegation_key.signed_expiry
+  end
 end

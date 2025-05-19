@@ -20,6 +20,15 @@ end
 task default: %i[test]
 
 task :test do
+  [
+    "AZURE_ACCOUNT_NAME",
+    "AZURE_PRIVATE_CONTAINER",
+    "AZURE_PUBLIC_CONTAINER",
+  ].each do |env|
+    value = ENV[env]
+    raise "#{env} variable need to be set if you are using the nix/devenv environment, consider running generate-env-file" if value.nil? || value.empty?
+  end
+
   Rake::Task["test_client"].execute
   Rake::Task["test_rails"].execute
 end

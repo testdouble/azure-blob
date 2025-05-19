@@ -11,6 +11,7 @@ class ActiveStorage::AzureBlobDirectUploadsControllerTest < ActionDispatch::Inte
   end
 
   test "creating new direct upload" do
+    skip if ENV["TESTING_AZURITE"]
     checksum = OpenSSL::Digest::MD5.base64digest("Hello")
     metadata = {
       "foo" => "bar",

@@ -15,6 +15,7 @@ module AzureBlob
     end
 
     def to_s
+      refresh
       user_delegation_key
     end
 

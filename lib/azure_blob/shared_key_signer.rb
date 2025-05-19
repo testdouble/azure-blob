@@ -11,7 +11,7 @@ module AzureBlob
       @account_name = account_name
       @access_key = Base64.decode64(access_key)
       @host = host
-      @remove_prefix = @host.include?("/#{@account_name}")
+      @remove_prefix = @host.end_with?("/#{@account_name}")
     end
 
     def authorization_header(uri:, verb:, headers: {})

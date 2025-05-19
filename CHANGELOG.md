@@ -1,5 +1,28 @@
 ## [Unreleased]
 
+## [0.5.8] 2025-05-14
+
+- Add support for copying blobs across containers (#24)
+
+## [0.5.7.1] 2025-04-22
+
+- Fixed a bug when reusing the account name in the container name. #22
+
+## [0.5.7] 2025-02-21
+
+- Add `copy_blob`
+- Update `compose` to use `copy_blob` if 1 source key and blob is <= 256MiB
+
+## [0.5.6] 2025-01-17
+
+- Fix user delegation key not refreshing (#14)
+
+## [0.5.5] 2025-01-10
+
+- Allow lazy loading the signer
+- Add `blob_exist?`
+- Add `container_exist?`
+
 ## [0.5.4] 2024-11-18
 
 - Allow creating public container

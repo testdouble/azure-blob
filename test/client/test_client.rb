@@ -12,6 +12,7 @@ class TestClient < TestCase
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
     @container = ENV["AZURE_PRIVATE_CONTAINER"]
+    @public_container = ENV["AZURE_PUBLIC_CONTAINER"]
     @principal_id = ENV["AZURE_PRINCIPAL_ID"]
     @host = ENV["STORAGE_BLOB_HOST"]
     @client = AzureBlob::Client.new(
@@ -64,6 +65,18 @@ class TestClient < TestCase
       account_name: @account_name,
       container: @container,
     )
+  end
+
+  def test_lazy_loading_doesnt_raise_before_querying
+    client = AzureBlob::Client.new(
+      account_name: @account_name,
+      container: @container,
+      lazy: true,
+    )
+
+    assert_raises(AzureBlob::Error) do
+      client.create_block_blob(key, content)
+    end
   end
 
   def test_single_block_upload
@@ -163,6 +176,17 @@ class TestClient < TestCase
     assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob(key) }
   end
 
+  def test_copy
+    client.create_block_blob(key, content)
+    assert_equal content, client.get_blob(key)
+
+    copy_key = "#{key}_copy"
+
+    client.copy_blob(copy_key, key)
+
+    assert_equal content, client.get_blob(copy_key)
+  end
+
   def test_delete
     client.create_block_blob(key, content)
     assert_equal content, client.get_blob(key)
@@ -225,6 +249,14 @@ class TestClient < TestCase
 
   def test_get_blob_properties_404
     assert_raises(AzureBlob::Http::FileNotFoundError) { client.get_blob_properties(key) }
+  end
+
+  def test_blob_exist?
+    refute client.blob_exist?(key)
+
+    client.create_block_blob(key, content)
+
+    assert client.blob_exist?(key)
   end
 
   def test_append_blob
@@ -323,6 +355,7 @@ class TestClient < TestCase
   end
 
   def test_get_container_properties
+    skip if ENV["TESTING_AZURITE"]
     container = client.get_container_properties
     assert container.present?
 
@@ -334,6 +367,20 @@ class TestClient < TestCase
     )
     container = client.get_container_properties
     refute container.present?
+  end
+
+  def test_container_exist?
+    skip if ENV["TESTING_AZURITE"]
+    assert client.container_exist?
+
+    client = AzureBlob::Client.new(
+      account_name: @account_name,
+      access_key: @access_key,
+      container: "missingcontainer",
+      principal_id: @principal_id,
+    )
+
+    refute client.container_exist?
   end
 
   def test_create_container
@@ -362,5 +409,27 @@ class TestClient < TestCase
     tags = client.get_blob_tags(key)
 
     assert_equal({ "tag1" => "value 1", "tag 2" => "value 2" }, tags)
+  end
+
+  def test_copy_between_containers
+    destination_client = AzureBlob::Client.new(
+      account_name: @account_name,
+      access_key: @access_key,
+      container: @public_container,
+      principal_id: @principal_id,
+      host: @host,
+    )
+    client.create_block_blob(key, content)
+    assert_equal content, client.get_blob(key)
+
+    destination_client.copy_blob(key, key, source_client: client)
+
+
+    assert_equal content, destination_client.get_blob(key)
+
+    begin
+      destination_client.delete_blob(key)
+    rescue AzureBlob::Http::FileNotFoundError
+    end
   end
 end

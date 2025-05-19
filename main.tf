@@ -12,7 +12,7 @@ provider "azurerm" {
 }
 
 locals {
-  public_ssh_key = var.ssh_key != "" ? var.ssh_key : file("~/.ssh/id_rsa.pub")
+  public_ssh_key = var.create_vm && var.ssh_key == "" ?  file("~/.ssh/id_rsa.pub") : var.ssh_key
 }
 
 resource "azurerm_resource_group" "main" {
@@ -43,6 +43,18 @@ resource "azurerm_storage_container" "private" {
 
 resource "azurerm_storage_container" "public" {
   name                  = "public"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "blob"
+}
+
+resource "azurerm_storage_container" "azureblobrubygemdev_private" {
+  name                  = "azureblobrubygemdev-private"
+  storage_account_name  = azurerm_storage_account.main.name
+  container_access_type = "private"
+}
+
+resource "azurerm_storage_container" "azureblobrubygemdev_public" {
+  name                  = "azureblobrubygemdev-public"
   storage_account_name  = azurerm_storage_account.main.name
   container_access_type = "blob"
 }

@@ -19,7 +19,7 @@ module AzureBlob
     end
 
     def to_s
-      refresh if expired?
+      refresh
       token
     end
 
@@ -30,6 +30,7 @@ module AzureBlob
     end
 
     def refresh
+      return unless expired?
       headers =  { "Metadata" => "true" }
       headers["X-IDENTITY-HEADER"] = ENV["IDENTITY_HEADER"] if ENV["IDENTITY_HEADER"]
 

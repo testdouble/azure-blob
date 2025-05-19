@@ -13,6 +13,7 @@ class ActiveStorage::Service::AzureBlobPublicServiceTest < ActiveSupport::TestCa
   end
 
   test "public URL generation" do
+    skip if ENV["TESTING_AZURITE"]
     url = @service.url(@key, filename: ActiveStorage::Filename.new("avatar.png"))
     host = @config[:host] || "https://#{@config[:storage_account_name]}.blob.core.windows.net"
 

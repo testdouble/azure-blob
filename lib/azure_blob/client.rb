@@ -20,18 +20,10 @@ module AzureBlob
       @container = container
       @host = host
       @cloud_regions = options[:cloud_regions]&.to_sym || :global
-
-      no_access_key = access_key.nil? || access_key&.empty?
-      using_managed_identities = no_access_key && !principal_id.nil? || options[:use_managed_identities]
-
-      if !using_managed_identities && no_access_key
-        raise AzureBlob::Error.new(
-          "`access_key` cannot be empty. To use managed identities instead, pass a `principal_id` or set `use_managed_identities` to true."
-        )
-      end
-      @signer = using_managed_identities ?
-        AzureBlob::EntraIdSigner.new(account_name:, host: self.host, principal_id:) :
-        AzureBlob::SharedKeySigner.new(account_name:, access_key:, host: self.host)
+      @access_key = access_key
+      @principal_id = principal_id
+      @use_managed_identities = options[:use_managed_identities]
+      signer unless options[:lazy]
     end
 
     # Create a blob of type block. Will automatically split the the blob in multiple block and send the blob in pieces (blocks) if the blob is too big.
@@ -83,6 +75,31 @@ module AzureBlob
       }
 
       Http.new(uri, headers, signer:).get
+    end
+
+    # Copy a blob between containers or within the same container
+    #
+    # Calls to {Copy Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url]
+    #
+    # Parameters:
+    # - key: destination blob path
+    # - source_key: source blob path
+    # - options: additional options
+    #   - source_client: AzureBlob::Client instance for the source container (optional)
+    #     If not provided, copies from within the same container
+    #
+    def copy_blob(key, source_key, options = {})
+      source_client = options.delete(:source_client) || self
+      uri = generate_uri("#{container}/#{key}")
+
+      source_uri = source_client.signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 300).utc.iso8601)
+
+      headers = {
+        "x-ms-copy-source": source_uri.to_s,
+        "x-ms-requires-sync": "true",
+      }
+
+      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
     end
 
     # Delete a blob
@@ -150,13 +167,23 @@ module AzureBlob
     #
     # Calls to {Get Blob Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob-properties]
     #
-    # This can be used to see if the blob exist or obtain metadata such as content type, disposition, checksum or Azure custom metadata.
+    # This can be used to obtain metadata such as content type, disposition, checksum or Azure custom metadata.
+    # To check for blob presence, look for `blob_exist?` as `get_blob_properties` raises on missing blob.
     def get_blob_properties(key, options = {})
       uri = generate_uri("#{container}/#{key}")
 
       response = Http.new(uri, signer:).head
 
       Blob.new(response)
+    end
+
+    # Returns a boolean indicating if the blob exists.
+    #
+    # Calls to {Get Blob Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob-properties]
+    def blob_exist?(key, options = {})
+      get_blob_properties(key, options).present?
+    rescue AzureBlob::Http::FileNotFoundError
+      false
     end
 
     # Returns the tags associated with a blob
@@ -186,6 +213,13 @@ module AzureBlob
       Container.new(response)
     end
 
+    # Returns a boolean indicating if the container exists.
+    #
+    # Calls to {Get Container Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-container-properties]
+    def container_exist?(options = {})
+      get_container_properties(options = {}).present?
+    end
+
     # Create the container
     #
     # Calls to {Create Container}[https://learn.microsoft.com/en-us/rest/api/storageservices/create-container]
@@ -193,7 +227,7 @@ module AzureBlob
       uri = generate_uri(container)
       headers = {}
       headers[:"x-ms-blob-public-access"] = "blob" if options[:public_access]
-      headers[:"x-ms-blob-public-access"] = options[:public_access] if ["container","blob"].include?(options[:public_access])
+      headers[:"x-ms-blob-public-access"] = options[:public_access] if [ "container", "blob" ].include?(options[:public_access])
 
       uri.query = URI.encode_www_form(restype: "container")
       response = Http.new(uri, headers, signer:).put
@@ -366,6 +400,24 @@ module AzureBlob
       @host ||= "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
     end
 
-    attr_reader :account_name, :signer, :container, :http, :cloud_regions
+    def signer
+      @signer ||=
+        begin
+          no_access_key = access_key.nil? || access_key&.empty?
+          using_managed_identities = no_access_key && !principal_id.nil? || use_managed_identities
+
+          if !using_managed_identities && no_access_key
+            raise AzureBlob::Error.new(
+              "`access_key` cannot be empty. To use managed identities instead, pass a `principal_id` or set `use_managed_identities` to true."
+            )
+          end
+
+          using_managed_identities ?
+            AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id:) :
+            AzureBlob::SharedKeySigner.new(account_name:, access_key:, host:)
+        end
+    end
+
+    attr_reader :account_name, :container, :http, :cloud_regions, :access_key, :principal_id, :use_managed_identities
   end
 end
