@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Add support for additional headers to all endpoints
+
 ## [0.5.8] 2025-05-14
 
 - Add support for copying blobs across containers (#24)
