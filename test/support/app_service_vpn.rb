@@ -74,7 +74,7 @@ class AppServiceVpn
     puts "Extracting MSI endpoint info..."
     endpoint = nil
     header = nil
-    Net::SSH.start(HOST, username, password:, port:, encryption: 'aes256-ctr', hmac: 'hmac-sha1-96', auth_methods: ['password']) do |ssh|
+    Net::SSH.start(HOST, username, password:, port:, encryption: "aes256-ctr", hmac: "hmac-sha1-96", auth_methods: [ "password" ]) do |ssh|
       endpoint = ssh.exec! [ "bash", "-l", "-c", %(printf "%s" "$IDENTITY_ENDPOINT") ].shelljoin
       header = ssh.exec! [ "bash", "-l", "-c", %(printf "%s" "$IDENTITY_HEADER") ].shelljoin
     end
