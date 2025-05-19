@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require "debug"
-require "active_support/testing/strict_warnings"
 require "action_view"
 require "action_view/helpers"
 ENV["RAILS_ENV"] ||= "test"

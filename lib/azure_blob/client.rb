@@ -246,7 +246,7 @@ module AzureBlob
     #
     # Example: +generate_uri("#{container}/#{key}")+
     def generate_uri(path)
-      URI.parse(URI::DEFAULT_PARSER.escape(File.join(host, path)))
+      URI.parse(URI::RFC2396_PARSER.escape(File.join(host, path)))
     end
 
     # Returns an SAS signed URI

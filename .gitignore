@@ -28,3 +28,8 @@ provider.tf
 
 __azurite_db*
 __blobstorage__/
+
+# LLM
+**/.claude/settings.local.json
+**/CLAUDE.local.md
+**/CLAUDE.local.md

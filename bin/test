@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+
+if ARGV.empty?
+  # Run all tests when no arguments provided
+  exec("bundle", "exec", "rake", "test")
+else
+  # Use m gem for specific tests
+  exec("bundle", "exec", "m", *ARGV)
+end
