@@ -22,7 +22,8 @@ class TestClient < TestCase
       principal_id: @principal_id,
       host: @host,
     )
-    @key = "test client##{name}"
+    @uid = SecureRandom.uuid
+    @key = "test-client-#{name}-#{@uid}"
     @content = "Some random content #{Random.rand(200)}"
   end
 
@@ -197,9 +198,9 @@ class TestClient < TestCase
   end
 
   def test_delete_prefix
-    prefix = "#{name}_prefix"
+    prefix = "#{name}_prefix_#{@uid}"
     keys = 4.times.map do |i|
-      key = "#{prefix}/#{name}_#{i}"
+      key = "#{prefix}/#{i}"
       client.create_block_blob(key, content)
       key
     end
@@ -212,7 +213,7 @@ class TestClient < TestCase
   end
 
   def test_list_prefix
-    prefix = "#{name}_prefix"
+    prefix = "#{name}_prefix_#{@uid}"
     @key = "#{prefix}/#{key}"
     client.create_block_blob(key, content)
 
@@ -222,9 +223,9 @@ class TestClient < TestCase
   end
 
   def test_list_blobs_with_pages
-    prefix = "#{name}_prefix"
+    prefix = "#{name}_prefix_#{@uid}"
     keys = 4.times.map do |i|
-      key = "#{prefix}/#{name}_#{i}"
+      key = "#{prefix}/#{i}"
       client.create_block_blob(key, content)
       key
     end
