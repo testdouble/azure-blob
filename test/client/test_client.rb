@@ -449,13 +449,13 @@ class TestClient < TestCase
 
     http_mock.verify
     dummy = Minitest::Mock.new
-    dummy.expect :delete_blob, nil, [key]
+    dummy.expect :delete_blob, nil, [ key ]
     @client = dummy
   end
 
   def test_create_append_blob_additional_headers
     http_mock = Minitest::Mock.new
-    http_mock.expect :put, true, [nil]
+    http_mock.expect :put, true, [ nil ]
 
     stubbed_new = lambda do |uri, headers = {}, signer: nil, **kwargs|
       assert_equal "bar", headers[:"x-ms-foo"]
@@ -469,7 +469,7 @@ class TestClient < TestCase
 
     http_mock.verify
     dummy = Minitest::Mock.new
-    dummy.expect :delete_blob, nil, [key]
+    dummy.expect :delete_blob, nil, [ key ]
     @client = dummy
   end
 end
