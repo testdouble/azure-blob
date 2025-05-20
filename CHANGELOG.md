@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+- Fix typo in class name `AzureBlob::ForbidenError` to `AzureBlob::ForbiddenError`
+- Fix proper URI encoding for keys with special characters like question marks
+
 ## [0.5.8] 2025-05-14
 
 - Add support for copying blobs across containers (#24)
