@@ -432,4 +432,12 @@ class TestClient < TestCase
     rescue AzureBlob::Http::FileNotFoundError
     end
   end
+
+  def test_blob_name_too_long
+    long_key = "a" * (AzureBlob::MAX_BLOB_NAME_LENGTH + 1)
+
+    assert_raises(AzureBlob::Error) { client.create_block_blob(long_key, content) }
+
+    assert_raises(AzureBlob::Error) { client.create_block_blob(long_key, content) }
+  end
 end

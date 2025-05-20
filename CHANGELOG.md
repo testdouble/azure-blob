@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Validate blob name length against Azure's limits
+
 ## [0.5.8] 2025-05-14
 
 - Add support for copying blobs across containers (#24)

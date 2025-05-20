@@ -48,6 +48,7 @@ module AzureBlob
     # [+:block_size+]
     #   Block size in bytes, can be used to force the method to split the upload in smaller chunk. Defaults to +AzureBlob::DEFAULT_BLOCK_SIZE+ and cannot be bigger than +AzureBlob::MAX_UPLOAD_SIZE+
     def create_block_blob(key, content, options = {})
+      validate_key_length!(key)
       if content.size > (options[:block_size] || DEFAULT_BLOCK_SIZE)
         put_blob_multiple(key, content, **options)
       else
@@ -89,6 +90,8 @@ module AzureBlob
     #     If not provided, copies from within the same container
     #
     def copy_blob(key, source_key, options = {})
+      validate_key_length!(key)
+      validate_key_length!(source_key)
       source_client = options.delete(:source_client) || self
       uri = generate_uri("#{container}/#{key}")
 
@@ -274,6 +277,7 @@ module AzureBlob
     # [+:content_disposition+]
     #   Will be saved on the blob in Azure.
     def create_append_blob(key, options = {})
+      validate_key_length!(key)
       uri = generate_uri("#{container}/#{key}")
 
       headers = {
@@ -297,6 +301,7 @@ module AzureBlob
     #   Will ensure integrity of the upload. The checksum must be a base64 digest. Can be produced with +OpenSSL::Digest::MD5.base64digest+.
     #   The checksum must be the checksum of the block not the blob.
     def append_blob_block(key, content, options = {})
+      validate_key_length!(key)
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(comp: "appendblock")
 
@@ -320,6 +325,7 @@ module AzureBlob
     # [+:content_md5+]
     #   Must be the checksum for the block not the blob. The checksum must be a base64 digest. Can be produced with +OpenSSL::Digest::MD5.base64digest+.
     def put_blob_block(key, index, content, options = {})
+      validate_key_length!(key)
       block_id = generate_block_id(index)
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
@@ -347,6 +353,7 @@ module AzureBlob
     #   This is the checksum for the whole blob. The checksum is saved on the blob, but it is not validated!
     #   Add a checksum for each block if you want Azure to validate integrity.
     def commit_blob_blocks(key, block_ids, options = {})
+      validate_key_length!(key)
       block_list = BlockList.new(block_ids)
       content = block_list.to_s
       uri = generate_uri("#{container}/#{key}")
@@ -364,11 +371,23 @@ module AzureBlob
 
     private
 
+    def validate_key_length!(key)
+      max_length = max_blob_name_length
+      if key.nil? || key.empty? || key.length > max_length
+        raise AzureBlob::Error.new("`key` must be between 1 and #{max_length} characters")
+      end
+    end
+
+    def max_blob_name_length
+      MAX_BLOB_NAME_LENGTH
+    end
+
     def generate_block_id(index)
       Base64.urlsafe_encode64(index.to_s.rjust(6, "0"))
     end
 
     def put_blob_multiple(key, content, options = {})
+      validate_key_length!(key)
       content = StringIO.new(content) if content.is_a? String
       block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
       block_count = (content.size.to_f / block_size).ceil
@@ -380,6 +399,7 @@ module AzureBlob
     end
 
     def put_blob_single(key, content, options = {})
+      validate_key_length!(key)
       content = StringIO.new(content) if content.is_a? String
       uri = generate_uri("#{container}/#{key}")
 
