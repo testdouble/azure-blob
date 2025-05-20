@@ -295,7 +295,7 @@ class TestClient < TestCase
       permissions: "r",
       expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
     )
-    assert_raises(AzureBlob::Http::ForbidenError) do
+    assert_raises(AzureBlob::Http::ForbiddenError) do
       AzureBlob::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).put(content)
     end
 
