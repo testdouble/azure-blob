@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - test
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -29,7 +30,7 @@ jobs:
         run: bundle exec rubocop
   deploy-infrastructure:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/test')
+    if: startsWith(github.ref, 'refs/tags/test') || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-terraform
