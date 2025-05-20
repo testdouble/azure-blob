@@ -18,3 +18,4 @@ class TestCase < Minitest::Test
     !(ENV["AZURE_ACCESS_KEY"].nil? || ENV["AZURE_ACCESS_KEY"].empty?)
   end
 end
+
