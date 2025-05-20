@@ -248,7 +248,7 @@ module AzureBlob
     # Example: +generate_uri("#{container}/#{key}")+
     def generate_uri(path)
       encoded = path.split("/").map { |segment| CGI.escape(segment) }.join("/")
-      URI.parse([host.chomp("/"), encoded].join("/"))
+      URI.parse([ host.chomp("/"), encoded ].join("/"))
     end
 
     # Returns an SAS signed URI
