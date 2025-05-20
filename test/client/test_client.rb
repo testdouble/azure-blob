@@ -23,7 +23,7 @@ class TestClient < TestCase
       host: @host,
     )
     @uid = SecureRandom.uuid
-    @key = "test-client-#{name}-#{@uid}"
+    @key = "test-client-?-#{name}-#{@uid}" # ? in key to test proper escaping
     @content = "Some random content #{Random.rand(200)}"
   end
 
