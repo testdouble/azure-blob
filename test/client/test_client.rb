@@ -433,4 +433,44 @@ class TestClient < TestCase
     rescue AzureBlob::Http::FileNotFoundError
     end
   end
+
+  def test_get_blob_additional_headers
+    http_mock = Minitest::Mock.new
+    http_mock.expect :get, ""
+
+    stubbed_new = lambda do |uri, headers = {}, signer: nil, **kwargs|
+      assert_equal "bar", headers[:"x-ms-foo"]
+      http_mock
+    end
+
+    AzureBlob::Http.stub :new, stubbed_new do
+      custom_client = AzureBlob::Client.new(account_name: "foo", access_key: "bar", container: "cont")
+      custom_client.get_blob(key, headers: { foo: "bar" })
+    end
+
+    http_mock.verify
+    dummy = Minitest::Mock.new
+    dummy.expect :delete_blob, nil, [ key ]
+    @client = dummy
+  end
+
+  def test_create_append_blob_additional_headers
+    http_mock = Minitest::Mock.new
+    http_mock.expect :put, true, [ nil ]
+
+    stubbed_new = lambda do |uri, headers = {}, signer: nil, **kwargs|
+      assert_equal "bar", headers[:"x-ms-foo"]
+      http_mock
+    end
+
+    AzureBlob::Http.stub :new, stubbed_new do
+      custom_client = AzureBlob::Client.new(account_name: "foo", access_key: "bar", container: "cont")
+      custom_client.create_append_blob(key, headers: { foo: "bar" })
+    end
+
+    http_mock.verify
+    dummy = Minitest::Mock.new
+    dummy.expect :delete_blob, nil, [ key ]
+    @client = dummy
+  end
 end
