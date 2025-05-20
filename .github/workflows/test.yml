@@ -5,9 +5,6 @@ on:
   push:
     tags:
       - test
-    branches:
-      - '*'
-    pull_request:
 
 permissions:
   id-token: write
@@ -20,6 +17,16 @@ env:
   ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: RuboCop
+        run: bundle exec rubocop
   deploy-infrastructure:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/test')
@@ -113,7 +120,7 @@ jobs:
           AZURE_PRINCIPAL_ID: ${{ secrets.AZURE_PRINCIPAL_ID }}
         run: bundle exec rake test_azurite
 
-  test:
+  client_test:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
@@ -124,11 +131,32 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      - name: Tests
+      - name: Client tests
         env:
           AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
           AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
           AZURE_PRIVATE_CONTAINER: ${{secrets.AZURE_PRIVATE_CONTAINER}}
           AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
           AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
-        run: bundle exec rake test
+        run: bundle exec rake test_client
+
+  rails_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get install -y libvips sqlite3 libsqlite3-dev
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Rails tests
+        env:
+          AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
+          AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
+          AZURE_PRIVATE_CONTAINER: ${{secrets.AZURE_PRIVATE_CONTAINER}}
+          AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
+          AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
+        run: bundle exec rake test_rails
+

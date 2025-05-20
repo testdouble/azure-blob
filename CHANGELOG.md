@@ -1,6 +1,8 @@
 ## [Unreleased]
 
 - Add support for additional headers to all endpoints
+- Fix typo in class name `AzureBlob::ForbidenError` to `AzureBlob::ForbiddenError`
+- Fix proper URI encoding for keys with special characters like question marks
 
 ## [0.5.8] 2025-05-14
 
