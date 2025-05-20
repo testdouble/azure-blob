@@ -194,7 +194,8 @@ module AzureBlob
     #
     # Returns a hash of the blob's tags.
     def get_blob_tags(key, options = {})
-      uri = generate_uri("#{container}/#{key}?comp=tags")
+      uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(comp: "tags")
       response = Http.new(uri, additional_headers(options), signer:).get
 
       Tags.from_response(response).to_h
@@ -247,7 +248,8 @@ module AzureBlob
     #
     # Example: +generate_uri("#{container}/#{key}")+
     def generate_uri(path)
-      URI.parse(URI::RFC2396_PARSER.escape(File.join(host, path)))
+      encoded = path.split("/").map { |segment| CGI.escape(segment) }.join("/")
+      URI.parse([ host.chomp("/"), encoded ].join("/"))
     end
 
     # Returns an SAS signed URI
