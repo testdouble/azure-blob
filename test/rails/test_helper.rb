@@ -183,4 +183,3 @@ class Group < ActiveRecord::Base
 end
 
 ActiveSupport::TestCase.alias_method :force_skip, :skip
-
