@@ -9,6 +9,7 @@ class TestClient < TestCase
   EXPIRATION = 120
 
   def setup
+    skip if offline?
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @access_key = ENV["AZURE_ACCESS_KEY"]
     @container = ENV["AZURE_PRIVATE_CONTAINER"]

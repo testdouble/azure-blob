@@ -10,6 +10,7 @@ module ActiveStorage::Service::SharedServiceTests
 
   included do
     setup do
+      skip if offline?
       @key = SecureRandom.base58(24)
       @service = self.class.const_get(:SERVICE)
       @service.upload @key, StringIO.new(FIXTURE_DATA)

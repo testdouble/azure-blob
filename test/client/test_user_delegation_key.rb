@@ -5,7 +5,7 @@ require_relative "test_helper"
 class TestUserDelegationKey < TestCase
   attr_reader :delegation_key, :account_name, :principal_id, :signer, :host
   def setup
-    skip if using_shared_key
+    skip if using_shared_key || offline?
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @principal_id = ENV["AZURE_PRINCIPAL_ID"]
     @host = "https://#{account_name}.blob.core.windows.net"

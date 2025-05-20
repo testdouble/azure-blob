@@ -116,6 +116,7 @@ module AzureBlob
 
     def raise_error
       return unless raise_on_error
+      warn "[AzureBlob] HTTP #{response.code} body: #{response.body}" if ENV["CI"]
       raise error_from_response.new(body: @response.body, status: @response.code&.to_i)
     end
 

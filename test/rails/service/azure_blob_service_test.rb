@@ -6,6 +6,8 @@ require "uri"
 class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
   SERVICE = ActiveStorage::Service.configure(:azure, SERVICE_CONFIGURATIONS)
 
+  setup { skip if offline? }
+
   include ActiveStorage::Service::SharedServiceTests
 
   test "direct upload with content type" do

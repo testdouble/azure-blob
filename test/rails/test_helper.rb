@@ -3,6 +3,10 @@
 require "debug"
 require "action_view"
 require "action_view/helpers"
+
+def offline?
+  ENV.key?("OFFLINE_TESTS_ONLY")
+end
 ENV["RAILS_ENV"] ||= "test"
 require_relative "dummy/config/environment.rb"
 

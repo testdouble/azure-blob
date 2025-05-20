@@ -6,6 +6,7 @@ require "rails/database/setup"
 
 class ActiveStorage::AzureBlobDirectUploadsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    skip if offline?
     @config = SERVICE_CONFIGURATIONS[:azure]
     ActiveStorage::Blob.service = ActiveStorage::Service.configure(:azure, SERVICE_CONFIGURATIONS)
   end

@@ -9,6 +9,7 @@ class ActiveStorage::Service::AzureBlobPublicServiceTest < ActiveSupport::TestCa
   include ActiveStorage::Service::SharedServiceTests
 
   setup do
+    skip if offline?
     @config = SERVICE_CONFIGURATIONS[:azure_public]
   end
 
