@@ -61,7 +61,7 @@ module AzureBlob
     def current_page
       document
         .get_elements("//EnumerationResults/Blobs/Blob/Name")
-        .map { |element| element.get_text.to_s }
+        .map { |element| element.text }
     end
 
     def fetch

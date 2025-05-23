@@ -10,6 +10,7 @@ require_relative "shared_key_signer"
 require_relative "entra_id_signer"
 require "time"
 require "base64"
+require "stringio"
 
 module AzureBlob
   # AzureBlob Client class. You interact with the Azure Blob api
@@ -248,8 +249,12 @@ module AzureBlob
     #
     # Example: +generate_uri("#{container}/#{key}")+
     def generate_uri(path)
-      encoded = path.split("/").map { |segment| CGI.escape(segment) }.join("/")
-      URI.parse([ host.chomp("/"), encoded ].join("/"))
+      # https://github.com/Azure/azure-storage-ruby/blob/master/common/lib/azure/storage/common/service/storage_service.rb#L191-L201
+      encoded_path = CGI.escape(path.encode("UTF-8"))
+      encoded_path = encoded_path.gsub(/%2F/, "/")
+      encoded_path = encoded_path.gsub(/%5C/, "/")
+      encoded_path = encoded_path.gsub(/\+/, "%20")
+      URI.parse(File.join(host, encoded_path))
     end
 
     # Returns an SAS signed URI
