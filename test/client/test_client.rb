@@ -23,7 +23,7 @@ class TestClient < TestCase
       host: @host,
     )
     @uid = SecureRandom.uuid
-    @key = "test-client-?-#{name}-#{@uid}" # ? in key to test proper escaping
+    @key = "test-client-#{name}-#{@uid} ?#&<>\"'%+/\\" # Special chars to test proper escaping
     @content = "Some random content #{Random.rand(200)}"
   end
 
@@ -219,7 +219,9 @@ class TestClient < TestCase
 
     blobs = client.list_blobs(prefix: prefix).to_a
 
-    assert_match_content [ key ], blobs
+    # Account for backslash to forward slash conversion in our encoding
+    expected_key = key.gsub(/\\/, "/")
+    assert_match_content [ expected_key ], blobs
   end
 
   def test_list_blobs_with_pages
