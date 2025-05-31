@@ -247,7 +247,7 @@ class TestClient < TestCase
     blob = client.get_blob_properties(key)
 
     assert blob.present?
-    assert_equal content.size, blob.size
+    assert_equal content.bytesize, blob.size
   end
 
   def test_get_blob_properties_404
@@ -468,6 +468,27 @@ class TestClient < TestCase
     AzureBlob::Http.stub :new, stubbed_new do
       custom_client = AzureBlob::Client.new(account_name: "foo", access_key: "bar", container: "cont")
       custom_client.create_append_blob(key, headers: { foo: "bar" })
+    end
+
+    http_mock.verify
+    dummy = Minitest::Mock.new
+    dummy.expect :delete_blob, nil, [ key ]
+    @client = dummy
+  end
+
+  def test_append_blob_block_content_size
+    content = "Ň"
+    http_mock = Minitest::Mock.new
+    http_mock.expect :put, true, [ content ]
+
+    stubbed_new = lambda do |uri, headers = {}, signer: nil, **kwargs|
+      assert_equal "2", headers[:"Content-Length"]
+      http_mock
+    end
+
+    AzureBlob::Http.stub :new, stubbed_new do
+      custom_client = AzureBlob::Client.new(account_name: "foo", access_key: "bar", container: "cont")
+      custom_client.append_blob_block(key, content)
     end
 
     http_mock.verify
