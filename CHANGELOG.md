@@ -3,6 +3,7 @@
 - Add support for additional headers to all endpoints
 - Fix typo in class name `AzureBlob::ForbidenError` to `AzureBlob::ForbiddenError`
 - Fix proper URI encoding for keys with special characters like question marks
+- Bug fix: Use bytesize to get content size for multi-byte characters
 
 ## [0.5.8] 2025-05-14
 
