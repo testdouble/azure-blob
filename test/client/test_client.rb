@@ -482,7 +482,7 @@ class TestClient < TestCase
     http_mock.expect :put, true, [ content ]
 
     stubbed_new = lambda do |uri, headers = {}, signer: nil, **kwargs|
-      assert_equal "2", headers[:"Content-Length"]
+      assert_equal 2, headers[:"Content-Length"]
       http_mock
     end
 
