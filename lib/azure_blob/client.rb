@@ -49,7 +49,7 @@ module AzureBlob
     # [+:block_size+]
     #   Block size in bytes, can be used to force the method to split the upload in smaller chunk. Defaults to +AzureBlob::DEFAULT_BLOCK_SIZE+ and cannot be bigger than +AzureBlob::MAX_UPLOAD_SIZE+
     def create_block_blob(key, content, options = {})
-      if content.size > (options[:block_size] || DEFAULT_BLOCK_SIZE)
+      if content_size(content) > (options[:block_size] || DEFAULT_BLOCK_SIZE)
         put_blob_multiple(key, content, **options)
       else
         put_blob_single(key, content, **options)
@@ -309,7 +309,7 @@ module AzureBlob
       uri.query = URI.encode_www_form(comp: "appendblock")
 
       headers = {
-        "Content-Length": content.size,
+        "Content-Length": content_size(content),
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
       }.merge(additional_headers(options))
@@ -333,7 +333,7 @@ module AzureBlob
       uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
 
       headers = {
-        "Content-Length": content.size,
+        "Content-Length": content_size(content),
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
       }.merge(additional_headers(options))
@@ -361,7 +361,7 @@ module AzureBlob
       uri.query = URI.encode_www_form(comp: "blocklist")
 
       headers = {
-        "Content-Length": content.size,
+        "Content-Length": content_size(content),
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
@@ -384,7 +384,7 @@ module AzureBlob
     def put_blob_multiple(key, content, options = {})
       content = StringIO.new(content) if content.is_a? String
       block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
-      block_count = (content.size.to_f / block_size).ceil
+      block_count = (content_size(content).to_f / block_size).ceil
       block_ids = block_count.times.map do |i|
         put_blob_block(key, i, content.read(block_size))
       end
@@ -398,13 +398,21 @@ module AzureBlob
 
       headers = {
         "x-ms-blob-type": "BlockBlob",
-        "Content-Length": content.size,
+        "Content-Length": content_size(content),
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content.read)
+    end
+
+    def content_size(content)
+      if content.respond_to?(:bytesize)
+        content.bytesize
+      else
+        content.size
+      end
     end
 
     def host
