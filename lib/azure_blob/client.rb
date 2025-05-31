@@ -408,7 +408,11 @@ module AzureBlob
     end
 
     def content_size(content)
-      content.bytesize
+      if content.respond_to?(:bytesize)
+        content.bytesize
+      else
+        content.size
+      end
     end
 
     def host
