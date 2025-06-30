@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.5.9.1] 2025-06-30
+
 - Fix a regression in #13 + fix add a test
 
 ## [0.5.9] 2025-05-31
