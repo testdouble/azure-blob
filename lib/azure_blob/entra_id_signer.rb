@@ -25,6 +25,7 @@ module AzureBlob
     end
 
     def sas_token(uri, options = {})
+      delegation_key.refresh
       to_sign = [
         options[:permissions],
         options[:start],

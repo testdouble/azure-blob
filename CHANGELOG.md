@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Fix a regression in #13 + fix add a test
+
 ## [0.5.9] 2025-05-31
 
 - Add support for additional headers to all endpoints
