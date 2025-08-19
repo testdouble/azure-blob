@@ -78,6 +78,18 @@ module AzureBlob
       Http.new(uri, headers, signer:).get
     end
 
+    # Returns the raw HTTP response for a blob
+    #
+    # Calls to the {Get Blob}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob] endpoint.
+    #
+    # Takes a key (path) and options.
+    def get_blob_response(key, options = {}, &block)
+      uri = generate_uri("#{container}/#{key}")
+      headers = additional_headers(options)
+
+      Http.new(uri, headers, signer:).get_full_response(&block)
+    end
+
     # Copy a blob between containers or within the same container
     #
     # Calls to {Copy Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url]

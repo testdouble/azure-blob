@@ -42,12 +42,16 @@ module AzureBlob
     end
 
     def get
+      get_full_response.body
+    end
+
+    def get_full_response(&block)
       sign_request("GET") if signer
       @response = http.start do |http|
-        http.get(uri, headers)
+        http.request_get(uri, headers, &block)
       end
       raise_error  unless success?
-      response.body
+      response
     end
 
     def put(content = "")
