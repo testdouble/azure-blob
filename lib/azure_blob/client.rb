@@ -70,10 +70,7 @@ module AzureBlob
     #   Ending point in bytes
     def get_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
-
-      headers = {
-        "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}",
-      }.merge(additional_headers(options))
+      headers = {}.merge(range_headers(options)).merge(additional_headers(options))
 
       Http.new(uri, headers, signer:).get
     end
@@ -82,10 +79,10 @@ module AzureBlob
     #
     # Calls to the {Get Blob}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob] endpoint.
     #
-    # Takes a key (path) and options.
+    # Takes a key (path) and same options as get_blob
     def get_blob_response(key, options = {}, &block)
       uri = generate_uri("#{container}/#{key}")
-      headers = additional_headers(options)
+      headers = {}.merge(range_headers(options)).merge(additional_headers(options))
 
       Http.new(uri, headers, signer:).get_full_response(&block)
     end
@@ -387,6 +384,12 @@ module AzureBlob
     def additional_headers(options)
       (options[:headers] || {}).transform_keys { |k| "x-ms-#{k}".to_sym }.
         transform_values(&:to_s)
+    end
+
+    def range_headers(options)
+      return {} unless options[:start]
+
+      { "x-ms-range": "bytes=#{options[:start]}-#{options[:end]}" }
     end
 
     def generate_block_id(index)
