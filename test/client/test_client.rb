@@ -138,6 +138,13 @@ class TestClient < TestCase
     assert_equal "funky content_type", response.content_type
   end
 
+  def test_content_encoding_persisted
+    client.create_block_blob(key, content, content_encoding: "compress")
+    response = client.get_blob_properties(key)
+
+    assert_equal "compress", response.content_encoding
+  end
+
   def test_metadata_persisted
     client.create_block_blob(key, content, metadata: { hello: "world" })
     response = client.get_blob_properties(key)

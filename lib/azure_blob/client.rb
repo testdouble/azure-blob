@@ -295,6 +295,7 @@ module AzureBlob
 
       headers = {
         "x-ms-blob-type": "AppendBlob",
+        "Content-Encoding": options[:content_encoding],
         "Content-Length": 0,
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
@@ -318,6 +319,7 @@ module AzureBlob
       uri.query = URI.encode_www_form(comp: "appendblock")
 
       headers = {
+        "Content-Encoding": options[:content_encoding],
         "Content-Length": content_size(content),
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
@@ -342,6 +344,7 @@ module AzureBlob
       uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
 
       headers = {
+        "Content-Encoding": options[:content_encoding],
         "Content-Length": content_size(content),
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
@@ -370,6 +373,7 @@ module AzureBlob
       uri.query = URI.encode_www_form(comp: "blocklist")
 
       headers = {
+        "Content-Encoding": options[:content_encoding],
         "Content-Length": content_size(content),
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
@@ -413,6 +417,7 @@ module AzureBlob
 
       headers = {
         "x-ms-blob-type": "BlockBlob",
+        "Content-Encoding": options[:content_encoding],
         "Content-Length": content_size(content),
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],

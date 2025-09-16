@@ -20,6 +20,10 @@ module AzureBlob
       response["content-disposition"]
     end
 
+    def content_encoding
+      response["content-encoding"]
+    end
+
     def checksum
       response["content-md5"]
     end
