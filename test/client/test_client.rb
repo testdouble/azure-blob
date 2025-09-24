@@ -248,6 +248,25 @@ class TestClient < TestCase
     end
   end
 
+  def test_list_blobs_with_initial_marker
+    prefix = "#{name}_prefix_#{@uid}"
+    keys = 4.times.map do |i|
+      key = "#{prefix}/#{i}"
+      client.create_block_blob(key, content)
+      key
+    end
+
+    list = client.list_blobs(max_results: 2, prefix:).tap(&:first)
+    marker = list.marker
+
+    assert marker
+
+    list = client.list_blobs(max_results: 2, prefix:)
+    list.initial_marker = marker
+
+    assert_match_content keys.last(2), list.to_a
+  end
+
   def test_get_blob_properties
     client.create_block_blob(key, content)
 

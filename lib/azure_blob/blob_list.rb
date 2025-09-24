@@ -52,11 +52,15 @@ module AzureBlob
       to_a.inspect
     end
 
-    private
-
     def marker
-      document && document.get_elements("//EnumerationResults/NextMarker").first.get_text()&.to_s
+      return initial_marker if document.nil?
+
+      document.get_elements("//EnumerationResults/NextMarker").first.get_text()&.to_s
     end
+
+    attr_accessor :initial_marker
+
+    private
 
     def current_page
       document
