@@ -440,6 +440,15 @@ class TestClient < TestCase
     assert_equal({ "tag1" => "value 1", "tag 2" => "value 2" }, tags)
   end
 
+  def test_put_blob_tags
+    client.create_block_blob(key, content)
+    client.put_blob_tags(key, { "set_tag1" => "one", "set_tag2" => "two" })
+
+    tags = client.get_blob_tags(key)
+
+    assert_equal({ "set_tag1" => "one", "set_tag2" => "two" }, tags)
+  end
+
   def test_copy_between_containers
     destination_client = AzureBlob::Client.new(
       account_name: @account_name,

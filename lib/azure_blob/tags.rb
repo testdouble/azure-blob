@@ -31,5 +31,21 @@ module AzureBlob
     def to_h
       @tags
     end
+
+    def to_xml
+      doc = REXML::Document.new
+      doc << REXML::XMLDecl.new('1.0', 'utf-8')
+
+      root = doc.add_element('Tags')
+      tag_set = root.add_element('TagSet')
+
+      @tags.each do |key, value|
+        tag_element = tag_set.add_element('Tag')
+        tag_element.add_element('Key').text = key.to_s
+        tag_element.add_element('Value').text = value.to_s
+      end
+
+      doc.to_s
+    end
   end
 end

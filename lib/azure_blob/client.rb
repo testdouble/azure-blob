@@ -211,6 +211,28 @@ module AzureBlob
       Tags.from_response(response).to_h
     end
 
+    # Update tags associated with a blob
+    #
+    # Calls to the {Set Blob Tags}[https://learn.microsoft.com/en-us/rest/api/storageservices/set-blob-tags] endpoint.
+    #
+    # Takes a key (path) of the blob and a hash of tags
+    #
+    # Returns a hash of the blob's tags.
+    def put_blob_tags(key, tags, options = {})
+      uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(comp: "tags")
+
+      content = Tags.new(tags).to_xml
+      headers = {
+        "Content-Length": content_size(content),
+        "Content-Type": "application/xml; charset=UTF-8",
+      }.merge(additional_headers(options))
+
+      Http.new(uri, headers, signer:).put(content)
+
+      nil
+    end
+
     # Returns a Container object.
     #
     # Calls to {Get Container Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-container-properties]
