@@ -228,7 +228,7 @@ class TestClient < TestCase
 
     # Account for backslash to forward slash conversion in our encoding
     expected_key = key.gsub(/\\/, "/")
-    assert_match_content [ expected_key ], blobs
+    assert_match_content [ expected_key ], blobs.map(&:first)
   end
 
   def test_list_blobs_with_pages
@@ -241,7 +241,7 @@ class TestClient < TestCase
 
     results = client.list_blobs(max_results: 2, prefix:)
 
-    assert_match_content keys, results.to_a
+    assert_match_content keys, results.to_a.map(&:first)
 
     keys.each do |key|
       client.delete_blob(key)
@@ -264,7 +264,7 @@ class TestClient < TestCase
     list = client.list_blobs(max_results: 2, prefix:)
     list.initial_marker = marker
 
-    assert_match_content keys.last(2), list.to_a
+    assert_match_content keys.last(2), list.to_a.map(&:first)
   end
 
   def test_get_blob_properties

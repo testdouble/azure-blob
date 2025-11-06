@@ -36,8 +36,8 @@ module AzureBlob
     def each
       loop do
         fetch
-        current_page.each do |key|
-          yield key
+        current_page.each do |key, properties|
+          yield key, properties
         end
 
         break unless marker
@@ -63,9 +63,10 @@ module AzureBlob
     private
 
     def current_page
-      document
-        .get_elements("//EnumerationResults/Blobs/Blob/Name")
-        .map { |element| element.text }
+      document.get_elements("//EnumerationResults/Blobs/Blob").map do |element|
+        [element.get_elements("Name").first.text,
+         element.get_elements("Properties//").to_h { |p| [p.name, p.text] }]
+      end
     end
 
     def fetch
