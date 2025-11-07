@@ -58,7 +58,7 @@ module AzureBlob
       document.get_elements("//EnumerationResults/NextMarker").first.get_text()&.to_s
     end
 
-    attr_accessor :initial_marker
+    attr_accessor :initial_marker, :fetched_at
 
     private
 
@@ -70,6 +70,7 @@ module AzureBlob
     end
 
     def fetch
+      @fetched_at = Time.now.utc
       @document = Document.new(fetcher.call(marker))
     end
 
