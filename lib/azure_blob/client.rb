@@ -16,7 +16,7 @@ module AzureBlob
   # AzureBlob Client class. You interact with the Azure Blob api
   # through an instance of this class.
   class Client
-    def initialize(account_name:, access_key: nil, principal_id: nil, container:, host: nil, **options)
+    def initialize(account_name:, access_key: nil, principal_id: nil, container:, host: nil, signer: nil, **options)
       @account_name = account_name
       @container = container
       @host = host
@@ -24,6 +24,7 @@ module AzureBlob
       @access_key = access_key
       @principal_id = principal_id
       @use_managed_identities = options[:use_managed_identities]
+      @signer = signer
       signer unless options[:lazy]
     end
 

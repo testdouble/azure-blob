@@ -80,6 +80,25 @@ class TestClient < TestCase
     end
   end
 
+  def test_custom_signer
+    signer_mock = Minitest::Mock.new
+    signer_mock.expect :sas_token, "sas-token" do |uri, kwargs|
+      uri.to_s =~ /key/
+    end
+
+    client = AzureBlob::Client.new(
+      access_key: "access_key",
+      account_name: @account_name,
+      container: @container,
+      signer: signer_mock
+    )
+
+    signed_uri = client.signed_uri(
+      "key", permissions: "w", expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601)
+
+    assert_includes signed_uri.to_s, "sas-token"
+  end
+
   def test_single_block_upload
     client.create_block_blob(key, content)
 
