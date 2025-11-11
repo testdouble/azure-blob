@@ -5,7 +5,6 @@ set -euo pipefail
 resource_group=$(terraform output --raw "resource_group")
 cluster_name=$(terraform output --raw "aks_cluster_name")
 ssh_username=$(terraform output --raw "aks_ssh_username")
-ssh_password=$(terraform output --raw "aks_ssh_password")
 
 # Setup kubectl config
 echo "Setting up kubectl config..."
@@ -32,4 +31,4 @@ sleep 3
 
 # Establish sshuttle VPN
 echo "Establishing VPN connection..."
-exec sshuttle -e "sshpass -p '$ssh_password' ssh -o PubkeyAuthentication=no -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -r "$ssh_username@127.0.0.1:2222" 0/0
+exec sshuttle -e "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -r "$ssh_username@127.0.0.1:2222" 0/0

@@ -214,12 +214,6 @@ resource "azurerm_app_service_source_control" "main" {
 }
 
 # AKS Resources
-resource "random_password" "aks_ssh" {
-  count   = var.create_aks ? 1 : 0
-  length  = 20
-  special = true
-}
-
 resource "azurerm_kubernetes_cluster" "main" {
   count               = var.create_aks ? 1 : 0
   name                = "${var.prefix}-aks"
@@ -337,13 +331,8 @@ resource "kubernetes_deployment" "ssh" {
           }
 
           env {
-            name  = "USER_PASSWORD"
-            value = random_password.aks_ssh[0].result
-          }
-
-          env {
-            name  = "PASSWORD_ACCESS"
-            value = "true"
+            name  = "PUBLIC_KEY"
+            value = local.public_ssh_key
           }
 
           env {

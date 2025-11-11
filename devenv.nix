@@ -16,7 +16,6 @@
     glib
     vips
     sshuttle
-    sshpass
     rsync
     azurite
     sqlite

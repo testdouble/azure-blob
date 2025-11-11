@@ -26,7 +26,7 @@ class AksVpn
 
     puts "Establishing VPN connection..."
 
-    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e([ "sshuttle", "-e", "ssh -o PubkeyAuthentication=no -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}:#{password}@#{HOST}:#{port}", "0/0" ].shelljoin)
+    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e([ "sshuttle", "-e", "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}@#{HOST}:#{port}", "0/0" ].shelljoin)
 
     connection_successful = false
     tunnel_stdout.each do |line|
@@ -58,12 +58,7 @@ class AksVpn
   def setup_port_forward
     puts "Setting up port forward to SSH service..."
 
-    # Get SSH service external IP from Terraform output
-    ssh_ip = `terraform output --raw aks_ssh_ip`.strip
-    raise "Could not get SSH service IP" if ssh_ip.empty?
-
     @username = `terraform output --raw aks_ssh_username`.strip
-    @password = `terraform output --raw aks_ssh_password`.strip
 
     # Use kubectl port-forward to forward to the LoadBalancer service
     # This is more reliable than waiting for the external IP to be routable
@@ -87,7 +82,7 @@ class AksVpn
       endpoint = nil
       header = nil
 
-      Net::SSH.start(HOST, username, password:, port:, encryption: "aes256-ctr", hmac: "hmac-sha1-96", auth_methods: [ "password" ]) do |ssh|
+      Net::SSH.start(HOST, username, port:, encryption: "aes256-ctr", hmac: "hmac-sha1-96", auth_methods: [ "publickey" ]) do |ssh|
         # Extract the IDENTITY_ENDPOINT and IDENTITY_HEADER from the pod environment
         endpoint = ssh.exec! [ "bash", "-l", "-c", %(printenv IDENTITY_ENDPOINT || echo "http://169.254.169.254/metadata/identity/oauth2/token") ].shelljoin
         header = ssh.exec! [ "bash", "-l", "-c", %(printenv IDENTITY_HEADER || echo "") ].shelljoin
@@ -116,5 +111,5 @@ class AksVpn
     end
   end
 
-  attr_reader :port, :username, :password, :verbose, :tunnel_wait_thread, :port_forward_wait_thread
+  attr_reader :port, :username, :verbose, :tunnel_wait_thread, :port_forward_wait_thread
 end

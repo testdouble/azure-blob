@@ -40,8 +40,3 @@ output "aks_ssh_ip" {
 output "aks_ssh_username" {
   value = var.aks_ssh_username
 }
-
-output "aks_ssh_password" {
-  value     = var.create_aks ? random_password.aks_ssh[0].result : ""
-  sensitive = true
-}
