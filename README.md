@@ -26,13 +26,12 @@ microsoft:
 
 ### Managed Identity (Entra ID)
 
-AzureBlob supports managed identities on :
+AzureBlob supports managed identities on:
 - Azure VM
 - App Service
+- AKS (Azure Kubernetes Service) - supports both node identity and workload identity
 - Azure Functions (Untested but should work)
 - Azure Containers (Untested but should work)
-
-AKS support will likely require more work. Contributions are welcome.
 
 To authenticate through managed identities instead of a shared key, omit `storage_access_key` from your `storage.yml` file and pass in the identity `principal_id`.
 
@@ -126,20 +125,34 @@ A dev environment is supplied through Nix with [devenv](https://devenv.sh/).
 
 To test with Entra ID, the `AZURE_ACCESS_KEY` environment variable must be unset and the code must be ran or proxied through a VPS with the proper roles.
 
-For cost saving, the terraform variable `create_vm` and `create_app_service` are false by default.
-To create the VPS and App service, Create a var file `var.tfvars` containing:
+For cost saving, the terraform variables `create_vm`, `create_app_service`, and `create_aks` are false by default.
+To create the VM, App Service, and/or AKS cluster, create a var file `var.tfvars` containing:
 
 ```
 create_vm = true
 create_app_service = true
+create_aks = true
 ```
 and re-apply terraform: `terraform apply -var-file=var.tfvars`.
 
-This will create the VPS and required managed identities.
+This will create the infrastructure and required managed identities.
 
-`bin/rake test_azure_vm` and `bin/rake test_app_service` will establish a VPN connection to the VM or App service container and run the test suite. You might be prompted for a sudo password when the VPN starts (sshuttle).
+**Testing:**
+- `bin/rake test_azure_vm` - Establishes a VPN connection to the Azure VM and runs tests using node identity
+- `bin/rake test_app_service` - Establishes a VPN connection to the App Service container and runs tests
+- `bin/rake test_aks` - Establishes a VPN connection to the AKS cluster and runs tests. This tests both:
+  - **Node identity**: Storage access via the node pool's managed identity
+  - **Workload identity**: Storage access via Azure AD federated credentials for the pod's service account
 
-After you are done, run terraform again without the var file (`terraform apply`) to destroy the VPS and App service application.
+You might be prompted for a sudo password when the VPN starts (sshuttle).
+
+After you are done, run terraform again without the var file (`terraform apply`) to destroy all resources.
+
+**Note for AKS:** The AKS setup includes:
+- A Kubernetes cluster with OIDC issuer and workload identity enabled
+- An SSH-enabled pod running the `linuxserver/openssh-server` image
+- A LoadBalancer service exposing SSH access for VPN tunneling
+- Both kubelet identity (for node-level access) and federated identity credentials (for workload identity)
 
 #### Cleanup
 

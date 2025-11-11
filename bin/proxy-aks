@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Get Terraform outputs
+resource_group=$(terraform output --raw "resource_group")
+cluster_name=$(terraform output --raw "aks_cluster_name")
+ssh_username=$(terraform output --raw "aks_ssh_username")
+ssh_password=$(terraform output --raw "aks_ssh_password")
+
+# Setup kubectl config
+echo "Setting up kubectl config..."
+az aks get-credentials --resource-group "$resource_group" --name "$cluster_name" --overwrite-existing --only-show-errors 2>/dev/null
+
+# Wait for pod to be ready
+echo "Waiting for SSH pod to be ready..."
+kubectl wait --for=condition=ready pod -l app=azure-blob-test --timeout=300s
+
+# Start port forward in the background
+echo "Setting up port forward..."
+kubectl port-forward service/azure-blob-test-ssh 2222:22 &
+PORT_FORWARD_PID=$!
+
+# Cleanup function
+cleanup() {
+  echo "Cleaning up..."
+  kill $PORT_FORWARD_PID 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# Wait for port forward to be established
+sleep 3
+
+# Establish sshuttle VPN
+echo "Establishing VPN connection..."
+exec sshuttle -e "sshpass -p '$ssh_password' ssh -o PubkeyAuthentication=no -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -r "$ssh_username@127.0.0.1:2222" 0/0

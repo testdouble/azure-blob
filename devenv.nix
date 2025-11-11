@@ -12,6 +12,7 @@
     libyaml
     terraform
     azure-cli
+    kubectl
     glib
     vips
     sshuttle
