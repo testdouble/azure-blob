@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
+        run: sudo apt-get update && sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v4
       - uses: ./.github/actions/setup-terraform
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
+        run: sudo apt-get update && sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
       - name: SSH key
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -147,7 +147,7 @@ jobs:
       - name: Install Azurite
         run: npm install -g azurite
       - name: Install dependencies
-        run: sudo apt-get install -y libvips sqlite3 libsqlite3-dev
+        run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Ruby
@@ -165,7 +165,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: sudo apt-get install -y libvips sqlite3 libsqlite3-dev
+        run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup ruby
@@ -185,7 +185,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: sudo apt-get install -y libvips sqlite3 libsqlite3-dev
+        run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup ruby
