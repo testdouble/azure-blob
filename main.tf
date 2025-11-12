@@ -15,15 +15,21 @@ terraform {
   }
 }
 
+data "azurerm_kubernetes_cluster" "main" {
+  count               = var.create_aks ? 0 : 1
+  name                = "${var.prefix}-aks"
+  resource_group_name = var.prefix
+}
+
 provider "azurerm" {
   features {}
 }
 
 provider "kubernetes" {
-  host                   = var.create_aks ? azurerm_kubernetes_cluster.main[0].kube_config[0].host : ""
-  client_certificate     = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].client_certificate) : ""
-  client_key             = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].client_key) : ""
-  cluster_ca_certificate = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].cluster_ca_certificate) : ""
+  host                   = var.create_aks ? azurerm_kubernetes_cluster.main[0].kube_config[0].host : (length(data.azurerm_kubernetes_cluster.main) > 0 ? data.azurerm_kubernetes_cluster.main[0].kube_config[0].host : "")
+  client_certificate     = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].client_certificate) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].client_certificate) : "")
+  client_key             = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].client_key) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].client_key) : "")
+  cluster_ca_certificate = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].cluster_ca_certificate) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].cluster_ca_certificate) : "")
 }
 
 locals {
