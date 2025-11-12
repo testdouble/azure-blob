@@ -32,6 +32,7 @@ AzureBlob supports managed identities on:
 - AKS (Azure Kubernetes Service) - supports both node identity and workload identity
 - Azure Functions (Untested but should work)
 - Azure Containers (Untested but should work)
+- Azure AD Workload Identity (AKS/K8s)
 
 To authenticate through managed identities instead of a shared key, omit `storage_access_key` from your `storage.yml` file and pass in the identity `principal_id`.
 
@@ -44,6 +45,21 @@ prod:
   storage_account_name: account_name
   principal_id: 71b34410-4c50-451d-b456-95ead1b18cce
 ```
+
+#### Azure AD Workload Identity (AKS/K8s)
+
+ActiveStorage config example:
+
+```
+prod:
+  service: AzureBlob
+  container: container_name
+  storage_account_name: account_name
+  use_managed_identities: true
+```
+
+> uses `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_FEDERATED_TOKEN_FILE` environment variables, made available by AKS cluster when Azure AD Workload Identity is set up properly.
+
 
 ### Azurite
 
