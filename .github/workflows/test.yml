@@ -102,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
+        run: sudo apt-get update && sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
       - name: SSH key
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -130,10 +130,9 @@ jobs:
       - name: Tests
         env:
           AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
-          AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
           AZURE_PRIVATE_CONTAINER: ${{secrets.AZURE_PRIVATE_CONTAINER}}
           AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
-          AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
+          USE_MANAGED_IDENTITIES: true
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: bundle exec rake test_aks
 
