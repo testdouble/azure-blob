@@ -26,7 +26,7 @@ class AksVpn
 
     puts "Establishing VPN connection..."
 
-    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e([ "sshuttle", "-e", "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}@#{HOST}:#{port}", "0/0" ].shelljoin)
+    tunnel_stdin, tunnel_stdout, @tunnel_wait_thread = Open3.popen2e([ "sshuttle", "-e", "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "--python=python3", "-r", "#{username}@#{HOST}:#{port}", "0/0" ].shelljoin)
 
     connection_successful = false
     tunnel_stdout.each do |line|
@@ -60,14 +60,30 @@ class AksVpn
 
     @username = `terraform output --raw aks_ssh_username`.strip
 
+    @port = 2222
+
+    system("lsof -ti:#{@port} | xargs kill -9 2>/dev/null")
+
     # Use kubectl port-forward to forward to the LoadBalancer service
     # This is more reliable than waiting for the external IP to be routable
-    port_forward_stdin, port_forward_stdout, @port_forward_wait_thread = Open3.popen2e("kubectl port-forward service/azure-blob-test-ssh 2222:22")
+    port_forward_stdin, port_forward_stdout, @port_forward_wait_thread = Open3.popen2e("kubectl port-forward service/azure-blob-test-ssh #{@port}:22")
 
-    # Wait for port forward to be established
-    sleep 2
+    # Wait for port forward to be established and read confirmation
+    port_forward_ready = false
+    Thread.new do
+      port_forward_stdout.each do |line|
+        puts "DEBUG (port-forward): #{line}" if verbose
+        port_forward_ready = true if line.include?("Forwarding from")
+      end
+    end
 
-    @port = 2222
+    # Wait up to 10 seconds for port forward
+    10.times do
+      break if port_forward_ready
+      sleep 1
+    end
+
+    raise "Port forward did not establish" unless port_forward_ready
 
     puts "Port forward established on port #{@port}"
   end
@@ -82,7 +98,9 @@ class AksVpn
       endpoint = nil
       header = nil
 
-      Net::SSH.start(HOST, username, port:, encryption: "aes256-ctr", hmac: "hmac-sha1-96", auth_methods: [ "publickey" ]) do |ssh|
+      puts "DEBUG: Attempting SSH connection to #{HOST}:#{port} as #{username}"
+      puts "DEBUG: Using publickey auth"
+      Net::SSH.start(HOST, username, port:, auth_methods: [ "publickey" ]) do |ssh|
         # Extract the IDENTITY_ENDPOINT and IDENTITY_HEADER from the pod environment
         endpoint = ssh.exec! [ "bash", "-l", "-c", %(printenv IDENTITY_ENDPOINT || echo "http://169.254.169.254/metadata/identity/oauth2/token") ].shelljoin
         header = ssh.exec! [ "bash", "-l", "-c", %(printenv IDENTITY_HEADER || echo "") ].shelljoin
