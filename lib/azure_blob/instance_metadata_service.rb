@@ -8,7 +8,7 @@ module AzureBlob
       @identity_uri = URI.parse(IDENTITY_ENDPOINT)
       params = {
         'api-version': API_VERSION,
-        resource: AzureBlob::IdentityToken::RESOURCE_URI
+        resource: RESOURCE_URI
       }
       params[:principal_id] = principal_id if principal_id
       @identity_uri.query = URI.encode_www_form(params)
