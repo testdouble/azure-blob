@@ -72,7 +72,6 @@ class AksVpn
     port_forward_ready = false
     Thread.new do
       port_forward_stdout.each do |line|
-        puts "DEBUG (port-forward): #{line}" if verbose
         port_forward_ready = true if line.include?("Forwarding from")
       end
     end
@@ -98,8 +97,6 @@ class AksVpn
       endpoint = nil
       header = nil
 
-      puts "DEBUG: Attempting SSH connection to #{HOST}:#{port} as #{username}"
-      puts "DEBUG: Using publickey auth"
       Net::SSH.start(HOST, username, port:, auth_methods: [ "publickey" ]) do |ssh|
         # Extract the IDENTITY_ENDPOINT and IDENTITY_HEADER from the pod environment
         endpoint = ssh.exec! [ "bash", "-l", "-c", %(printenv IDENTITY_ENDPOINT || echo "http://169.254.169.254/metadata/identity/oauth2/token") ].shelljoin
