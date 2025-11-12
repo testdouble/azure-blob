@@ -14,12 +14,14 @@ class TestClient < TestCase
     @container = ENV["AZURE_PRIVATE_CONTAINER"]
     @public_container = ENV["AZURE_PUBLIC_CONTAINER"]
     @principal_id = ENV["AZURE_PRINCIPAL_ID"]
+    @use_managed_identities = ENV["USE_MANAGED_IDENTITIES"] == "true"
     @host = ENV["STORAGE_BLOB_HOST"]
     @client = AzureBlob::Client.new(
       account_name: @account_name,
       access_key: @access_key,
       container: @container,
       principal_id: @principal_id,
+      use_managed_identities: @use_managed_identities,
       host: @host,
     )
     @uid = SecureRandom.uuid
@@ -367,6 +369,7 @@ class TestClient < TestCase
       access_key: @access_key,
       container: "missingcontainer",
       principal_id: @principal_id,
+      use_managed_identities: @use_managed_identities,
     )
     container = client.get_container_properties
     refute container.present?
@@ -381,6 +384,7 @@ class TestClient < TestCase
       access_key: @access_key,
       container: "missingcontainer",
       principal_id: @principal_id,
+      use_managed_identities: @use_managed_identities,
     )
 
     refute client.container_exist?
@@ -392,6 +396,7 @@ class TestClient < TestCase
       access_key: @access_key,
       container: Random.alphanumeric(20).tr("0-9", "").downcase,
       principal_id: @principal_id,
+      use_managed_identities: @use_managed_identities,
       host: @host,
     )
     container = client.get_container_properties
@@ -420,6 +425,7 @@ class TestClient < TestCase
       access_key: @access_key,
       container: @public_container,
       principal_id: @principal_id,
+      use_managed_identities: @use_managed_identities,
       host: @host,
     )
     client.create_block_blob(key, content)
