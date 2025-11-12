@@ -140,7 +140,7 @@ GEM
       timeout
     net-smtp (0.5.1)
       net-protocol
-    net-ssh (7.2.3)
+    net-ssh (7.3.0)
     nio4r (2.7.4)
     nokogiri (1.18.8-arm64-darwin)
       racc (~> 1.4)
@@ -258,6 +258,7 @@ GEM
       base64
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
+    x25519 (1.0.10)
     zeitwerk (2.7.2)
 
 PLATFORMS
@@ -279,6 +280,7 @@ DEPENDENCIES
   rake
   rubocop-rails-omakase
   sqlite3 (>= 1.6.6)
+  x25519
 
 BUNDLED WITH
    2.5.9
