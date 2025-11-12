@@ -237,6 +237,12 @@ resource "azurerm_kubernetes_cluster" "main" {
   tags = {
     source = "Terraform"
   }
+
+  lifecycle {
+    ignore_changes = [
+      default_node_pool[0].upgrade_settings
+    ]
+  }
 }
 
 resource "azurerm_role_assignment" "aks_kubelet" {
