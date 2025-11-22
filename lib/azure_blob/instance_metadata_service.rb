@@ -1,5 +1,5 @@
 module AzureBlob
-  class InstanceMetadataService # Azure Instance Metadata Service (IMDS)
+  class InstanceMetadataService # :nodoc:
     IDENTITY_ENDPOINT = ENV["IDENTITY_ENDPOINT"] || "http://169.254.169.254/metadata/identity/oauth2/token"
     API_VERSION = ENV["IDENTITY_ENDPOINT"] ? "2019-08-01" : "2018-02-01"
     RESOURCE_URI = "https://storage.azure.com/"

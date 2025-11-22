@@ -1,5 +1,5 @@
 module AzureBlob
-  class WorkloadIdentity # Azure AD Workload Identity
+  class WorkloadIdentity # :nodoc:
     IDENTITY_ENDPOINT = "https://login.microsoftonline.com/#{ENV['AZURE_TENANT_ID']}/oauth2/v2.0/token"
     CLIENT_ID = ENV["AZURE_CLIENT_ID"]
     SCOPE = "https://storage.azure.com/.default"
