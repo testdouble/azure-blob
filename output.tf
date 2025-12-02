@@ -34,7 +34,7 @@ output "aks_cluster_name" {
 }
 
 output "aks_ssh_ip" {
-  value = var.create_aks && length(kubernetes_service.ssh) > 0 && length(kubernetes_service.ssh[0].status) > 0 && length(kubernetes_service.ssh[0].status[0].load_balancer) > 0 && length(kubernetes_service.ssh[0].status[0].load_balancer[0].ingress) > 0 ? kubernetes_service.ssh[0].status[0].load_balancer[0].ingress[0].ip : ""
+  value = try(kubernetes_service.ssh[0].status[0].load_balancer[0].ingress[0].ip, "")
 }
 
 output "aks_ssh_username" {
