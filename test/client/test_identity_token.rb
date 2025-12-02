@@ -100,7 +100,7 @@ class TestIdentityToken < TestCase
   def expect_http_method(mock, access_token, expires_on)
     if AzureBlob::WorkloadIdentity.federated_token?
       expires_in = expires_on - Time.now.to_i
-      mock.expect :post, JSON.generate({ access_token: access_token, expires_in: expires_in }), [String]
+      mock.expect :post, JSON.generate({ access_token: access_token, expires_in: expires_in }), [ String ]
     else
       mock.expect :get, JSON.generate({ access_token: access_token, expires_on: expires_on.to_s })
     end
