@@ -29,10 +29,9 @@ microsoft:
 AzureBlob supports managed identities on:
 - Azure VM
 - App Service
-- AKS (Azure Kubernetes Service) - supports both node identity and workload identity
+- AKS (Azure Kubernetes Service) with workload identity
 - Azure Functions (Untested but should work)
 - Azure Containers (Untested but should work)
-- Azure AD Workload Identity (AKS/K8s)
 
 To authenticate through managed identities instead of a shared key, omit `storage_access_key` from your `storage.yml` file and pass in the identity `principal_id`.
 
@@ -46,7 +45,7 @@ prod:
   principal_id: 71b34410-4c50-451d-b456-95ead1b18cce
 ```
 
-#### Azure AD Workload Identity (AKS/K8s)
+#### AKS with Workload Identity
 
 ActiveStorage config example:
 
@@ -156,19 +155,11 @@ This will create the infrastructure and required managed identities.
 **Testing:**
 - `bin/rake test_azure_vm` - Establishes a VPN connection to the Azure VM and runs tests using node identity
 - `bin/rake test_app_service` - Establishes a VPN connection to the App Service container and runs tests
-- `bin/rake test_aks` - Establishes a VPN connection to the AKS cluster and runs tests. This tests both:
-  - **Node identity**: Storage access via the node pool's managed identity
-  - **Workload identity**: Storage access via Azure AD federated credentials for the pod's service account
+- `bin/rake test_aks` - Establishes a VPN connection to the AKS cluster and runs tests using workload identity
 
 You might be prompted for a sudo password when the VPN starts (sshuttle).
 
 After you are done, run terraform again without the var file (`terraform apply`) to destroy all resources.
-
-**Note for AKS:** The AKS setup includes:
-- A Kubernetes cluster with OIDC issuer and workload identity enabled
-- An SSH-enabled pod running the `linuxserver/openssh-server` image
-- A LoadBalancer service exposing SSH access for VPN tunneling
-- Both kubelet identity (for node-level access) and federated identity credentials (for workload identity)
 
 #### Cleanup
 
