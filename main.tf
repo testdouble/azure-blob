@@ -351,9 +351,37 @@ resource "kubernetes_deployment" "ssh" {
             name  = "SUDO_ACCESS"
             value = "true"
           }
+
+          volume_mount {
+            name       = "install-python-script"
+            mount_path = "/custom-cont-init.d"
+          }
+        }
+
+        volume {
+          name = "install-python-script"
+          config_map {
+            name         = kubernetes_config_map.install_python[0].metadata[0].name
+            default_mode = "0755"
+          }
         }
       }
     }
+  }
+}
+
+resource "kubernetes_config_map" "install_python" {
+  count = var.create_aks ? 1 : 0
+  metadata {
+    name      = "install-python"
+    namespace = "default"
+  }
+
+  data = {
+    "install-python.sh" = <<-EOF
+      #!/bin/sh
+      apk add --no-cache python3
+    EOF
   }
 }
 
