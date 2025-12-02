@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export AZURE_CLIENT_ID=$(terraform output --raw aks_workload_identity_client_id)
+export AZURE_TENANT_ID=$(terraform output --raw azure_tenant_id)
+export AZURE_FEDERATED_TOKEN_FILE=/tmp/azure-identity-token
+
+exec bundle exec m "$@"

@@ -1,0 +1,40 @@
+FROM ruby:3.2.3-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    curl \
+    unzip \
+    sshuttle \
+    iptables \
+    openssh-client \
+    libsqlite3-dev \
+    libvips-dev \
+    python3 \
+    gnupg \
+    lsb-release \
+    lsof \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
+    && rm kubectl
+
+RUN TERRAFORM_VERSION="1.9.8" \
+    && curl -fsSL "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" -o terraform.zip \
+    && unzip terraform.zip \
+    && install -o root -g root -m 0755 terraform /usr/local/bin/terraform \
+    && rm terraform.zip
+
+WORKDIR /app
+
+COPY Gemfile Gemfile.lock azure-blob.gemspec ./
+COPY lib/azure_blob/version.rb ./lib/azure_blob/version.rb
+
+RUN bundle install
+
+COPY . .
+
+ENTRYPOINT ["/app/bin/docker-vpn-test"]

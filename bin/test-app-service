@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export IDENTITY_ENDPOINT=$(cat /tmp/azure-identity-endpoint)
+export IDENTITY_HEADER=$(cat /tmp/azure-identity-header)
+
+exec bundle exec m "$@"

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -e
+
+usage() {
+  echo "Usage: $0 <test_type>"
+  echo ""
+  echo "Test types:"
+  echo "  aks          - Run AKS VPN tests"
+  echo "  azure_vm     - Run Azure VM VPN tests"
+  echo "  app_service  - Run App Service VPN tests"
+  exit 1
+}
+
+if [ -z "$1" ]; then
+  usage
+fi
+
+TEST_TYPE="$1"
+
+case "$TEST_TYPE" in
+  aks|azure_vm|app_service)
+    ;;
+  *)
+    echo "Unknown test type: $TEST_TYPE"
+    usage
+    ;;
+esac
+
+cd "$(dirname "$0")/.."
+
+bundle exec rake "test_${TEST_TYPE}"
