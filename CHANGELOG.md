@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.6.0] 2025-12-01
+
 - Add support for AKS workload identity
 
 ## [0.5.9.1] 2025-06-30
