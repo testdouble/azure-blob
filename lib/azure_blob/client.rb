@@ -82,7 +82,7 @@ module AzureBlob
     #
     # Takes a key (path) and same options as get_blob
     def get_blob_response(key, options = {}, &block)
-      uri = generate_uri("#{container}/#{key}")
+      uri = generate_uri("#{container}/#{key}", options.delete(:params))
       headers = {}.merge(range_headers(options)).merge(additional_headers(options))
 
       Http.new(uri, headers, signer:).get_full_response(&block)
@@ -280,13 +280,15 @@ module AzureBlob
     # Return a URI object to a resource in the container. Takes a path.
     #
     # Example: +generate_uri("#{container}/#{key}")+
-    def generate_uri(path)
+    def generate_uri(path, params = nil)
       # https://github.com/Azure/azure-storage-ruby/blob/master/common/lib/azure/storage/common/service/storage_service.rb#L191-L201
       encoded_path = CGI.escape(path.encode("UTF-8"))
       encoded_path = encoded_path.gsub(/%2F/, "/")
       encoded_path = encoded_path.gsub(/%5C/, "/")
       encoded_path = encoded_path.gsub(/\+/, "%20")
-      URI.parse(File.join(host, encoded_path))
+      URI.parse(File.join(host, encoded_path)).tap do |uri|
+        uri.query = URI.encode_www_form(params) if params.is_a?(Hash)
+      end
     end
 
     # Returns an SAS signed URI
