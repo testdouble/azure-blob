@@ -52,8 +52,9 @@ end
 
 task :test_aks do |t|
   vpn = AksVpn.new
-  ENV["IDENTITY_ENDPOINT"] = vpn.endpoint
-  ENV["IDENTITY_HEADER"] = vpn.header
+  ENV["AZURE_CLIENT_ID"] = vpn.client_id
+  ENV["AZURE_TENANT_ID"] = vpn.tenant_id
+  ENV["AZURE_FEDERATED_TOKEN_FILE"] = vpn.token_file
   Rake::Task["test_entra_id"].execute
 ensure
   vpn.kill

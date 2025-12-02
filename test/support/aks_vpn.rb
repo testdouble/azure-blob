@@ -4,8 +4,9 @@ require "shellwords"
 
 class AksVpn
   HOST = "127.0.0.1"
+  TOKEN_FILE_PATH = "/tmp/azure-identity-token"
 
-  attr_reader :header, :endpoint
+  attr_reader :header, :endpoint, :client_id, :tenant_id, :token_file
 
   def initialize(verbose: true)
     @verbose = verbose
@@ -22,7 +23,7 @@ class AksVpn
   def establish_vpn_connection
     setup_kubeconfig
     setup_port_forward
-    extract_msi_info
+    extract_workload_identity_token
 
     puts "Establishing VPN connection..."
 
@@ -87,33 +88,23 @@ class AksVpn
     puts "Port forward established on port #{@port}"
   end
 
-  def extract_msi_info
-    puts "Extracting MSI endpoint info from pod..."
+  def extract_workload_identity_token
+    puts "Extracting workload identity token from pod..."
 
     max_retries = 5
     retry_count = 0
 
     begin
-      endpoint = nil
-      header = nil
-
       Net::SSH.start(HOST, username, port:, auth_methods: [ "publickey" ]) do |ssh|
-        # Extract the IDENTITY_ENDPOINT and IDENTITY_HEADER from the pod environment
-        endpoint = ssh.exec! [ "bash", "-l", "-c", %(printenv IDENTITY_ENDPOINT || echo "http://169.254.169.254/metadata/identity/oauth2/token") ].shelljoin
-        header = ssh.exec! [ "bash", "-l", "-c", %(printenv IDENTITY_HEADER || echo "") ].shelljoin
-
-        endpoint = endpoint&.strip
-        header = header&.strip
+        token = ssh.exec! "cat /var/run/secrets/azure/tokens/azure-identity-token"
+        File.write(TOKEN_FILE_PATH, token.strip)
       end
 
-      # For AKS, we need to use the Azure Instance Metadata Service endpoint
-      # The workload identity will inject the token via the service account
-      @endpoint = endpoint || "http://169.254.169.254/metadata/identity/oauth2/token"
-      @header = header || ""
+      @client_id = `terraform output --raw aks_workload_identity_client_id`.strip
+      @tenant_id = `terraform output --raw azure_tenant_id`.strip
+      @token_file = TOKEN_FILE_PATH
 
-      puts "MSI Endpoint: #{@endpoint}"
-      puts "MSI Header: #{@header.empty? ? '(empty)' : '(set)'}"
-
+      puts "Wrote token to #{TOKEN_FILE_PATH}"
     rescue Net::SSH::AuthenticationFailed, Errno::ECONNREFUSED => e
       retry_count += 1
       if retry_count < max_retries
@@ -121,7 +112,7 @@ class AksVpn
         sleep 2
         retry
       else
-        raise "Could not extract MSI endpoint information after #{max_retries} attempts: #{e.message}"
+        raise "Could not extract workload identity token after #{max_retries} attempts: #{e.message}"
       end
     end
   end

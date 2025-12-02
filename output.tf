@@ -40,3 +40,11 @@ output "aks_ssh_ip" {
 output "aks_ssh_username" {
   value = var.aks_ssh_username
 }
+
+output "aks_workload_identity_client_id" {
+  value = azurerm_user_assigned_identity.vm.client_id
+}
+
+output "azure_tenant_id" {
+  value = azurerm_user_assigned_identity.vm.tenant_id
+}
