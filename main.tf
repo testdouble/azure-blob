@@ -4,11 +4,32 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>3.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~>2.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~>3.0"
+    }
   }
+}
+
+data "azurerm_kubernetes_cluster" "main" {
+  count               = var.create_aks ? 0 : 1
+  name                = "${var.prefix}-aks"
+  resource_group_name = var.prefix
 }
 
 provider "azurerm" {
   features {}
+}
+
+provider "kubernetes" {
+  host                   = var.create_aks ? azurerm_kubernetes_cluster.main[0].kube_config[0].host : (length(data.azurerm_kubernetes_cluster.main) > 0 ? data.azurerm_kubernetes_cluster.main[0].kube_config[0].host : "")
+  client_certificate     = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].client_certificate) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].client_certificate) : "")
+  client_key             = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].client_key) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].client_key) : "")
+  cluster_ca_certificate = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].cluster_ca_certificate) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].cluster_ca_certificate) : "")
 }
 
 locals {
@@ -196,4 +217,185 @@ resource "azurerm_app_service_source_control" "main" {
   branch                 = "master"
   use_manual_integration = true
   use_mercurial          = false
+}
+
+# AKS Resources
+resource "azurerm_kubernetes_cluster" "main" {
+  count               = var.create_aks ? 1 : 0
+  name                = "${var.prefix}-aks"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  dns_prefix          = "${var.prefix}-aks"
+
+  default_node_pool {
+    name       = "default"
+    node_count = var.aks_node_count
+    vm_size    = var.vm_size
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  oidc_issuer_enabled       = true
+  workload_identity_enabled = true
+
+  tags = {
+    source = "Terraform"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      default_node_pool[0].upgrade_settings
+    ]
+  }
+}
+
+resource "azurerm_federated_identity_credential" "aks" {
+  count               = var.create_aks ? 1 : 0
+  name                = "${var.prefix}-aks-federated-identity"
+  resource_group_name = azurerm_resource_group.main.name
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = azurerm_kubernetes_cluster.main[0].oidc_issuer_url
+  parent_id           = azurerm_user_assigned_identity.vm.id
+  subject             = "system:serviceaccount:default:azure-blob-test"
+}
+
+# Kubernetes Resources for SSH Pod
+resource "kubernetes_service_account" "azure_blob_test" {
+  count = var.create_aks ? 1 : 0
+  metadata {
+    name      = "azure-blob-test"
+    namespace = "default"
+    annotations = {
+      "azure.workload.identity/client-id" = azurerm_user_assigned_identity.vm.client_id
+    }
+    labels = {
+      "azure.workload.identity/use" = "true"
+    }
+  }
+}
+
+resource "kubernetes_deployment" "ssh" {
+  count = var.create_aks ? 1 : 0
+  metadata {
+    name      = "azure-blob-test"
+    namespace = "default"
+    labels = {
+      app = "azure-blob-test"
+    }
+  }
+
+  spec {
+    replicas = 1
+
+    selector {
+      match_labels = {
+        app = "azure-blob-test"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app                               = "azure-blob-test"
+          "azure.workload.identity/use"     = "true"
+        }
+      }
+
+      spec {
+        service_account_name = kubernetes_service_account.azure_blob_test[0].metadata[0].name
+
+        container {
+          name  = "openssh-server"
+          image = "lscr.io/linuxserver/openssh-server:latest"
+
+          port {
+            container_port = 2222
+            protocol       = "TCP"
+          }
+
+          env {
+            name  = "PUID"
+            value = "1000"
+          }
+
+          env {
+            name  = "PGID"
+            value = "1000"
+          }
+
+          env {
+            name  = "TZ"
+            value = "Etc/UTC"
+          }
+
+          env {
+            name  = "USER_NAME"
+            value = var.aks_ssh_username
+          }
+
+          env {
+            name  = "PUBLIC_KEY"
+            value = local.public_ssh_key
+          }
+
+          env {
+            name  = "SUDO_ACCESS"
+            value = "true"
+          }
+
+          volume_mount {
+            name       = "install-python-script"
+            mount_path = "/custom-cont-init.d"
+          }
+        }
+
+        volume {
+          name = "install-python-script"
+          config_map {
+            name         = kubernetes_config_map.install_python[0].metadata[0].name
+            default_mode = "0755"
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_config_map" "install_python" {
+  count = var.create_aks ? 1 : 0
+  metadata {
+    name      = "install-python"
+    namespace = "default"
+  }
+
+  data = {
+    "install-python.sh" = <<-EOF
+      #!/bin/sh
+      apk add --no-cache python3
+    EOF
+  }
+}
+
+resource "kubernetes_service" "ssh" {
+  count = var.create_aks ? 1 : 0
+  metadata {
+    name      = "azure-blob-test-ssh"
+    namespace = "default"
+  }
+
+  spec {
+    type = "LoadBalancer"
+
+    selector = {
+      app = "azure-blob-test"
+    }
+
+    port {
+      port        = 22
+      target_port = 2222
+      protocol    = "TCP"
+    }
+  }
 }

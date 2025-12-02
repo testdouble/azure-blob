@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+require "open3"
+require "net/ssh"
+require "shellwords"
+
+HOST = "127.0.0.1"
+
+resource_group = `terraform output --raw resource_group`.strip
+app_name = `terraform output --raw app_service_app_name`.strip
+
+puts "Starting App Service tunnel..."
+connection_stdin, connection_stdout, connection_wait_thread = Open3.popen2e("az webapp create-remote-connection --resource-group #{resource_group} --name #{app_name}")
+
+port = nil
+username = nil
+password = nil
+
+connection_stdout.each do |line|
+  puts "(tunnel) #{line}"
+  if line =~ /WARNING: Opening tunnel on port: (\d+)/
+    port = $1.to_i
+  end
+
+  if line =~ /WARNING: SSH is available \{ username: (\w+), password: ([^\s]+) \}/
+    username = $1
+    password = $2
+  end
+
+  break if port && username && password
+end
+
+raise "Could not establish tunnel" unless port && username && password
+
+puts "Tunnel established on port #{port}"
+puts "Extracting MSI endpoint info..."
+
+endpoint = nil
+header = nil
+Net::SSH.start(HOST, username, password:, port:, encryption: "aes256-ctr", hmac: "hmac-sha1-96", auth_methods: ["password"]) do |ssh|
+  endpoint = ssh.exec! ["bash", "-l", "-c", %(printf "%s" "$IDENTITY_ENDPOINT")].shelljoin
+  header = ssh.exec! ["bash", "-l", "-c", %(printf "%s" "$IDENTITY_HEADER")].shelljoin
+end
+
+raise "Could not extract MSI endpoint information" unless endpoint && header
+
+File.write("/tmp/azure-identity-endpoint", endpoint)
+File.write("/tmp/azure-identity-header", header)
+puts "Wrote identity info to /tmp/azure-identity-endpoint and /tmp/azure-identity-header"
+
+puts "Establishing VPN connection..."
+exec ["sshuttle", "-e", "ssh -o PubkeyAuthentication=no -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null", "-r", "#{username}:#{password}@#{HOST}:#{port}", "0/0"].shelljoin

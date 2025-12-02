@@ -5,6 +5,7 @@ require "minitest/test_task"
 require "azure_blob"
 require_relative "test/support/app_service_vpn"
 require_relative "test/support/azure_vm_vpn"
+require_relative "test/support/aks_vpn"
 require_relative "test/support/azurite"
 
 Minitest::TestTask.create(:test_rails) do
@@ -44,6 +45,16 @@ end
 
 task :test_azure_vm do |t|
   vpn = AzureVmVpn.new
+  Rake::Task["test_entra_id"].execute
+ensure
+  vpn.kill
+end
+
+task :test_aks do |t|
+  vpn = AksVpn.new
+  ENV["AZURE_CLIENT_ID"] = vpn.client_id
+  ENV["AZURE_TENANT_ID"] = vpn.tenant_id
+  ENV["AZURE_FEDERATED_TOKEN_FILE"] = vpn.token_file
   Rake::Task["test_entra_id"].execute
 ensure
   vpn.kill

@@ -1,21 +1,14 @@
+require_relative "instance_metadata_service"
+require_relative "workload_identity"
 require "json"
 
 module AzureBlob
   class IdentityToken
-    RESOURCE_URI = "https://storage.azure.com/"
     EXPIRATION_BUFFER = 600 # 10 minutes
 
-    IDENTITY_ENDPOINT = ENV["IDENTITY_ENDPOINT"] || "http://169.254.169.254/metadata/identity/oauth2/token"
-    API_VERSION = ENV["IDENTITY_ENDPOINT"] ? "2019-08-01" : "2018-02-01"
-
     def initialize(principal_id: nil)
-      @identity_uri = URI.parse(IDENTITY_ENDPOINT)
-      params = {
-        'api-version': API_VERSION,
-        resource: RESOURCE_URI,
-      }
-      params[:principal_id] = principal_id if principal_id
-      @identity_uri.query = URI.encode_www_form(params)
+      @service = AzureBlob::WorkloadIdentity.federated_token? ?
+                   AzureBlob::WorkloadIdentity.new : AzureBlob::InstanceMetadataService.new(principal_id: principal_id)
     end
 
     def to_s
@@ -31,13 +24,11 @@ module AzureBlob
 
     def refresh
       return unless expired?
-      headers =  { "Metadata" => "true" }
-      headers["X-IDENTITY-HEADER"] = ENV["IDENTITY_HEADER"] if ENV["IDENTITY_HEADER"]
 
       attempt = 0
       begin
         attempt += 1
-        response = JSON.parse(AzureBlob::Http.new(identity_uri, headers).get)
+        response = JSON.parse(service.request)
       rescue AzureBlob::Http::Error => error
         if should_retry?(error, attempt)
           attempt = 1 if error.status == 410
@@ -48,7 +39,7 @@ module AzureBlob
         raise
       end
       @token = response["access_token"]
-      @expiration = Time.at(response["expires_on"].to_i)
+      @expiration = service.expiration(response)
     end
 
     def should_retry?(error, attempt)
@@ -61,6 +52,6 @@ module AzureBlob
     end
     EXPONENTIAL_BACKOFF = [ 2, 6, 14, 30 ]
 
-    attr_reader :identity_uri, :expiration, :token
+    attr_reader :service, :expiration, :token
   end
 end

@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Get Terraform outputs
+resource_group=$(terraform output --raw "resource_group")
+cluster_name=$(terraform output --raw "aks_cluster_name")
+ssh_username=$(terraform output --raw "aks_ssh_username")
+
+# Setup kubectl config
+echo "Setting up kubectl config..."
+az aks get-credentials --resource-group "$resource_group" --name "$cluster_name" --overwrite-existing --only-show-errors 2>/dev/null
+
+# Wait for pod to be ready
+echo "Waiting for SSH pod to be ready..."
+kubectl wait --for=condition=ready pod -l app=azure-blob-test --timeout=300s
+
+# Extract workload identity token
+echo "Extracting workload identity token..."
+POD_NAME=$(kubectl get pod -l app=azure-blob-test -o jsonpath='{.items[0].metadata.name}')
+kubectl exec "$POD_NAME" -- cat /var/run/secrets/azure/tokens/azure-identity-token > /tmp/azure-identity-token
+
+# Kill any existing process on port 2222
+lsof -ti:2222 | xargs kill -9 2>/dev/null || true
+
+# Start port forward in the background
+echo "Setting up port forward..."
+kubectl port-forward service/azure-blob-test-ssh 2222:22 &
+PORT_FORWARD_PID=$!
+
+# Cleanup function
+cleanup() {
+  echo "Cleaning up..."
+  kill $PORT_FORWARD_PID 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# Wait for port forward to be established
+sleep 3
+
+# Establish sshuttle VPN
+echo "Establishing VPN connection..."
+exec sshuttle -e "ssh -o CheckHostIP=no -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" --python=python3 -r "$ssh_username@127.0.0.1:2222" 0/0

@@ -28,3 +28,23 @@ output "app_service_app_name" {
 output "resource_group" {
   value = azurerm_resource_group.main.name
 }
+
+output "aks_cluster_name" {
+  value = var.create_aks ? azurerm_kubernetes_cluster.main[0].name : ""
+}
+
+output "aks_ssh_ip" {
+  value = var.create_aks && length(kubernetes_service.ssh) > 0 && length(kubernetes_service.ssh[0].status) > 0 && length(kubernetes_service.ssh[0].status[0].load_balancer) > 0 && length(kubernetes_service.ssh[0].status[0].load_balancer[0].ingress) > 0 ? kubernetes_service.ssh[0].status[0].load_balancer[0].ingress[0].ip : ""
+}
+
+output "aks_ssh_username" {
+  value = var.aks_ssh_username
+}
+
+output "aks_workload_identity_client_id" {
+  value = azurerm_user_assigned_identity.vm.client_id
+}
+
+output "azure_tenant_id" {
+  value = azurerm_user_assigned_identity.vm.tenant_id
+}

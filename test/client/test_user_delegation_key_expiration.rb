@@ -13,11 +13,13 @@ class TestUserDelegationKeyExpiration < TestCase
     @account_name = ENV["AZURE_ACCOUNT_NAME"]
     @container = ENV["AZURE_PRIVATE_CONTAINER"]
     @principal_id = ENV["AZURE_PRINCIPAL_ID"]
+    @use_managed_identities = ENV["USE_MANAGED_IDENTITIES"] == "true"
     @host = ENV["STORAGE_BLOB_HOST"]
     @client = AzureBlob::Client.new(
       account_name: @account_name,
       container: @container,
       principal_id: @principal_id,
+      use_managed_identities: @use_managed_identities,
       host: @host,
     )
     @uid = SecureRandom.uuid

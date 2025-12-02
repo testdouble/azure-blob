@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -e
+
+usage() {
+  echo "Usage: $0 <test_type>"
+  echo ""
+  echo "Run VPN tests in a Docker container to isolate sshuttle from host network."
+  echo ""
+  echo "Test types:"
+  echo "  aks          - Run AKS VPN tests"
+  echo "  azure_vm     - Run Azure VM VPN tests"
+  echo "  app_service  - Run App Service VPN tests"
+  exit 1
+}
+
+if [ -z "$1" ]; then
+  usage
+fi
+
+TEST_TYPE="$1"
+
+case "$TEST_TYPE" in
+  aks|azure_vm|app_service)
+    ;;
+  *)
+    echo "Unknown test type: $TEST_TYPE"
+    usage
+    ;;
+esac
+
+cd "$(dirname "$0")/.."
+
+IMAGE_NAME="azure-blob-vpn-test"
+
+echo "Building Docker image..."
+docker build -f Dockerfile.vpn-test -t "$IMAGE_NAME" .
+
+echo "Extracting terraform outputs..."
+RESOURCE_GROUP=$(terraform output --raw resource_group)
+VM_USERNAME=$(terraform output --raw vm_username 2>/dev/null || echo "")
+VM_IP=$(terraform output --raw vm_ip 2>/dev/null || echo "")
+AKS_CLUSTER_NAME=$(terraform output --raw aks_cluster_name 2>/dev/null || echo "")
+AKS_SSH_USERNAME=$(terraform output --raw aks_ssh_username 2>/dev/null || echo "")
+APP_SERVICE_APP_NAME=$(terraform output --raw app_service_app_name 2>/dev/null || echo "")
+
+echo "Running tests in Docker container..."
+DOCKER_TTY_FLAG=""
+if [ -t 0 ]; then
+  DOCKER_TTY_FLAG="-it"
+fi
+
+docker run --rm $DOCKER_TTY_FLAG \
+  --cap-add=NET_ADMIN \
+  -v "$HOME/.ssh:/root/.ssh:ro" \
+  -v "$HOME/.azure:/root/.azure:ro" \
+  -v "$HOME/.kube:/root/.kube" \
+  -e "AZURE_ACCOUNT_NAME=${AZURE_ACCOUNT_NAME}" \
+  -e "AZURE_PRIVATE_CONTAINER=${AZURE_PRIVATE_CONTAINER}" \
+  -e "AZURE_PUBLIC_CONTAINER=${AZURE_PUBLIC_CONTAINER}" \
+  -e "RESOURCE_GROUP=${RESOURCE_GROUP}" \
+  -e "VM_USERNAME=${VM_USERNAME}" \
+  -e "VM_IP=${VM_IP}" \
+  -e "AKS_CLUSTER_NAME=${AKS_CLUSTER_NAME}" \
+  -e "AKS_SSH_USERNAME=${AKS_SSH_USERNAME}" \
+  -e "APP_SERVICE_APP_NAME=${APP_SERVICE_APP_NAME}" \
+  "$IMAGE_NAME" "$TEST_TYPE"

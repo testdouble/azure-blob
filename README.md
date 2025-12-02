@@ -26,13 +26,12 @@ microsoft:
 
 ### Managed Identity (Entra ID)
 
-AzureBlob supports managed identities on :
+AzureBlob supports managed identities on:
 - Azure VM
 - App Service
+- AKS (Azure Kubernetes Service) with workload identity
 - Azure Functions (Untested but should work)
 - Azure Containers (Untested but should work)
-
-AKS support will likely require more work. Contributions are welcome.
 
 To authenticate through managed identities instead of a shared key, omit `storage_access_key` from your `storage.yml` file and pass in the identity `principal_id`.
 
@@ -45,6 +44,21 @@ prod:
   storage_account_name: account_name
   principal_id: 71b34410-4c50-451d-b456-95ead1b18cce
 ```
+
+#### AKS with Workload Identity
+
+ActiveStorage config example:
+
+```
+prod:
+  service: AzureBlob
+  container: container_name
+  storage_account_name: account_name
+  use_managed_identities: true
+```
+
+> uses `AZURE_CLIENT_ID`, `AZURE_TENANT_ID` and `AZURE_FEDERATED_TOKEN_FILE` environment variables, made available by AKS cluster when Azure AD Workload Identity is set up properly.
+
 
 ### Azurite
 
@@ -126,20 +140,26 @@ A dev environment is supplied through Nix with [devenv](https://devenv.sh/).
 
 To test with Entra ID, the `AZURE_ACCESS_KEY` environment variable must be unset and the code must be ran or proxied through a VPS with the proper roles.
 
-For cost saving, the terraform variable `create_vm` and `create_app_service` are false by default.
-To create the VPS and App service, Create a var file `var.tfvars` containing:
+For cost saving, the terraform variables `create_vm`, `create_app_service`, and `create_aks` are false by default.
+To create the VM, App Service, and/or AKS cluster, create a var file `var.tfvars` containing:
 
 ```
 create_vm = true
 create_app_service = true
+create_aks = true
 ```
 and re-apply terraform: `terraform apply -var-file=var.tfvars`.
 
-This will create the VPS and required managed identities.
+This will create the infrastructure and required managed identities.
 
-`bin/rake test_azure_vm` and `bin/rake test_app_service` will establish a VPN connection to the VM or App service container and run the test suite. You might be prompted for a sudo password when the VPN starts (sshuttle).
+**Testing:**
+- `bin/rake test_azure_vm` - Establishes a VPN connection to the Azure VM and runs tests using node identity
+- `bin/rake test_app_service` - Establishes a VPN connection to the App Service container and runs tests
+- `bin/rake test_aks` - Establishes a VPN connection to the AKS cluster and runs tests using workload identity
 
-After you are done, run terraform again without the var file (`terraform apply`) to destroy the VPS and App service application.
+You might be prompted for a sudo password when the VPN starts (sshuttle).
+
+After you are done, run terraform again without the var file (`terraform apply`) to destroy all resources.
 
 #### Cleanup
 
