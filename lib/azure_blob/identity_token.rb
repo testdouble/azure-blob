@@ -39,7 +39,11 @@ module AzureBlob
         raise
       end
       @token = response["access_token"]
-      @expiration = Time.at((response["expires_on"] || response["expires_in"]).to_i)
+      @expiration = if response["expires_on"]
+        Time.at(response["expires_on"].to_i)
+      else
+        Time.now + response["expires_in"].to_i
+      end
     end
 
     def should_retry?(error, attempt)
