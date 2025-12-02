@@ -251,13 +251,6 @@ resource "azurerm_kubernetes_cluster" "main" {
   }
 }
 
-resource "azurerm_role_assignment" "aks_kubelet" {
-  count                = var.create_aks ? 1 : 0
-  scope                = azurerm_storage_account.main.id
-  role_definition_name = "Storage Blob Data Owner"
-  principal_id         = azurerm_kubernetes_cluster.main[0].kubelet_identity[0].object_id
-}
-
 resource "azurerm_federated_identity_credential" "aks" {
   count               = var.create_aks ? 1 : 0
   name                = "${var.prefix}-aks-federated-identity"
