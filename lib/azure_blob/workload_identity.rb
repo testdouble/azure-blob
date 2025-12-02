@@ -12,8 +12,12 @@ module AzureBlob
       !FEDERATED_TOKEN_FILE.empty?
     end
 
+    def initialize
+      @identity_uri = URI.parse(IDENTITY_ENDPOINT)
+    end
+
     def request
-      AzureBlob::Http.new(URI.parse(IDENTITY_ENDPOINT)).post(
+      AzureBlob::Http.new(@identity_uri).post(
         URI.encode_www_form(
           client_id: CLIENT_ID,
           scope: SCOPE,
