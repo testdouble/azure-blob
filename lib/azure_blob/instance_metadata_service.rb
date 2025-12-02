@@ -20,5 +20,9 @@ module AzureBlob
 
       AzureBlob::Http.new(@identity_uri, headers).get
     end
+
+    def expiration(response)
+      Time.at(response["expires_on"].to_i)
+    end
   end
 end

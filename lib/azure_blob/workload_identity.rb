@@ -24,6 +24,10 @@ module AzureBlob
       )
     end
 
+    def expiration(response)
+      Time.now + response["expires_in"].to_i
+    end
+
     private
 
     def federated_token
