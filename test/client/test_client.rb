@@ -286,6 +286,19 @@ class TestClient < TestCase
     assert_match_content keys.last(2), list.to_a.map(&:first)
   end
 
+  def test_list_blobs_with_start_from
+    prefix = "#{name}_prefix_#{@uid}"
+    keys = 4.times.map do |i|
+      key = "#{prefix}/#{i}"
+      client.create_block_blob(key, content)
+      key
+    end
+
+    list = client.list_blobs(max_results: 2, prefix:, start_from: "#{prefix}/2")
+
+    assert_match_content keys.last(2), list.to_a.map(&:first)
+  end
+
   def test_list_blobs_with_fetched_at
     prefix = "#{name}_prefix_#{@uid}"
     keys = 4.times.map do |i|

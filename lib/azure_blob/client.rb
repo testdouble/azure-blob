@@ -152,6 +152,10 @@ module AzureBlob
     # Options:
     # [+:prefix+]
     #   Prefix of the blobs to be listed. Defaults to listing everything in the container.
+    # [+:start_from+]
+    #    Specifies a fully qualified path within the container, similar to how
+    #    the prefix parameter is used to list blobs starting from a defined
+    #    location within prefix’s specified range.
     # [:+max_results+]
     #   Maximum number of results to return per page.
     def list_blobs(options = {})
@@ -162,6 +166,7 @@ module AzureBlob
         prefix: options[:prefix].to_s.gsub(/\\/, "/"),
       }
       query[:maxresults] = options[:max_results] if options[:max_results]
+      query[:startFrom] = options[:start_from].to_s if options[:start_from]
       uri.query = URI.encode_www_form(**query)
 
       fetcher = ->(marker) do
