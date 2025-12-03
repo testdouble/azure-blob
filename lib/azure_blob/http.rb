@@ -20,6 +20,7 @@ module AzureBlob
     end
     class FileNotFoundError < Error; end
     class ForbiddenError < Error; end
+    class NotModifiedError < Error; end
     class IntegrityError < Error; end
 
     include REXML
@@ -99,6 +100,7 @@ module AzureBlob
     ERROR_MAPPINGS = {
       Net::HTTPNotFound => FileNotFoundError,
       Net::HTTPForbidden => ForbiddenError,
+      Net::HTTPNotModified => NotModifiedError,
     }
 
     ERROR_CODE_MAPPINGS = {

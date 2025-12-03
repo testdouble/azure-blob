@@ -575,6 +575,42 @@ class TestClient < TestCase
     @client = dummy
   end
 
+  def test_get_blob_response_with_conditional_headers
+    timestamp = Time.now.httpdate
+    resp = Struct.new(:code, :message, :body).new(200, "OK", "")
+    http_mock = Minitest::Mock.new
+    http_mock.expect :get_full_response, resp
+
+    stubbed_new = lambda do |uri, headers = {}, signer: nil, **kwargs|
+      assert_equal timestamp, headers[:"if-modified-since"]
+      http_mock
+    end
+
+    AzureBlob::Http.stub :new, stubbed_new do
+      custom_client = AzureBlob::Client.new(account_name: "foo", access_key: "bar", container: "cont")
+      resp = custom_client.get_blob_response(key, headers: { "if-modified-since" => timestamp })
+
+      assert_equal 200, resp.code
+      assert_equal "", resp.body
+    end
+
+    http_mock.verify
+    dummy = Minitest::Mock.new
+    dummy.expect :delete_blob, nil, [ key ]
+    @client = dummy
+  end
+
+  def test_get_blob_response_with_conditional_headers_raise_not_modified_error
+    client.create_block_blob(key, content)
+
+    resp = client.get_blob_response(key)
+    last_mod = resp.header["last-modified"]
+
+    assert_raises AzureBlob::Http::NotModifiedError do
+      client.get_blob_response(key, headers: { "If-Modified-Since" => last_mod })
+    end
+  end
+
   def test_create_append_blob_additional_headers
     http_mock = Minitest::Mock.new
     http_mock.expect :put, true, [ nil ]

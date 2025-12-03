@@ -411,8 +411,9 @@ module AzureBlob
   private
 
     def additional_headers(options)
-      (options[:headers] || {}).transform_keys { |k| "x-ms-#{k}".to_sym }.
-        transform_values(&:to_s)
+      (options[:headers] || {})
+        .transform_keys { |k| (k =~ /\Aif-/i ? k : "x-ms-#{k}").to_sym }
+        .transform_values(&:to_s)
     end
 
     def range_headers(options)
