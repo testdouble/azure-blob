@@ -36,6 +36,10 @@ module AzureBlob
       response.code == "200"
     end
 
+    def version_id
+      response["x-ms-version-id"]
+    end
+
     # Returns the custom Azure metadata tagged on the blob.
     def metadata
       @metadata || response
