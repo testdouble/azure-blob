@@ -15,21 +15,40 @@ terraform {
   }
 }
 
-data "azurerm_kubernetes_cluster" "main" {
-  count               = var.create_aks ? 0 : 1
-  name                = "${var.prefix}-aks"
-  resource_group_name = var.prefix
+data "external" "aks_credentials" {
+  count   = var.create_aks ? 0 : 1
+  program = ["bash", "-c", <<-EOF
+    tmpfile=$(mktemp)
+    trap "rm -f $tmpfile" EXIT
+    if az aks get-credentials -n "${var.prefix}-aks" -g "${var.prefix}" --admin --file "$tmpfile" --overwrite-existing 2>/dev/null; then
+      host=$(grep 'server:' "$tmpfile" | awk '{print $2}')
+      cluster_ca=$(grep 'certificate-authority-data:' "$tmpfile" | awk '{print $2}')
+      client_cert=$(grep 'client-certificate-data:' "$tmpfile" | awk '{print $2}')
+      client_key=$(grep 'client-key-data:' "$tmpfile" | awk '{print $2}')
+      printf '{"host":"%s","cluster_ca":"%s","client_cert":"%s","client_key":"%s"}\n' "$host" "$cluster_ca" "$client_cert" "$client_key"
+    else
+      echo '{"host":"","cluster_ca":"","client_cert":"","client_key":""}'
+    fi
+  EOF
+  ]
 }
 
 provider "azurerm" {
   features {}
 }
 
+locals {
+  aks_host        = var.create_aks ? azurerm_kubernetes_cluster.main[0].kube_config[0].host : data.external.aks_credentials[0].result.host
+  aks_cluster_ca  = var.create_aks ? azurerm_kubernetes_cluster.main[0].kube_config[0].cluster_ca_certificate : data.external.aks_credentials[0].result.cluster_ca
+  aks_client_cert = var.create_aks ? azurerm_kubernetes_cluster.main[0].kube_config[0].client_certificate : data.external.aks_credentials[0].result.client_cert
+  aks_client_key  = var.create_aks ? azurerm_kubernetes_cluster.main[0].kube_config[0].client_key : data.external.aks_credentials[0].result.client_key
+}
+
 provider "kubernetes" {
-  host                   = var.create_aks ? azurerm_kubernetes_cluster.main[0].kube_config[0].host : (length(data.azurerm_kubernetes_cluster.main) > 0 ? data.azurerm_kubernetes_cluster.main[0].kube_config[0].host : "")
-  client_certificate     = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].client_certificate) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].client_certificate) : "")
-  client_key             = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].client_key) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].client_key) : "")
-  cluster_ca_certificate = var.create_aks ? base64decode(azurerm_kubernetes_cluster.main[0].kube_config[0].cluster_ca_certificate) : (length(data.azurerm_kubernetes_cluster.main) > 0 ? base64decode(data.azurerm_kubernetes_cluster.main[0].kube_config[0].cluster_ca_certificate) : "")
+  host                   = local.aks_host
+  client_certificate     = local.aks_client_cert != "" ? base64decode(local.aks_client_cert) : ""
+  client_key             = local.aks_client_key != "" ? base64decode(local.aks_client_key) : ""
+  cluster_ca_certificate = local.aks_cluster_ca != "" ? base64decode(local.aks_cluster_ca) : ""
 }
 
 locals {
