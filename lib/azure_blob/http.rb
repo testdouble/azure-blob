@@ -21,6 +21,7 @@ module AzureBlob
     class FileNotFoundError < Error; end
     class ForbiddenError < Error; end
     class IntegrityError < Error; end
+    class TimeoutError < Error; end
 
     include REXML
 
@@ -99,6 +100,7 @@ module AzureBlob
 
     ERROR_CODE_MAPPINGS = {
       "Md5Mismatch" => IntegrityError,
+      "OperationTimedOut" => TimeoutError,
     }
 
     def sanitize_headers

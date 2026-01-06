@@ -70,6 +70,7 @@ module AzureBlob
     #   Ending point in bytes
     def get_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
       headers = {
         "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}",
@@ -92,6 +93,7 @@ module AzureBlob
     def copy_blob(key, source_key, options = {})
       source_client = options.delete(:source_client) || self
       uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
       source_uri = source_client.signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 300).utc.iso8601)
 
@@ -114,6 +116,7 @@ module AzureBlob
     #   Sets the value of the x-ms-delete-snapshots header. Default to +include+
     def delete_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
       headers = {
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
@@ -152,6 +155,7 @@ module AzureBlob
         prefix: options[:prefix].to_s.gsub(/\\/, "/"),
       }
       query[:maxresults] = options[:max_results] if options[:max_results]
+      query[:timeout] = options[:timeout] if options[:timeout]
       uri.query = URI.encode_www_form(**query)
 
       fetcher = ->(marker) do
@@ -172,6 +176,7 @@ module AzureBlob
     # To check for blob presence, look for `blob_exist?` as `get_blob_properties` raises on missing blob.
     def get_blob_properties(key, options = {})
       uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
       response = Http.new(uri, additional_headers(options), signer:).head
 
@@ -196,7 +201,9 @@ module AzureBlob
     # Returns a hash of the blob's tags.
     def get_blob_tags(key, options = {})
       uri = generate_uri("#{container}/#{key}")
-      uri.query = URI.encode_www_form(comp: "tags")
+      query = { comp: "tags" }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
       response = Http.new(uri, additional_headers(options), signer:).get
 
       Tags.from_response(response).to_h
@@ -209,7 +216,9 @@ module AzureBlob
     # This can be used to see if the container exist or obtain metadata.
     def get_container_properties(options = {})
       uri = generate_uri(container)
-      uri.query = URI.encode_www_form(restype: "container")
+      query = { restype: "container" }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
       response = Http.new(uri, additional_headers(options), signer:, raise_on_error: false).head
 
       Container.new(response)
@@ -232,7 +241,9 @@ module AzureBlob
       headers[:"x-ms-blob-public-access"] = options[:public_access] if [ "container", "blob" ].include?(options[:public_access])
       headers.merge!(additional_headers(options))
 
-      uri.query = URI.encode_www_form(restype: "container")
+      query = { restype: "container" }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
       response = Http.new(uri, headers, signer:).put
     end
 
@@ -241,7 +252,9 @@ module AzureBlob
     # Calls to {Delete Container}[https://learn.microsoft.com/en-us/rest/api/storageservices/delete-container]
     def delete_container(options = {})
       uri = generate_uri(container)
-      uri.query = URI.encode_www_form(restype: "container")
+      query = { restype: "container" }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
       response = Http.new(uri, additional_headers(options), signer:).delete
     end
 
@@ -283,6 +296,7 @@ module AzureBlob
     #   Will be saved on the blob in Azure.
     def create_append_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
       headers = {
         "x-ms-blob-type": "AppendBlob",
@@ -306,7 +320,9 @@ module AzureBlob
     #   The checksum must be the checksum of the block not the blob.
     def append_blob_block(key, content, options = {})
       uri = generate_uri("#{container}/#{key}")
-      uri.query = URI.encode_www_form(comp: "appendblock")
+      query = { comp: "appendblock" }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
 
       headers = {
         "Content-Length": content_size(content),
@@ -330,7 +346,9 @@ module AzureBlob
     def put_blob_block(key, index, content, options = {})
       block_id = generate_block_id(index)
       uri = generate_uri("#{container}/#{key}")
-      uri.query = URI.encode_www_form(comp: "block", blockid: block_id)
+      query = { comp: "block", blockid: block_id }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
 
       headers = {
         "Content-Length": content_size(content),
@@ -358,7 +376,9 @@ module AzureBlob
       block_list = BlockList.new(block_ids)
       content = block_list.to_s
       uri = generate_uri("#{container}/#{key}")
-      uri.query = URI.encode_www_form(comp: "blocklist")
+      query = { comp: "blocklist" }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
 
       headers = {
         "Content-Length": content_size(content),
@@ -386,7 +406,7 @@ module AzureBlob
       block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
       block_count = (content_size(content).to_f / block_size).ceil
       block_ids = block_count.times.map do |i|
-        put_blob_block(key, i, content.read(block_size))
+        put_blob_block(key, i, content.read(block_size), options.slice(:timeout))
       end
 
       commit_blob_blocks(key, block_ids, options)
@@ -395,6 +415,7 @@ module AzureBlob
     def put_blob_single(key, content, options = {})
       content = StringIO.new(content) if content.is_a? String
       uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
       headers = {
         "x-ms-blob-type": "BlockBlob",

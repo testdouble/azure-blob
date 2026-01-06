@@ -502,4 +502,12 @@ class TestClient < TestCase
     dummy.expect :delete_blob, nil, [ key ]
     @client = dummy
   end
+
+  def test_timeout_triggers_error
+    skip if ENV["TESTING_AZURITE"]
+
+    assert_raises(AzureBlob::Http::TimeoutError) do
+      client.create_block_blob(key, content, timeout: 0.000001)
+    end
+  end
 end

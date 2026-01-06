@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+- Add optional `timeout` parameter to all API methods
+- Add `AzureBlob::Http::TimeoutError` for handling Azure `OperationTimedOut` errors
+
 ## [0.6.0] 2025-12-01
 
 - Add support for AKS workload identity
