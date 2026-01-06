@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    azure-blob (0.6.0)
+    azure-blob (0.7.0)
       rexml
 
 GEM

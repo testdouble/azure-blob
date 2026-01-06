@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.7.0] 2025-01-05
+
 - Add optional `timeout` parameter to all API methods
 - Add `AzureBlob::Http::TimeoutError` for handling Azure `OperationTimedOut` errors
 
