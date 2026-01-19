@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    azure-blob (0.7.0)
+    azure-blob (0.8.0)
       cgi
       rexml
 
@@ -289,4 +289,4 @@ DEPENDENCIES
   sqlite3 (>= 1.6.6)
 
 BUNDLED WITH
-   2.5.9
+   2.6.6

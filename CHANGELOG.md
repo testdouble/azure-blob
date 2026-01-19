@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [0.8.0] 2025-01-18
+
+- Add cgi gem dependency for Ruby 4.0 compatibility
+
 ## [0.7.0] 2025-01-05
 
 - Add optional `timeout` parameter to all API methods
