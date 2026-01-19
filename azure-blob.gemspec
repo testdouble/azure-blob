@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "https://github.com/testdouble/azure-blob/blob/main/CHANGELOG.md"
 
+  spec.add_dependency "cgi"
   spec.add_dependency "rexml"
 
   spec.files = Dir['lib/**/*.rb', 'Rakefile', 'README.md', 'CHANGELOG.md', 'LICENSE.txt']
