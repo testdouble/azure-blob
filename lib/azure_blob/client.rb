@@ -365,7 +365,7 @@ module AzureBlob
     # Calls to {Put Block From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-block-from-url]
     #
     # Returns the id of the block. Required to commit the list of blocks to a blob.
-    def put_blob_block_from_url(key, source_uri, index, block_size, options = {})
+    def put_blob_block_from_url(key, source_uri, index, block_size, source_size, options = {})
       block_id = generate_block_id(index)
       uri = generate_uri("#{container}/#{key}")
       query = { comp: "block", blockid: block_id }
@@ -375,7 +375,7 @@ module AzureBlob
       headers = {
         "Content-Length": 0,
         "x-ms-copy-source": source_uri.to_s,
-        "x-ms-source-range": "bytes=#{index * block_size}-#{[(index + 1) * block_size - 1, source_uri.size - 1].min}",
+        "x-ms-source-range": "bytes=#{index * block_size}-#{[(index + 1) * block_size - 1, source_size - 1].min}",
       }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content)
@@ -485,9 +485,9 @@ module AzureBlob
       source_uri = source_client.signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 3600).utc.iso8601)
 
       block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
-      block_count = (source_client.get_blob_properties(source_key).size.to_f / block_size).ceil
+      block_count = (options[:content_size].to_f / block_size).ceil
       block_ids = block_count.times.map do |i|
-        put_blob_block_from_url(key, source_uri, i, block_size, options.slice(:timeout))
+        put_blob_block_from_url(key, source_uri, i, block_size, options[:content_size], options.slice(:timeout))
       end
 
       commit_blob_blocks(key, block_ids, options)
