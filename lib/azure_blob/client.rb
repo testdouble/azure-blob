@@ -333,6 +333,33 @@ module AzureBlob
       Http.new(uri, headers, signer:).put(content)
     end
 
+    # Creates a blob from an existing blob between containers or within the same container
+    #
+    # Calls to {Put Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-blob-from-url]
+    #
+    # Parameters:
+    # - key: destination blob path
+    # - source_key: source blob path
+    # - options: additional options
+    #   - source_client: AzureBlob::Client instance for the source container (optional)
+    #     If not provided, copies from within the same container
+    #
+    def put_blob(key, source_key, options = {})
+      source_client = options.delete(:source_client) || self
+      uri = generate_uri("#{container}/#{key}")
+      uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
+
+      source_uri = source_client.signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 300).utc.iso8601)
+
+      headers = {
+        "Content-Length": 0,
+        "x-ms-copy-source": source_uri.to_s,
+        "x-ms-blob-type": "BlockBlob",
+      }.merge(additional_headers(options))
+
+      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
+    end
+
     # Uploads a block to a blob.
     #
     # Calls to {Put Block}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-block]
