@@ -124,8 +124,7 @@ module ActiveStorage
       content_disposition = content_disposition_with(type: disposition, filename: filename) if disposition && filename
 
       # use put_blob operation if composing a new blob from a single existing blob
-      # and that single blob is <= 1000 MiB which is the under the upper limit of 5000 MIB for put_blob operation
-      if source_keys.length == 1 && client.get_blob_properties(source_keys[0]).size <= 1000.megabytes 
+      if source_keys.length == 1 
         client.put_blob(destination_key, source_keys[0], metadata: custom_metadata)
       else
         client.create_append_blob(
