@@ -378,7 +378,7 @@ module AzureBlob
         "x-ms-source-range": "bytes=#{index * block_size}-#{[(index + 1) * block_size - 1, source_size - 1].min}",
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content)
+      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
 
       block_id
     end
