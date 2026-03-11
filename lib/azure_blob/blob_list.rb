@@ -54,8 +54,9 @@ module AzureBlob
 
     def marker
       return initial_marker if document.nil?
+      return @current_marker unless @current_marker.nil?
 
-      document.get_elements("//EnumerationResults/NextMarker").first.get_text()&.to_s
+      @current_marker = document.get_elements("//EnumerationResults/NextMarker").first.get_text()&.to_s
     end
 
     attr_accessor :initial_marker, :fetched_at
@@ -71,6 +72,7 @@ module AzureBlob
 
     def fetch
       @fetched_at = Time.now.utc
+      @current_marker = nil
       @document = Document.new(fetcher.call(marker))
     end
 
