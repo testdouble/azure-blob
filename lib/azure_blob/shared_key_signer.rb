@@ -60,7 +60,7 @@ module AzureBlob
         nil,
         nil,
         options[:content_disposition],
-        nil,
+        options[:content_encoding],
         nil,
         options[:content_type],
       ].join("\n")
@@ -71,6 +71,7 @@ module AzureBlob
         SAS::Fields::Expiry => options[:expiry],
         SAS::Fields::Resource => SAS::Resources::Blob,
         SAS::Fields::Disposition => options[:content_disposition],
+        SAS::Fields::Encoding => options[:content_encoding],
         SAS::Fields::Type => options[:content_type],
         SAS::Fields::Signature => sign(to_sign),
       }.reject { |_, value| value.nil? }
@@ -99,6 +100,7 @@ module AzureBlob
         Resource = :sr
         Signature = :sig
         Disposition = :rscd
+        Encoding = :rsce
         Type = :rsct
       end
       module Resources # :nodoc:
