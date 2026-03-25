@@ -123,10 +123,9 @@ module ActiveStorage
     def compose(source_keys, destination_key, filename: nil, content_type: nil, disposition: nil, custom_metadata: {})
       content_disposition = content_disposition_with(type: disposition, filename: filename) if disposition && filename
 
-      # use copy_blob operation if composing a new blob from a single existing blob
-      # and that single blob is <= 256 MiB which is the upper limit for copy_blob operation
-      if source_keys.length == 1 && client.get_blob_properties(source_keys[0]).size <= 256.megabytes
-        client.copy_blob(destination_key, source_keys[0], metadata: custom_metadata)
+      # use put_blob operation if composing a new blob from a single existing blob
+      if source_keys.length == 1 
+        client.put_blob(destination_key, source_keys[0], metadata: custom_metadata)
       else
         client.create_append_blob(
           destination_key,

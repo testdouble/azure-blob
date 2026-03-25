@@ -190,6 +190,26 @@ class TestClient < TestCase
     assert_equal content, client.get_blob(copy_key)
   end
 
+  def test_single_block_put_blob_from_url
+    client.create_block_blob(key, content)
+    assert_equal content, client.get_blob(key)
+
+    copy_key = "#{key}_copy"
+    client.put_blob(copy_key, key)
+
+    assert_equal content, client.get_blob(copy_key)
+  end
+
+  def test_multi_block_put_blob_from_url
+    client.create_block_blob(key, content)
+    assert_equal content, client.get_blob(key)
+
+    copy_key = "#{key}_copy"
+    client.put_blob(copy_key, key, block_size: 1)
+
+    assert_equal content, client.get_blob(copy_key)
+  end
+
   def test_delete
     client.create_block_blob(key, content)
     assert_equal content, client.get_blob(key)
