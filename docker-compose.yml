@@ -37,8 +37,10 @@ services:
     command: bundle exec rubocop
 
   azurite:
-    # Bump to pick up Azurite releases with newer APIs.
-    image: mcr.microsoft.com/azure-storage/azurite:3.37.0
+    # Built from an Azurite main commit because Put Blob From URL isn't released yet (due in 3.38.0).
+    # The azurite_test CI job pins the same commit. Once 3.38.0 ships, replace this with
+    # image: mcr.microsoft.com/azure-storage/azurite:3.38.0
+    build: https://github.com/Azure/Azurite.git#d48491e981528a6ebb32d60a8969fff3da54e7ed
     command: azurite-blob --blobHost 0.0.0.0 --inMemoryPersistence
     healthcheck:
       test: ["CMD", "nc", "-z", "127.0.0.1", "10000"]

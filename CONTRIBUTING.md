@@ -11,7 +11,7 @@ docker compose run lint
 docker compose run test
 ```
 
-The first run builds the image and installs the gems, which takes a few minutes. After that, gems are only reinstalled when the Gemfile changes. Add `--rm` to remove the container after each run.
+The first run builds the images (Azurite is built from source until its next release) and installs the gems, which takes a few minutes. After that, gems are only reinstalled when the Gemfile changes. Add `--rm` to remove the container after each run.
 
 To run a single file or test:
 
@@ -24,7 +24,7 @@ The full run creates the test containers in Azurite, so run `docker compose run 
 
 ## What Azurite doesn't cover
 
-Azurite doesn't implement every Azure API (Put Blob From URL, for example) and has no Entra ID (managed identity) support, so some tests are skipped there. Before merging, a maintainer runs the full suite on your commit against real Azure, including the managed identity tests on an Azure VM, App Service and AKS.
+Azurite doesn't implement every Azure API and has no Entra ID (managed identity) support, so some tests are skipped there. Before merging, a maintainer runs the full suite on your commit against real Azure, including the managed identity tests on an Azure VM, App Service and AKS.
 
 The `client_test` and `rails_test` checks on a pull request run against the maintainers' Azure account. They need repository secrets, so they fail on pull requests from forks. The `lint` and `azurite_test` checks need no secrets and should pass.
 
