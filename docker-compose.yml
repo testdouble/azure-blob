@@ -37,7 +37,7 @@ services:
     command: bundle exec rubocop
 
   azurite:
-    # The azurite_test CI job runs this same image, so bumping it here updates both.
+    # Bump to pick up Azurite releases with newer APIs.
     image: mcr.microsoft.com/azure-storage/azurite:3.37.0
     command: azurite-blob --blobHost 0.0.0.0 --inMemoryPersistence
     healthcheck:

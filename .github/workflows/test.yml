@@ -194,16 +194,29 @@ jobs:
     needs: approve-external-sha
     if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' }}
     steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '18'
+      - name: Install Azurite
+        run: npm install -g azurite
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v7
       - uses: ./.github/actions/checkout-sha
         with:
           sha: ${{ inputs.sha }}
-      # Same setup contributors run locally (docker-compose.yml), no secrets needed
-      - name: Build test image
-        run: docker compose build test
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
       - name: Run Azurite tests
-        run: docker compose run --rm test
+        env:
+          AZURE_PRIVATE_CONTAINER: ${{ secrets.AZURE_PRIVATE_CONTAINER }}
+          AZURE_PUBLIC_CONTAINER: ${{ secrets.AZURE_PUBLIC_CONTAINER }}
+          AZURE_PRINCIPAL_ID: ${{ secrets.AZURE_PRINCIPAL_ID }}
+        run: bundle exec rake test_azurite
 
   client_test:
     runs-on: ubuntu-latest
