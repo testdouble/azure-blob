@@ -1,0 +1,49 @@
+# Run RuboCop and the test suite with only Docker, against Azurite instead of a real Azure account:
+#
+#   docker compose run lint
+#   docker compose run test
+#
+# See CONTRIBUTING.md.
+
+x-ruby: &ruby
+  build:
+    context: .
+    dockerfile: Dockerfile.dev
+  image: azure-blob-dev
+  volumes:
+    - .:/app
+    - bundle:/usr/local/bundle
+  # Gems live in the bundle volume: installed on the first run, then again only when the Gemfile changes.
+  entrypoint: ["sh", "-c", "bundle check > /dev/null || bundle install && exec \"$$@\"", "--"]
+
+services:
+  test:
+    <<: *ruby
+    command: bundle exec rake test_azurite
+    environment:
+      # Azurite's well-known development account
+      AZURE_ACCOUNT_NAME: devstoreaccount1
+      AZURE_ACCESS_KEY: Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
+      AZURE_PRIVATE_CONTAINER: private
+      AZURE_PUBLIC_CONTAINER: public
+      STORAGE_BLOB_HOST: http://azurite:10000/devstoreaccount1
+      TESTING_AZURITE: "true"
+    depends_on:
+      azurite:
+        condition: service_healthy
+
+  lint:
+    <<: *ruby
+    command: bundle exec rubocop
+
+  azurite:
+    # The azurite_test CI job runs this same image, so bumping it here updates both.
+    image: mcr.microsoft.com/azure-storage/azurite:3.37.0
+    command: azurite-blob --blobHost 0.0.0.0 --inMemoryPersistence
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "10000"]
+      interval: 1s
+      retries: 30
+
+volumes:
+  bundle:
