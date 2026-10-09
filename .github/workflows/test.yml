@@ -6,10 +6,17 @@ on:
     tags:
       - test
   workflow_dispatch:
+    inputs:
+      sha:
+        description: "Full commit sha to test (e.g. a reviewed contributor PR commit). Workflow, terraform, Rakefile and test/support still come from the dispatched ref."
+        required: false
+        default: ""
 
 permissions:
-  id-token: write
   contents: read
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.run_id) || 'azure-infra' }}
+  cancel-in-progress: false
 env:
   ARM_SKIP_PROVIDER_REGISTRATION: true
   ARM_USE_OIDC: true
@@ -28,9 +35,22 @@ jobs:
           bundler-cache: true
       - name: RuboCop
         run: bundle exec rubocop
+  approve-external-sha:
+    runs-on: ubuntu-latest
+    if: inputs.sha != ''
+    environment: azure-external
+    steps:
+      - env:
+          SHA: ${{ inputs.sha }}
+        run: echo "Approved running $SHA with repository credentials"
+
   deploy-infrastructure:
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/test') || github.event_name == 'workflow_dispatch'
+    needs: approve-external-sha
+    if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' && (startsWith(github.ref, 'refs/tags/test') || github.event_name == 'workflow_dispatch') }}
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-terraform
@@ -40,11 +60,17 @@ jobs:
   app_service_test:
     needs: deploy-infrastructure
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: ./.github/actions/checkout-sha
+        with:
+          sha: ${{ inputs.sha }}
       - uses: ./.github/actions/setup-terraform
       - name: Azure login
         uses: azure/login@v2
@@ -68,6 +94,9 @@ jobs:
   azurevm_test:
     needs: deploy-infrastructure
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
@@ -82,6 +111,9 @@ jobs:
           ssh-add /home/runner/.ssh/id_rsa
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: ./.github/actions/checkout-sha
+        with:
+          sha: ${{ inputs.sha }}
       - uses: ./.github/actions/setup-terraform
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
@@ -100,6 +132,9 @@ jobs:
   aks_test:
     needs: deploy-infrastructure
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
@@ -114,6 +149,9 @@ jobs:
           ssh-add /home/runner/.ssh/id_rsa
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: ./.github/actions/checkout-sha
+        with:
+          sha: ${{ inputs.sha }}
       - uses: ./.github/actions/setup-terraform
       - name: Azure login
         uses: azure/login@v2
@@ -138,6 +176,8 @@ jobs:
 
   azurite_test:
     runs-on: ubuntu-latest
+    needs: approve-external-sha
+    if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' }}
     steps:
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -149,6 +189,9 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: ./.github/actions/checkout-sha
+        with:
+          sha: ${{ inputs.sha }}
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -162,11 +205,16 @@ jobs:
 
   client_test:
     runs-on: ubuntu-latest
+    needs: approve-external-sha
+    if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' }}
     steps:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: ./.github/actions/checkout-sha
+        with:
+          sha: ${{ inputs.sha }}
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -182,11 +230,16 @@ jobs:
 
   rails_test:
     runs-on: ubuntu-latest
+    needs: approve-external-sha
+    if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' }}
     steps:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
         uses: actions/checkout@v4
+      - uses: ./.github/actions/checkout-sha
+        with:
+          sha: ${{ inputs.sha }}
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
