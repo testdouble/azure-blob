@@ -27,8 +27,13 @@ env:
 jobs:
   lint:
     runs-on: ubuntu-latest
+    needs: approve-external-sha
+    if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' }}
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/checkout-sha
+        with:
+          sha: ${{ inputs.sha }}
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
