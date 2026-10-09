@@ -165,6 +165,14 @@ After you are done, run terraform again without the var file (`terraform apply`)
 
 Some tests copied over from Rails don't clean after themselves. A rake task is provided to empty your containers and keep cost low: `bin/rake flush_test_container`
 
+#### Continuous integration
+
+Pull requests run lint and the shared key, Rails, and Azurite suites. The Entra ID suites (VM, App Service, AKS) need Azure infrastructure, so a maintainer runs them by triggering the "Run tests" workflow manually from GitHub Actions (or `gh workflow run test.yml`).
+
+To run the full suite against a contributor's commit, pass its full sha: `gh workflow run test.yml -f sha=<commit sha>`. The workflow, terraform, Rakefile, and `test/support` still come from the dispatched branch, and the run waits for approval on the `azure-external` environment. Only approve after reviewing the diff at that exact sha, since it runs with the repository's Azure credentials.
+
+Infrastructure is torn down daily by the Teardown workflow.
+
 #### Run without devenv/nix
 
 If you prefer not using devenv/nix:
