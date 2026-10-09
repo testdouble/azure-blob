@@ -382,7 +382,7 @@ module AzureBlob
 
       headers = {
         "Content-Length": content_size(content),
-        "Content-Type": options[:content_type],
+        "x-ms-blob-content-type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.merge(additional_headers(options))

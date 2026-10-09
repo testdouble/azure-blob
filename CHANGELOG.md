@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Fix the content type being dropped when a blob is uploaded in multiple blocks
+
 ## [0.8.0] 2025-01-18
 
 - Add cgi gem dependency for Ruby 4.0 compatibility
