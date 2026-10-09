@@ -137,4 +137,17 @@ class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
     @service.delete key
     @service.delete copy_key
   end
+
+  test "composing a blob from a composed blob" do
+    keys = 2.times.map { SecureRandom.base58(24) }
+    composed_key, copy_key = 2.times.map { SecureRandom.base58(24) }
+
+    keys.each { |key| @service.upload(key, StringIO.new("half-")) }
+    @service.compose(keys, composed_key)
+    @service.compose([ composed_key ], copy_key)
+
+    assert_equal "half-half-", @service.download(copy_key)
+  ensure
+    (keys + [ composed_key, copy_key ]).each { |key| @service.delete key }
+  end
 end

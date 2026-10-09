@@ -30,8 +30,15 @@ class TestClient < TestCase
   end
 
   def teardown
-    client.delete_blob(key)
-  rescue AzureBlob::Http::FileNotFoundError
+    [ key, @copy_key ].compact.each do |blob_key|
+      client.delete_blob(blob_key)
+    rescue AzureBlob::Http::FileNotFoundError
+    end
+  end
+
+  # Destination key for copy tests; registering it here gets it deleted in teardown.
+  def copy_key
+    @copy_key ||= "#{key}_copy"
   end
 
   def test_rails_is_not_loaded
@@ -183,31 +190,37 @@ class TestClient < TestCase
     client.create_block_blob(key, content)
     assert_equal content, client.get_blob(key)
 
-    copy_key = "#{key}_copy"
-
     client.copy_blob(copy_key, key)
 
     assert_equal content, client.get_blob(copy_key)
   end
 
-  def test_single_block_put_blob_from_url
-    client.create_block_blob(key, content)
-    assert_equal content, client.get_blob(key)
+  def test_copy_append_blob
+    client.create_append_blob(key, content_type: "text/plain")
+    client.append_blob_block(key, content[0, 5])
+    client.append_blob_block(key, content[5..])
+    assert_equal "AppendBlob", client.get_blob_properties(key).blob_type
 
-    copy_key = "#{key}_copy"
-    client.put_blob(copy_key, key)
+    client.copy_blob(copy_key, key)
 
     assert_equal content, client.get_blob(copy_key)
+    assert_equal "BlockBlob", client.get_blob_properties(copy_key).blob_type
+    assert_equal "text/plain", client.get_blob_properties(copy_key).content_type
   end
 
-  def test_multi_block_put_blob_from_url
-    client.create_block_blob(key, content)
-    assert_equal content, client.get_blob(key)
+  def test_copy_keeps_properties_and_metadata
+    client.create_block_blob(key, content, content_type: "text/plain", content_disposition: "attachment", metadata: { foo: "bar" })
 
-    copy_key = "#{key}_copy"
-    client.put_blob(copy_key, key, block_size: 1)
+    client.copy_blob(copy_key, key)
+    copy = client.get_blob_properties(copy_key)
 
-    assert_equal content, client.get_blob(copy_key)
+    assert_equal "text/plain", copy.content_type
+    assert_equal "attachment", copy.content_disposition
+    assert_equal({ foo: "bar" }, copy.metadata)
+
+    client.copy_blob(copy_key, key, metadata: { baz: "qux" })
+
+    assert_equal({ baz: "qux" }, client.get_blob_properties(copy_key).metadata)
   end
 
   def test_delete

@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- `copy_blob` and single-source `compose` call Put Blob From URL: append blobs can be copied (#48) and block blobs up to 5000 MiB are copied in one request
+
 ## [0.8.0] 2025-01-18
 
 - Add cgi gem dependency for Ruby 4.0 compatibility
