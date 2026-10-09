@@ -64,6 +64,7 @@ jobs:
 
   app_service_test:
     needs: deploy-infrastructure
+    if: ${{ !cancelled() && needs.deploy-infrastructure.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -98,6 +99,7 @@ jobs:
 
   azurevm_test:
     needs: deploy-infrastructure
+    if: ${{ !cancelled() && needs.deploy-infrastructure.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -136,6 +138,7 @@ jobs:
 
   aks_test:
     needs: deploy-infrastructure
+    if: ${{ !cancelled() && needs.deploy-infrastructure.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
