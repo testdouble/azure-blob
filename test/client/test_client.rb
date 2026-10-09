@@ -147,6 +147,13 @@ class TestClient < TestCase
     assert_equal "funky content_type", response.content_type
   end
 
+  def test_content_type_persisted_in_multiple_blocks
+    client.create_block_blob(key, content, content_type: "funky content_type", block_size: 1)
+    response = client.get_blob_properties(key)
+
+    assert_equal "funky content_type", response.content_type
+  end
+
   def test_metadata_persisted
     client.create_block_blob(key, content, metadata: { hello: "world" })
     response = client.get_blob_properties(key)

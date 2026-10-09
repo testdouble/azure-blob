@@ -1,6 +1,7 @@
 ## [Unreleased]
 
 - `copy_blob` and single-source `compose` call Put Blob From URL: append blobs can be copied (#48) and block blobs up to 5000 MiB are copied in one request
+- Fix the content type being dropped when a blob is uploaded in multiple blocks
 
 ## [0.8.0] 2025-01-18
 
