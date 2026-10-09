@@ -31,7 +31,7 @@ jobs:
     needs: approve-external-sha
     if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/checkout-sha
         with:
           sha: ${{ inputs.sha }}
@@ -60,7 +60,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-terraform
       - name: Terraform apply
         run: terraform apply -auto-approve -var "create_vm=true" -var "create_app_service=true" -var "create_aks=true" -var "ssh_key=${{ secrets.SSH_PUBLIC_KEY }}"
@@ -77,13 +77,13 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sshuttle sqlite3 libsqlite3-dev
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - uses: ./.github/actions/checkout-sha
         with:
           sha: ${{ inputs.sha }}
       - uses: ./.github/actions/setup-terraform
       - name: Azure login
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -122,7 +122,7 @@ jobs:
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add /home/runner/.ssh/id_rsa
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - uses: ./.github/actions/checkout-sha
         with:
           sha: ${{ inputs.sha }}
@@ -162,19 +162,19 @@ jobs:
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add /home/runner/.ssh/id_rsa
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - uses: ./.github/actions/checkout-sha
         with:
           sha: ${{ inputs.sha }}
       - uses: ./.github/actions/setup-terraform
       - name: Azure login
-        uses: azure/login@v2
+        uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@v5
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -195,7 +195,7 @@ jobs:
     if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' }}
     steps:
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
           node-version: '18'
       - name: Install Azurite
@@ -203,7 +203,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - uses: ./.github/actions/checkout-sha
         with:
           sha: ${{ inputs.sha }}
@@ -227,7 +227,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - uses: ./.github/actions/checkout-sha
         with:
           sha: ${{ inputs.sha }}
@@ -253,7 +253,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - uses: ./.github/actions/checkout-sha
         with:
           sha: ${{ inputs.sha }}
