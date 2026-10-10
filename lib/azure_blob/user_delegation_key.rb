@@ -38,8 +38,8 @@ module AzureBlob
       return unless expired? || (valid_until && valid_until > expiration)
 
       start = now.iso8601
-      @expiration = [ now + expiration_duration, valid_until ].compact.max
-      expiry = @expiration.getutc.iso8601
+      new_expiration = [ now + expiration_duration, valid_until ].compact.max
+      expiry = new_expiration.getutc.iso8601
 
       content = <<-XML.gsub!(/[[:space:]]+/, " ").strip!
         <?xml version="1.0" encoding="utf-8"?>
@@ -60,6 +60,7 @@ module AzureBlob
       @signed_service = doc.get_elements("/UserDelegationKey/SignedService").first.get_text.to_s
       @signed_version = doc.get_elements("/UserDelegationKey/SignedVersion").first.get_text.to_s
       @user_delegation_key = Base64.decode64(doc.get_elements("/UserDelegationKey/Value").first.get_text.to_s)
+      @expiration = new_expiration
     end
 
     attr_reader :signed_oid,

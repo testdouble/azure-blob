@@ -34,6 +34,14 @@ class TestUserDelegationKeyConfiguration < TestCase
     end
   end
 
+  KeyRequestFailed = Class.new(StandardError)
+
+  class FailingHttp
+    def post(_content)
+      raise KeyRequestFailed
+    end
+  end
+
   def setup
     @posts = []
   end
@@ -140,6 +148,20 @@ class TestUserDelegationKeyConfiguration < TestCase
 
     assert_equal 2, posts.size
     assert_includes posts.last, "<Expiry>#{valid_until.getutc.iso8601}</Expiry>"
+  end
+
+  def test_a_failed_key_request_leaves_the_key_unchanged
+    key = build_key(expiration: 1800)
+    valid_until = Time.at(Time.now.to_i + 3600).utc
+
+    AzureBlob::Http.stub(:new, ->(*, **) { FailingHttp.new }) do
+      assert_raises(KeyRequestFailed) { key.refresh(valid_until:) }
+    end
+
+    with_stubbed_http { key.refresh(valid_until:) }
+
+    assert_equal 2, posts.size
+    assert_equal valid_until, requested_expiry
   end
 
   def test_signed_url_can_last_seven_days_but_not_longer
