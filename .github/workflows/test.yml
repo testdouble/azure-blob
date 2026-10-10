@@ -41,15 +41,23 @@ jobs:
           bundler-cache: true
       - name: RuboCop
         run: bundle exec rubocop
+  # A sha run gives the contributor's code the repository secrets, so only the
+  # maintainer who reviewed that commit may dispatch it. The dispatch is the approval.
   approve-external-sha:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: inputs.sha != ''
-    environment: azure-external
     steps:
-      - env:
+      - name: Check who dispatched the sha run
+        env:
           SHA: ${{ inputs.sha }}
-        run: echo "Approved running $SHA with repository credentials"
+          DISPATCHER: ${{ github.triggering_actor }}
+        run: |
+          if [ "$DISPATCHER" != "JoeDupuis" ]; then
+            echo "::error::Only JoeDupuis can run a contributor sha with repository credentials, not $DISPATCHER"
+            exit 1
+          fi
+          echo "$DISPATCHER approved running $SHA with repository credentials"
 
   deploy-infrastructure:
     runs-on: ubuntu-latest
