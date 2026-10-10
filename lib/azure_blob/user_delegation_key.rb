@@ -7,10 +7,8 @@ module AzureBlob
     EXPIRATION = 25200 # 7 hours
     MAX_EXPIRATION = 604800 # 7 days
     EXPIRATION_BUFFER = 3600 # 1 hours
-    def initialize(account_name:, signer:, expiration: EXPIRATION)
-      raise ArgumentError, "expiration must be a positive number of seconds" unless expiration.is_a?(Numeric) && expiration > 0
-      raise ArgumentError, "expiration cannot be greater than #{MAX_EXPIRATION} seconds (7 days)" if expiration > MAX_EXPIRATION
 
+    def initialize(account_name:, signer:, expiration: EXPIRATION)
       @uri = URI.parse(
         "#{signer.host}/?restype=service&comp=userdelegationkey"
       )

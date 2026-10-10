@@ -15,6 +15,8 @@ module AzureBlob
     attr_reader :host
 
     def initialize(account_name:, host:, principal_id: nil, delegation_key_expiration: nil)
+      validate_delegation_key_expiration!(delegation_key_expiration)
+
       @token = AzureBlob::IdentityToken.new(principal_id:)
       @account_name = account_name
       @host = host
@@ -84,6 +86,18 @@ module AzureBlob
     private
 
     attr_reader :delegation_key_expiration
+
+    def validate_delegation_key_expiration!(expiration)
+      return if expiration.nil?
+
+      unless expiration.is_a?(Numeric) && expiration > 0
+        raise ArgumentError, "delegation_key_expiration must be a positive number of seconds, got #{expiration.inspect}"
+      end
+
+      if expiration > UserDelegationKey::MAX_EXPIRATION
+        raise ArgumentError, "delegation_key_expiration cannot be greater than #{UserDelegationKey::MAX_EXPIRATION} seconds (7 days), got #{expiration.inspect}"
+      end
+    end
 
     def delegation_key
       @delegation_key ||= UserDelegationKey.new(account_name:, signer: self, expiration: delegation_key_expiration || UserDelegationKey::EXPIRATION)

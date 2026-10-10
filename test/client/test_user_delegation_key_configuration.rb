@@ -74,17 +74,25 @@ class TestUserDelegationKeyConfiguration < TestCase
     assert_in_delta now + 86400, requested_expiry, 5
   end
 
-  def test_expiration_above_seven_days_raises
-    error = assert_raises(ArgumentError) { build_key(expiration: 604801) }
+  def test_entra_id_signer_rejects_an_invalid_expiration
+    [ 0, -1, 604801, "604800" ].each do |expiration|
+      assert_raises(ArgumentError) do
+        AzureBlob::EntraIdSigner.new(account_name: "account", host: HOST, delegation_key_expiration: expiration)
+      end
+    end
+  end
+
+  def test_client_rejects_an_invalid_expiration_when_built
+    error = assert_raises(ArgumentError) do
+      AzureBlob::Client.new(
+        account_name: "account",
+        container: "container",
+        principal_id: "principal",
+        delegation_key_expiration: 999_999_999,
+      )
+    end
+
     assert_match(/604800/, error.message)
-  end
-
-  def test_zero_expiration_raises
-    assert_raises(ArgumentError) { build_key(expiration: 0) }
-  end
-
-  def test_negative_expiration_raises
-    assert_raises(ArgumentError) { build_key(expiration: -1) }
   end
 
   def test_key_is_not_requested_again_until_close_to_expiry
