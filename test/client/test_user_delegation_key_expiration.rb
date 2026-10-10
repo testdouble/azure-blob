@@ -61,6 +61,12 @@ class TestUserDelegationKeyExpiration < TestCase
     assert_in_delta Time.now + 86400, sas_time(uri, :ske), 10
   end
 
+  def test_delegation_key_expiration_accepts_a_string_of_seconds
+    uri = signed_uri(expires_in: 60, client: build_client(delegation_key_expiration: "86400"))
+
+    assert_in_delta Time.now + 86400, sas_time(uri, :ske), 10
+  end
+
   def test_user_delegation_key_is_reused_while_the_signed_urls_fit_in_it
     client = build_client(delegation_key_expiration: 3600)
 

@@ -6,7 +6,7 @@ class TestUserDelegationKeyConfiguration < TestCase
   HOST = "https://account.blob.core.windows.net"
 
   def test_entra_id_signer_rejects_an_invalid_expiration
-    [ 0, -1, 604801, "604800" ].each do |expiration|
+    [ 0, -1, 604801, "soon", "" ].each do |expiration|
       assert_raises(ArgumentError) do
         AzureBlob::EntraIdSigner.new(account_name: "account", host: HOST, delegation_key_expiration: expiration)
       end
