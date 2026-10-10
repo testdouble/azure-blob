@@ -2,6 +2,7 @@
 
 require_relative "test_helper"
 require "securerandom"
+require "tempfile"
 
 class TestClient < TestCase
   attr_reader :client, :key, :content
@@ -30,8 +31,15 @@ class TestClient < TestCase
   end
 
   def teardown
-    client.delete_blob(key)
-  rescue AzureBlob::Http::FileNotFoundError
+    [ key, @copy_key ].compact.each do |blob_key|
+      client.delete_blob(blob_key)
+    rescue AzureBlob::Http::FileNotFoundError
+    end
+  end
+
+  # Destination key for copy tests; registering it here gets it deleted in teardown.
+  def copy_key
+    @copy_key ||= "#{key}_copy"
   end
 
   def test_rails_is_not_loaded
@@ -140,6 +148,13 @@ class TestClient < TestCase
     assert_equal "funky content_type", response.content_type
   end
 
+  def test_content_type_persisted_in_multiple_blocks
+    client.create_block_blob(key, content, content_type: "funky content_type", block_size: 1)
+    response = client.get_blob_properties(key)
+
+    assert_equal "funky content_type", response.content_type
+  end
+
   def test_metadata_persisted
     client.create_block_blob(key, content, metadata: { hello: "world" })
     response = client.get_blob_properties(key)
@@ -183,11 +198,73 @@ class TestClient < TestCase
     client.create_block_blob(key, content)
     assert_equal content, client.get_blob(key)
 
-    copy_key = "#{key}_copy"
-
     client.copy_blob(copy_key, key)
 
     assert_equal content, client.get_blob(copy_key)
+  end
+
+  def test_copy_keeps_properties_and_metadata
+    client.create_block_blob(key, content, content_type: "text/plain", content_disposition: "attachment", metadata: { foo: "bar" })
+
+    client.copy_blob(copy_key, key)
+    copy = client.get_blob_properties(copy_key)
+
+    assert_equal "text/plain", copy.content_type
+    assert_equal "attachment", copy.content_disposition
+    assert_equal({ foo: "bar" }, copy.metadata)
+
+    client.copy_blob(copy_key, key, metadata: { baz: "qux" })
+
+    assert_equal({ baz: "qux" }, client.get_blob_properties(copy_key).metadata)
+  end
+
+  def test_copy_append_blob
+    client.create_append_blob(key, content_type: "text/plain", metadata: { foo: "bar" })
+    client.append_blob_block(key, content[0, 5])
+    client.append_blob_block(key, content[5..])
+    assert_equal "AppendBlob", client.get_blob_properties(key).blob_type
+
+    client.copy_blob(copy_key, key)
+    copy = client.get_blob_properties(copy_key)
+
+    assert_equal content, client.get_blob(copy_key)
+    assert_equal "BlockBlob", copy.blob_type unless ENV["TESTING_AZURITE"] # Azurite copies append blobs as append blobs
+    assert_equal "text/plain", copy.content_type
+    assert_equal({ foo: "bar" }, copy.metadata)
+  end
+
+  def test_copy_append_blob_in_multiple_blocks
+    client.create_append_blob(key)
+    client.append_blob_block(key, content)
+
+    client.copy_blob(copy_key, key, block_size: 1, metadata: { baz: "qux" })
+
+    assert_equal content, client.get_blob(copy_key)
+    assert_equal "BlockBlob", client.get_blob_properties(copy_key).blob_type unless ENV["TESTING_AZURITE"] # Azurite copies append blobs as append blobs
+    assert_equal({ baz: "qux" }, client.get_blob_properties(copy_key).metadata)
+  end
+
+  def test_copy_block_blob_over_256_mib
+    skip "Uploads 257 MiB"
+    size = 257 * 1024 * 1024
+    boundary = AzureBlob::DEFAULT_BLOCK_SIZE - 3 # content straddles the first block boundary of the copy
+    Tempfile.create("big", binmode: true) do |file|
+      file.truncate(size)
+      file.seek(boundary)
+      file.write(content)
+      file.seek(size - content.bytesize)
+      file.write(content)
+      file.rewind
+      client.create_block_blob(key, file)
+    end
+
+    client.copy_blob(copy_key, key)
+    copy = client.get_blob_properties(copy_key)
+
+    assert_equal size, copy.size
+    assert_equal "BlockBlob", copy.blob_type
+    assert_equal content, client.get_blob(copy_key, start: boundary, end: boundary + content.bytesize - 1)
+    assert_equal content, client.get_blob(copy_key, start: size - content.bytesize, end: size - 1)
   end
 
   def test_delete
@@ -250,6 +327,7 @@ class TestClient < TestCase
 
     assert blob.present?
     assert_equal content.bytesize, blob.size
+    assert_equal "BlockBlob", blob.blob_type
   end
 
   def test_get_blob_properties_404

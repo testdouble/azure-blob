@@ -4,6 +4,8 @@ Azure Blob client and Active Storage adapter to replace the now abandoned azure-
 
 An Active Storage is supplied, but the gem is Rails agnostic and can be used in any Ruby project.
 
+Requires Ruby 3.3 or newer. The Active Storage service supports Rails 8.0 or newer.
+
 ## Active Storage
 
 ### Migration

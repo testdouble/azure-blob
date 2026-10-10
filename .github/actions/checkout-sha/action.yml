@@ -1,0 +1,26 @@
+name: "Checkout sha under test"
+description: "Replaces the library code, tests and Gemfile with the given commit, keeping workflows, terraform, Rakefile and test/support from the checked out ref"
+inputs:
+  sha:
+    description: "Full 40 character commit sha, empty to keep the checked out ref"
+    required: false
+    default: ""
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout code under test
+      if: inputs.sha != ''
+      shell: bash
+      env:
+        SHA: ${{ inputs.sha }}
+      run: |
+        if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "::error::sha must be a full 40 character commit sha"
+          exit 1
+        fi
+        git fetch --no-tags --depth=1 origin "$SHA"
+        rm -rf lib test
+        git checkout "$SHA" -- lib test Gemfile Gemfile.lock azure-blob.gemspec
+        rm -rf test/support
+        git checkout HEAD -- test/support
+        echo "Testing $SHA" >> "$GITHUB_STEP_SUMMARY"

@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+- Drop support for Ruby 3.1 and 3.2. Ruby 3.3 or newer is now required
+- Drop support for Rails 7.x. The Active Storage service now supports Rails 8.0 or newer
+- Fix `copy_blob` failing on append blobs and on blobs larger than 256 MiB
+- Fix `compose` failing when its source is a composed blob (#48)
+- Add `put_blob_block_from_url`
+- Fix the content type being dropped when a blob is uploaded in multiple blocks
 - Add optional `delegation_key_expiration` to `AzureBlob::Client.new` and the ActiveStorage config to set the minimum lifetime of the Entra ID user delegation key in seconds (default 7 hours, maximum 7 days)
 - Fix Entra ID signed URLs that stopped working before their expiry because the user delegation key expired first
 - Raise `ArgumentError` when signing an Entra ID URL that expires more than 7 days from now
