@@ -5,11 +5,11 @@
 - Add `put_blob_block_from_url`
 - Fix the content type being dropped when a blob is uploaded in multiple blocks
 
-## [0.8.0] 2025-01-18
+## [0.8.0] 2026-01-18
 
 - Add cgi gem dependency for Ruby 4.0 compatibility
 
-## [0.7.0] 2025-01-05
+## [0.7.0] 2026-01-05
 
 - Add optional `timeout` parameter to all API methods
 - Add `AzureBlob::Http::TimeoutError` for handling Azure `OperationTimedOut` errors
