@@ -1,7 +1,6 @@
 ## [Unreleased]
 
 - Add optional `delegation_key_expiration` to `AzureBlob::Client.new` to control the lifetime of the Entra ID user delegation key (default 7 hours, maximum 7 days)
-- Add `AzureBlob::UserDelegationKey#signed_expiry_at`
 
 ## [0.8.0] 2026-01-18
 

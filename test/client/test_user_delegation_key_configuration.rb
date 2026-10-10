@@ -55,6 +55,10 @@ class TestUserDelegationKeyConfiguration < TestCase
     Time.parse(posts[index][%r{<Expiry>(.*)</Expiry>}, 1])
   end
 
+  def sign(signer, expiry)
+    with_stubbed_http { signer.sas_token(URI("#{HOST}/container/blob"), permissions: "r", expiry:) }
+  end
+
   def test_default_expiration_is_seven_hours
     now = Time.now.utc
     build_key
@@ -101,11 +105,52 @@ class TestUserDelegationKeyConfiguration < TestCase
     assert_equal 2, posts.size
   end
 
-  def test_signed_expiry_at_returns_a_time
-    key = build_key
+  def test_key_is_extended_when_the_signed_url_outlives_it
+    signer = AzureBlob::EntraIdSigner.new(account_name: "account", host: HOST, delegation_key_expiration: 3600)
+    expiry = Time.at(Time.now.to_i + 7200).utc.iso8601
 
-    assert_equal Time.parse(SIGNED_EXPIRY), key.signed_expiry_at
-    assert_equal SIGNED_EXPIRY, key.signed_expiry
+    sign(signer, expiry)
+
+    assert_equal 2, posts.size
+    assert_equal Time.parse(expiry), requested_expiry
+  end
+
+  def test_key_is_not_requested_again_when_the_signed_url_fits
+    signer = AzureBlob::EntraIdSigner.new(account_name: "account", host: HOST, delegation_key_expiration: 3600)
+
+    sign(signer, Time.at(Time.now.to_i + 1800).utc.iso8601)
+    sign(signer, nil)
+
+    assert_equal 1, posts.size
+  end
+
+  def test_key_is_extended_to_a_time_in_any_zone
+    key = build_key(expiration: 1800)
+    valid_until = Time.at(Time.now.to_i + 3600).getlocal("+02:00")
+
+    with_stubbed_http { key.refresh(valid_until:) }
+
+    assert_equal 2, posts.size
+    assert_includes posts.last, "<Expiry>#{valid_until.getutc.iso8601}</Expiry>"
+  end
+
+  def test_signed_url_can_last_seven_days_but_not_longer
+    client = AzureBlob::Client.new(account_name: "account", container: "container", principal_id: "principal")
+    now = Time.utc(2026, 10, 10, 12)
+
+    Time.stub(:now, now) do
+      with_stubbed_http { client.signed_uri("blob", permissions: "r", expiry: (now + 604800).iso8601) }
+
+      assert_equal 2, posts.size
+      assert_equal now + 604800, requested_expiry
+
+      error = assert_raises(ArgumentError) do
+        with_stubbed_http { client.signed_uri("blob", permissions: "r", expiry: (now + 604801).iso8601) }
+      end
+      assert_match(/7 days/, error.message)
+    end
+
+    assert_equal 2, posts.size
   end
 
   def test_entra_id_signer_forwards_the_expiration

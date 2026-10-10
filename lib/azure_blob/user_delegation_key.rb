@@ -26,14 +26,22 @@ module AzureBlob
       user_delegation_key
     end
 
-    def refresh
-      return unless expired?
+    # Requests a new key when this one is about to expire, or when it expires
+    # before +valid_until+ (the expiry of the SAS about to be signed with it).
+    def refresh(valid_until: nil)
+      valid_until = Time.parse(valid_until) if valid_until.is_a?(String)
       now = Time.now.utc
 
+      if valid_until && valid_until > now + MAX_EXPIRATION
+        raise ArgumentError, "signed URL expiry #{valid_until.getutc.iso8601} is more than #{MAX_EXPIRATION} seconds (7 days) away, " \
+          "Azure cannot sign a user delegation SAS that lasts longer than 7 days"
+      end
+
+      return unless expired? || (valid_until && valid_until > expiration)
 
       start = now.iso8601
-      @expiration = (now + expiration_duration)
-      expiry = @expiration.iso8601
+      @expiration = [ now + expiration_duration, valid_until ].compact.max
+      expiry = @expiration.getutc.iso8601
 
       content = <<-XML.gsub!(/[[:space:]]+/, " ").strip!
         <?xml version="1.0" encoding="utf-8"?>
@@ -54,10 +62,6 @@ module AzureBlob
       @signed_service = doc.get_elements("/UserDelegationKey/SignedService").first.get_text.to_s
       @signed_version = doc.get_elements("/UserDelegationKey/SignedVersion").first.get_text.to_s
       @user_delegation_key = Base64.decode64(doc.get_elements("/UserDelegationKey/Value").first.get_text.to_s)
-    end
-
-    def signed_expiry_at
-      Time.parse(signed_expiry)
     end
 
     attr_reader :signed_oid,

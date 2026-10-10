@@ -47,6 +47,17 @@ class TestUserDelegationKeyExpiration < TestCase
     assert_operator sas_time(second_uri, :ske), :>, sas_time(first_uri, :ske)
   end
 
+  def test_user_delegation_key_covers_a_signed_url_that_outlives_it
+    client.create_block_blob(key, content)
+
+    uri = signed_uri(expires_in: 120)
+    assert_operator sas_time(uri, :ske), :>=, sas_time(uri, :se)
+
+    sleep DELEGATION_KEY_EXPIRATION + 1
+
+    assert_equal content, download(uri)
+  end
+
   private
 
   def signed_uri(expires_in:)
