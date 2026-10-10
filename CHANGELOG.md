@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+- Fix `copy_blob` failing on append blobs and on blobs larger than 256 MiB
+- Fix `compose` failing when its source is a composed blob (#48)
+- Add `put_blob_block_from_url`
 - Fix the content type being dropped when a blob is uploaded in multiple blocks
 
 ## [0.8.0] 2025-01-18

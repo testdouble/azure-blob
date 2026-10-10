@@ -28,6 +28,15 @@ module AzureBlob
       response.content_length
     end
 
+    # Returns the blob type: +"BlockBlob"+, +"AppendBlob"+ or +"PageBlob"+.
+    def blob_type
+      response["x-ms-blob-type"]
+    end
+
+    def block_blob?
+      blob_type == "BlockBlob"
+    end
+
     def present?
       response.code == "200"
     end
