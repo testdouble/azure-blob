@@ -6,7 +6,8 @@ require "securerandom"
 class TestUserDelegationKeyExpiration < TestCase
   attr_reader :client, :key, :content
 
-  EXPIRATION = 120
+  # The key is refreshed when it has less than half of its lifetime left (1 second).
+  DELEGATION_KEY_EXPIRATION = 2
 
   def setup
     skip if using_shared_key
@@ -21,6 +22,7 @@ class TestUserDelegationKeyExpiration < TestCase
       principal_id: @principal_id,
       use_managed_identities: @use_managed_identities,
       host: @host,
+      delegation_key_expiration: DELEGATION_KEY_EXPIRATION,
     )
     @uid = SecureRandom.uuid
     @key = "test-delegation-expiration-#{@uid}"
@@ -32,40 +34,34 @@ class TestUserDelegationKeyExpiration < TestCase
   end
 
   def test_user_delegation_key_auto_refresh_on_expiration
-    original_expiration = AzureBlob::UserDelegationKey.send(:remove_const, :EXPIRATION)
-    original_buffer = AzureBlob::UserDelegationKey.send(:remove_const, :EXPIRATION_BUFFER)
-    AzureBlob::UserDelegationKey.const_set(:EXPIRATION, 2)
-    AzureBlob::UserDelegationKey.const_set(:EXPIRATION_BUFFER, 0)
+    client.create_block_blob(key, content)
 
-    begin
-      client.create_block_blob(key, content)
+    first_uri = signed_uri(expires_in: DELEGATION_KEY_EXPIRATION)
+    assert_equal content, download(first_uri)
 
-      uri = client.signed_uri(
-        key,
-        permissions: "r",
-        expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
-      )
+    sleep 3
 
-      response = AzureBlob::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).get
+    second_uri = signed_uri(expires_in: DELEGATION_KEY_EXPIRATION)
+    assert_equal content, download(second_uri)
 
-      assert_equal response, content
+    assert_operator sas_time(second_uri, :ske), :>, sas_time(first_uri, :ske)
+  end
 
-      sleep 3
+  private
 
-      uri = client.signed_uri(
-        key,
-        permissions: "r",
-        expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
-      )
+  def signed_uri(expires_in:)
+    client.signed_uri(
+      key,
+      permissions: "r",
+      expiry: Time.at(Time.now.to_i + expires_in).utc.iso8601,
+    )
+  end
 
-      response = AzureBlob::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).get
+  def download(uri)
+    AzureBlob::Http.new(uri, { "x-ms-blob-type": "BlockBlob" }).get
+  end
 
-      assert_equal response, content
-    ensure
-      AzureBlob::UserDelegationKey.send(:remove_const, :EXPIRATION)
-      AzureBlob::UserDelegationKey.send(:remove_const, :EXPIRATION_BUFFER)
-      AzureBlob::UserDelegationKey.const_set(:EXPIRATION, original_expiration)
-      AzureBlob::UserDelegationKey.const_set(:EXPIRATION_BUFFER, original_buffer)
-    end
+  def sas_time(uri, field)
+    Time.parse(URI.decode_www_form(uri.query).to_h.fetch(field.to_s))
   end
 end

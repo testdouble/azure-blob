@@ -453,12 +453,9 @@ module AzureBlob
             )
           end
 
-          if using_managed_identities
-            entra_id_options = delegation_key_expiration.nil? ? {} : { delegation_key_expiration: }
-            AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id:, **entra_id_options)
-          else
+          using_managed_identities ?
+            AzureBlob::EntraIdSigner.new(account_name:, host:, principal_id:, delegation_key_expiration:) :
             AzureBlob::SharedKeySigner.new(account_name:, access_key:, host:)
-          end
         end
     end
 

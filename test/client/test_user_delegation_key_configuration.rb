@@ -4,9 +4,10 @@ require_relative "test_helper"
 
 class TestUserDelegationKeyConfiguration < TestCase
   SIGNED_EXPIRY = "2026-09-25T12:00:00Z"
+  HOST = "https://account.blob.core.windows.net"
 
   class FakeSigner
-    def host = "https://account.blob.core.windows.net"
+    def host = HOST
   end
 
   class FakeHttp
@@ -108,9 +109,7 @@ class TestUserDelegationKeyConfiguration < TestCase
   end
 
   def test_entra_id_signer_forwards_the_expiration
-    signer = AzureBlob::EntraIdSigner.allocate
-    signer.instance_variable_set(:@host, FakeSigner.new.host)
-    signer.instance_variable_set(:@delegation_key_expiration, 3600)
+    signer = AzureBlob::EntraIdSigner.new(account_name: "account", host: HOST, delegation_key_expiration: 3600)
 
     now = Time.now.utc
     with_stubbed_http { signer.send(:delegation_key) }
@@ -119,9 +118,7 @@ class TestUserDelegationKeyConfiguration < TestCase
   end
 
   def test_entra_id_signer_defaults_to_seven_hours
-    signer = AzureBlob::EntraIdSigner.allocate
-    signer.instance_variable_set(:@host, FakeSigner.new.host)
-    signer.instance_variable_set(:@delegation_key_expiration, AzureBlob::UserDelegationKey::EXPIRATION)
+    signer = AzureBlob::EntraIdSigner.new(account_name: "account", host: HOST)
 
     now = Time.now.utc
     with_stubbed_http { signer.send(:delegation_key) }

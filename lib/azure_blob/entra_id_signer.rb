@@ -14,7 +14,7 @@ module AzureBlob
     attr_reader :account_name
     attr_reader :host
 
-    def initialize(account_name:, host:, principal_id: nil, delegation_key_expiration: UserDelegationKey::EXPIRATION)
+    def initialize(account_name:, host:, principal_id: nil, delegation_key_expiration: nil)
       @token = AzureBlob::IdentityToken.new(principal_id:)
       @account_name = account_name
       @host = host
@@ -86,7 +86,7 @@ module AzureBlob
     attr_reader :delegation_key_expiration
 
     def delegation_key
-      @delegation_key ||= UserDelegationKey.new(account_name:, signer: self, expiration: delegation_key_expiration)
+      @delegation_key ||= UserDelegationKey.new(account_name:, signer: self, expiration: delegation_key_expiration || UserDelegationKey::EXPIRATION)
     end
 
     def sign(body, key:)
