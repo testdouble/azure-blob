@@ -6,14 +6,11 @@ require "securerandom"
 class TestUserDelegationKeyExpiration < TestCase
   attr_reader :client, :key, :content
 
-  # The key is refreshed when it has less than half of its lifetime left (1 second).
-  DELEGATION_KEY_EXPIRATION = 2
-
   KeyRequestFailed = Class.new(StandardError)
 
   def setup
     skip if using_shared_key
-    @client = build_client(delegation_key_expiration: DELEGATION_KEY_EXPIRATION)
+    @client = build_client
     @uid = SecureRandom.uuid
     @key = "test-delegation-expiration-#{@uid}"
     @content = "Test content for delegation key expiration"
@@ -24,26 +21,30 @@ class TestUserDelegationKeyExpiration < TestCase
   end
 
   def test_user_delegation_key_auto_refresh_on_expiration
+    # The key is refreshed once less than half of its lifetime is left, after 5 seconds.
+    client = build_client(delegation_key_expiration: 10)
     client.create_block_blob(key, content)
 
-    first_uri = signed_uri(expires_in: DELEGATION_KEY_EXPIRATION)
+    first_uri = signed_uri(expires_in: 2, client:)
     assert_equal content, download(first_uri)
 
-    sleep 3
+    sleep 6
 
-    second_uri = signed_uri(expires_in: DELEGATION_KEY_EXPIRATION)
+    # This URL still fits inside the first key, so only its approaching expiry can trigger the refresh.
+    second_uri = signed_uri(expires_in: 2, client:)
     assert_equal content, download(second_uri)
 
     assert_operator sas_time(second_uri, :ske), :>, sas_time(first_uri, :ske)
   end
 
   def test_user_delegation_key_covers_a_signed_url_that_outlives_it
+    client = build_client(delegation_key_expiration: 2)
     client.create_block_blob(key, content)
 
-    uri = signed_uri(expires_in: 120)
+    uri = signed_uri(expires_in: 120, client:)
     assert_operator sas_time(uri, :ske), :>=, sas_time(uri, :se)
 
-    sleep DELEGATION_KEY_EXPIRATION + 1
+    sleep 3
 
     assert_equal content, download(uri)
   end
@@ -64,6 +65,7 @@ class TestUserDelegationKeyExpiration < TestCase
     client = build_client(delegation_key_expiration: 3600)
 
     first_uri = signed_uri(expires_in: 1800, client:)
+    sleep 1 # a second key request would carry a later expiry
     second_uri = signed_uri(expires_in: 600, client:)
 
     assert_equal sas_time(first_uri, :ske), sas_time(second_uri, :ske)
