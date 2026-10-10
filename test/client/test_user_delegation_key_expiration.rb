@@ -9,21 +9,11 @@ class TestUserDelegationKeyExpiration < TestCase
   # The key is refreshed when it has less than half of its lifetime left (1 second).
   DELEGATION_KEY_EXPIRATION = 2
 
+  KeyRequestFailed = Class.new(StandardError)
+
   def setup
     skip if using_shared_key
-    @account_name = ENV["AZURE_ACCOUNT_NAME"]
-    @container = ENV["AZURE_PRIVATE_CONTAINER"]
-    @principal_id = ENV["AZURE_PRINCIPAL_ID"]
-    @use_managed_identities = ENV["USE_MANAGED_IDENTITIES"] == "true"
-    @host = ENV["STORAGE_BLOB_HOST"]
-    @client = AzureBlob::Client.new(
-      account_name: @account_name,
-      container: @container,
-      principal_id: @principal_id,
-      use_managed_identities: @use_managed_identities,
-      host: @host,
-      delegation_key_expiration: DELEGATION_KEY_EXPIRATION,
-    )
+    @client = build_client(delegation_key_expiration: DELEGATION_KEY_EXPIRATION)
     @uid = SecureRandom.uuid
     @key = "test-delegation-expiration-#{@uid}"
     @content = "Test content for delegation key expiration"
@@ -58,9 +48,67 @@ class TestUserDelegationKeyExpiration < TestCase
     assert_equal content, download(uri)
   end
 
+  def test_user_delegation_key_lasts_seven_hours_by_default
+    uri = signed_uri(expires_in: 60, client: build_client)
+
+    assert_in_delta Time.now + 25200, sas_time(uri, :ske), 10
+  end
+
+  def test_delegation_key_expiration_sets_the_key_lifetime
+    uri = signed_uri(expires_in: 60, client: build_client(delegation_key_expiration: 86400))
+
+    assert_in_delta Time.now + 86400, sas_time(uri, :ske), 10
+  end
+
+  def test_user_delegation_key_is_reused_while_the_signed_urls_fit_in_it
+    client = build_client(delegation_key_expiration: 3600)
+
+    first_uri = signed_uri(expires_in: 1800, client:)
+    second_uri = signed_uri(expires_in: 600, client:)
+
+    assert_equal sas_time(first_uri, :ske), sas_time(second_uri, :ske)
+  end
+
+  def test_signed_url_can_last_seven_days_but_not_longer
+    client.create_block_blob(key, content)
+    seven_days = AzureBlob::UserDelegationKey::MAX_EXPIRATION
+
+    uri = signed_uri(expires_in: seven_days)
+    assert_equal sas_time(uri, :se), sas_time(uri, :ske)
+    assert_equal content, download(uri)
+
+    error = assert_raises(ArgumentError) { signed_uri(expires_in: seven_days + 60) }
+    assert_match(/7 days/, error.message)
+  end
+
+  def test_a_failed_key_request_leaves_the_key_unchanged
+    client = build_client(delegation_key_expiration: 3600)
+    first_uri = signed_uri(expires_in: 60, client:)
+
+    AzureBlob::Http.stub(:new, ->(*, **) { raise KeyRequestFailed }) do
+      assert_raises(KeyRequestFailed) { signed_uri(expires_in: 7200, client:) }
+    end
+
+    second_uri = signed_uri(expires_in: 7200, client:)
+
+    assert_operator sas_time(second_uri, :ske), :>, sas_time(first_uri, :ske)
+    assert_in_delta Time.now + 7200, sas_time(second_uri, :ske), 10
+  end
+
   private
 
-  def signed_uri(expires_in:)
+  def build_client(**options)
+    AzureBlob::Client.new(
+      account_name: ENV["AZURE_ACCOUNT_NAME"],
+      container: ENV["AZURE_PRIVATE_CONTAINER"],
+      principal_id: ENV["AZURE_PRINCIPAL_ID"],
+      use_managed_identities: ENV["USE_MANAGED_IDENTITIES"] == "true",
+      host: ENV["STORAGE_BLOB_HOST"],
+      **options,
+    )
+  end
+
+  def signed_uri(expires_in:, client: self.client)
     client.signed_uri(
       key,
       permissions: "r",
