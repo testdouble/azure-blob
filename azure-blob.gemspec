@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary = "Azure Blob client and Active Storage adapter"
   spec.homepage = "https://github.com/testdouble/azure-blob"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.1"
+  spec.required_ruby_version = ">= 3.3"
 
   spec.metadata["rubygems_mfa_required"] = "true"
   spec.metadata["homepage_uri"] = spec.homepage

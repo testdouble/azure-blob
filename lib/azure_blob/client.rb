@@ -81,7 +81,13 @@ module AzureBlob
 
     # Copy a blob between containers or within the same container
     #
-    # Calls to {Copy Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url]
+    # Calls to {Copy Blob From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/copy-blob-from-url],
+    # which copies a block blob of at most 256 MiB in a single request. When Azure refuses the source
+    # (an append blob, or a bigger block blob) the blob is copied block by block with
+    # {Put Block From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-block-from-url] instead.
+    #
+    # Either way the copy is a block blob that keeps the content type, content disposition and checksum
+    # of the source, and its metadata unless +:metadata+ is given.
     #
     # Parameters:
     # - key: destination blob path
@@ -89,9 +95,11 @@ module AzureBlob
     # - options: additional options
     #   - source_client: AzureBlob::Client instance for the source container (optional)
     #     If not provided, copies from within the same container
+    #   - metadata: metadata of the copy (optional). Defaults to the metadata of the source
+    #   - block_size: block size of a block by block copy. Defaults to +AzureBlob::DEFAULT_BLOCK_SIZE+
     #
     def copy_blob(key, source_key, options = {})
-      source_client = options.delete(:source_client) || self
+      source_client = options.fetch(:source_client, self)
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
@@ -103,6 +111,9 @@ module AzureBlob
       }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
+    rescue Http::Error => error
+      raise unless error.status == 409
+      copy_blob_blocks(key, source_key, source_client, options)
     end
 
     # Delete a blob
@@ -361,6 +372,35 @@ module AzureBlob
       block_id
     end
 
+    # Copies a block from a URL into a blob.
+    #
+    # Calls to {Put Block From URL}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-block-from-url]
+    #
+    # Returns the id of the block. Required to commit the list of blocks to a blob.
+    #
+    # Options:
+    #
+    # [+:source_range+]
+    #   Range of bytes to copy from the source, for example +0..(block_size - 1)+. Defaults to the whole source.
+    def put_blob_block_from_url(key, index, source_uri, options = {})
+      block_id = generate_block_id(index)
+      uri = generate_uri("#{container}/#{key}")
+      query = { comp: "block", blockid: block_id }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
+
+      source_range = options[:source_range]
+      headers = {
+        "Content-Length": 0,
+        "x-ms-copy-source": source_uri.to_s,
+        "x-ms-source-range": source_range && "bytes=#{source_range.min}-#{source_range.max}",
+      }.merge(additional_headers(options))
+
+      Http.new(uri, headers, signer:).put
+
+      block_id
+    end
+
     # Commits the list of blocks to a blob.
     #
     # Calls to {Put Block List}[https://learn.microsoft.com/en-us/rest/api/storageservices/put-block-list]
@@ -382,7 +422,7 @@ module AzureBlob
 
       headers = {
         "Content-Length": content_size(content),
-        "Content-Type": options[:content_type],
+        "x-ms-blob-content-type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.merge(additional_headers(options))
@@ -426,6 +466,34 @@ module AzureBlob
       }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content.read)
+    end
+
+    # One Put Block From URL request per block, then one Put Block List to commit them.
+    # Works with any source blob type and size, and carries the properties and metadata over itself.
+    def copy_blob_blocks(key, source_key, source_client, options)
+      source = source_client.get_blob_properties(source_key, options.slice(:timeout))
+      block_size = options[:block_size] || DEFAULT_BLOCK_SIZE
+      # Every block reads the source through this URI, so it has to outlive the whole copy.
+      source_uri = source_client.signed_uri(source_key, permissions: "r", expiry: Time.at(Time.now.to_i + 3600).utc.iso8601)
+
+      block_ids = (source.size.to_f / block_size).ceil.times.map do |index|
+        first = index * block_size
+        last = [ first + block_size, source.size ].min - 1
+        put_blob_block_from_url(key, index, source_uri, source_range: first..last, **options.slice(:timeout, :headers))
+      end
+
+      metadata = options[:metadata]
+      metadata = source.metadata if metadata.nil? || metadata.empty?
+
+      commit_blob_blocks(
+        key,
+        block_ids,
+        content_type: source.content_type,
+        content_md5: source.checksum,
+        content_disposition: source.content_disposition,
+        metadata: metadata,
+        **options.slice(:tags, :timeout, :headers),
+      )
     end
 
     def content_size(content)

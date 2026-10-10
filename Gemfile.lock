@@ -288,7 +288,7 @@ DEPENDENCIES
   minitest-fail-fast
   net-ssh
   propshaft (>= 0.1.7)
-  rails
+  rails (>= 8.0)
   rake
   rubocop-rails-omakase
   sqlite3 (>= 1.6.6)
