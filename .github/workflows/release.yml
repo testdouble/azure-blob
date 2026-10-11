@@ -1,0 +1,101 @@
+name: Release
+
+# Releases the version in lib/azure_blob/version.rb from main: runs the full
+# test suite (incl. infra and Entra ID), tags v<version>, pushes the gem to
+# RubyGems through trusted publishing and creates the GitHub Release.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run the checks and the full test suite and build the gem, but publish nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Check who dispatched and from where
+        env:
+          DISPATCHER: ${{ github.triggering_actor }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Releases are cut from main, not $GITHUB_REF"
+            exit 1
+          fi
+          if [ "$DISPATCHER" != "JoeDupuis" ]; then
+            echo "::error::Only JoeDupuis can release, not $DISPATCHER"
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+      - name: Check the version
+        id: version
+        run: |
+          version=$(sed -n 's/.*VERSION = "\(.*\)"/\1/p' lib/azure_blob/version.rb)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" > /dev/null; then
+            echo "::error::Tag v$version already exists. Run Prepare release first"
+            exit 1
+          fi
+          if curl -sf "https://rubygems.org/api/v2/rubygems/azure-blob/versions/$version.json" > /dev/null; then
+            echo "::error::azure-blob $version is already on RubyGems"
+            exit 1
+          fi
+          if ! grep -q "^## \[$version\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no [$version] section"
+            exit 1
+          fi
+
+  # test.yml's own azure-infra concurrency group queues this behind Teardown
+  # and other infra runs. Don't put release.yml in that group too: a workflow
+  # and the workflow it calls sharing a group deadlock.
+  tests:
+    needs: check
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    permissions:
+      contents: read
+      id-token: write
+
+  publish:
+    needs: [check, tests]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # push the tag, create the GitHub Release
+      id-token: write # RubyGems trusted publishing
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Release notes from CHANGELOG
+        run: |
+          awk -v v="$VERSION" 'index($0, "## [" v "]") == 1 {on=1; next} /^## \[/ {on=0} on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md" >> "$GITHUB_STEP_SUMMARY"
+      - name: Build gem
+        if: inputs.dry_run
+        run: bundle exec rake build
+      # rake release: build, tag v<version>, push the tag, push the gem.
+      # It fails before tagging if main moved since this run started.
+      - name: Tag and push to RubyGems
+        if: ${{ !inputs.dry_run }}
+        uses: rubygems/release-gem@v1
+      - name: Create GitHub Release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "$VERSION" --notes-file "$RUNNER_TEMP/notes.md" --generate-notes

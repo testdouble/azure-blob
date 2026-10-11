@@ -1,0 +1,54 @@
+name: Prepare release
+
+# Bumps the version, Gemfile.lock and CHANGELOG on a release-<version> branch.
+# Open the PR from that branch yourself: CI doesn't run on PRs opened with the
+# workflow's token. Once it's merged, run the Release workflow on main.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 0.9.0 (no v)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write # push the release branch
+    env:
+      VERSION: ${{ inputs.version }}
+      DISPATCHER: ${{ github.triggering_actor }}
+    steps:
+      - name: Check who dispatched and the version
+        run: |
+          if [ "$DISPATCHER" != "JoeDupuis" ]; then
+            echo "::error::Only JoeDupuis can prepare a release, not $DISPATCHER"
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+(\.[0-9]+){2,3}$ ]]; then
+            echo "::error::$VERSION is not a version like 0.9.0 or 0.5.9.1"
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+      - name: Bump version, Gemfile.lock and CHANGELOG
+        run: |
+          if ! awk '/^## \[Unreleased\]$/ {on=1; next} /^## \[/ {on=0} on && /^- /' CHANGELOG.md | grep -q .; then
+            echo "::error::CHANGELOG.md has nothing under [Unreleased]"
+            exit 1
+          fi
+          sed -i "s/VERSION = \".*\"/VERSION = \"$VERSION\"/" lib/azure_blob/version.rb
+          sed -i "s/^    azure-blob (.*)$/    azure-blob ($VERSION)/" Gemfile.lock
+          sed -i "s/^## \[Unreleased\]$/## [Unreleased]\n\n## [$VERSION] $(date -u +%F)/" CHANGELOG.md
+          git diff
+      - name: Push the release branch
+        run: |
+          git switch -c "release-$VERSION"
+          git -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit -am "$VERSION"
+          git push origin "release-$VERSION"
+          echo "Open the release PR: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...release-$VERSION?expand=1" >> "$GITHUB_STEP_SUMMARY"

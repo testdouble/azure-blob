@@ -5,6 +5,8 @@ on:
   push:
     tags:
       - test
+  # Called by release.yml, which runs the same jobs as a dispatch on main.
+  workflow_call:
   workflow_dispatch:
     inputs:
       sha:
