@@ -56,9 +56,8 @@ jobs:
             exit 1
           fi
 
-  # test.yml's own azure-infra concurrency group queues this behind Teardown
-  # and other infra runs. Don't put release.yml in that group too: a workflow
-  # and the workflow it calls sharing a group deadlock.
+  # test.yml holds the azure-infra lock, so this waits for Teardown and other
+  # infra runs. Don't add that lock to release.yml too: it would deadlock.
   tests:
     needs: check
     uses: ./.github/workflows/test.yml
