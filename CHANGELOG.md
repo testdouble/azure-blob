@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [0.9.0] 2026-10-11
+
 - Drop support for Ruby 3.1 and 3.2. Ruby 3.3 or newer is now required
 - Drop support for Rails 7.x. The Active Storage service now supports Rails 8.0 or newer
 - Fix `copy_blob` failing on append blobs and on blobs larger than 256 MiB
