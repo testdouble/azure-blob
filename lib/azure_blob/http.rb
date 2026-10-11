@@ -8,10 +8,12 @@ require "rexml"
 module AzureBlob
   class Http # :nodoc:
     class Error < AzureBlob::Error
-      attr_reader :body, :status
-      def initialize(body: nil, status: nil)
+      attr_reader :body, :status, :code
+      def initialize(body: nil, status: nil, code: nil)
         @body = body
         @status = status
+        @code = code
+        super(status && [ status, code ].compact.join(" "))
       end
 
       def inspect
@@ -118,7 +120,7 @@ module AzureBlob
 
     def raise_error
       return unless raise_on_error
-      raise error_from_response.new(body: @response.body, status: @response.code&.to_i)
+      raise error_from_response.new(body: @response.body, status: @response.code&.to_i, code: azure_error_code)
     end
 
     def status
@@ -126,7 +128,9 @@ module AzureBlob
     end
 
     def azure_error_code
-      Document.new(response.body).get_elements("//Error/Code").first.get_text.to_s if response.body
+      response["x-ms-error-code"] || Document.new(response.body.to_s).get_elements("//Error/Code").first&.text
+    rescue ParseException
+      nil
     end
 
     def error_from_response
