@@ -2,6 +2,9 @@ name: Run tests
 
 on:
   pull_request:
+    # ready_for_review: PRs opened by a workflow (Prepare release) get no CI
+    # until someone marks them ready.
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     tags:
       - test

@@ -1,8 +1,9 @@
 name: Prepare release
 
-# Bumps the version, Gemfile.lock and CHANGELOG on a release-<version> branch.
-# Open the PR from that branch yourself: CI doesn't run on PRs opened with the
-# workflow's token. Once it's merged, run the Release workflow on main.
+# Bumps the version, Gemfile.lock and CHANGELOG on a release-<version> branch
+# and opens a draft PR for it. CI doesn't run on PRs opened with the workflow's
+# token, so mark the PR ready for review to start it (test.yml runs on
+# ready_for_review). Once it's merged, run the Release workflow on main.
 on:
   workflow_dispatch:
     inputs:
@@ -19,6 +20,7 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: write # push the release branch
+      pull-requests: write # open the release PR
     env:
       VERSION: ${{ inputs.version }}
       DISPATCHER: ${{ github.triggering_actor }}
@@ -51,4 +53,14 @@ jobs:
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit -am "$VERSION"
           git push origin "release-$VERSION"
-          echo "Open the release PR: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...release-$VERSION?expand=1" >> "$GITHUB_STEP_SUMMARY"
+      - name: Open the release PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body="Bumps the version to $VERSION. Mark this PR ready for review to run CI, merge it, then run the Release workflow on main."
+          if url=$(gh pr create --repo "$GITHUB_REPOSITORY" --draft --base main --head "release-$VERSION" --title "$VERSION" --body "$body"); then
+            echo "Release PR: $url. Mark it ready for review to run CI." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Couldn't open the PR. Allow GitHub Actions to create pull requests in the repository's Actions settings, or open it yourself"
+            echo "Open the release PR: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/compare/main...release-$VERSION?expand=1" >> "$GITHUB_STEP_SUMMARY"
+          fi
