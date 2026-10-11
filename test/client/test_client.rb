@@ -203,6 +203,14 @@ class TestClient < TestCase
     assert_equal content, client.get_blob(copy_key)
   end
 
+  def test_copy_with_nil_source_client
+    client.create_block_blob(key, content)
+
+    client.copy_blob(copy_key, key, source_client: nil)
+
+    assert_equal content, client.get_blob(copy_key)
+  end
+
   def test_copy_keeps_properties_and_metadata
     client.create_block_blob(key, content, content_type: "text/plain", content_disposition: "attachment", metadata: { foo: "bar" })
 
