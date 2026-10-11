@@ -12,6 +12,8 @@
 - Add optional `delegation_key_expiration` to `AzureBlob::Client.new` and the ActiveStorage config to set the minimum lifetime of the Entra ID user delegation key in seconds (default 7 hours, maximum 7 days)
 - Fix Entra ID signed URLs that stopped working before their expiry because the user delegation key expired first
 - Raise `ArgumentError` when signing an Entra ID URL that expires more than 7 days from now
+- Include the HTTP status and Azure error code in `AzureBlob::Http::Error` messages (e.g. `500 InternalError`) and add `AzureBlob::Http::Error#code`
+- Fix error responses without an XML body raising `NoMethodError` instead of `AzureBlob::Http::Error`, which skipped the managed identity token retries
 
 ## [0.8.0] 2026-01-18
 
