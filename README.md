@@ -47,6 +47,35 @@ prod:
   principal_id: 71b34410-4c50-451d-b456-95ead1b18cce
 ```
 
+#### User delegation key expiration
+
+When authenticating through Entra ID, signed URLs are signed with a user delegation key
+that AzureBlob requests and renews as needed. `delegation_key_expiration` (in seconds)
+sets how long each key lasts: 7 hours by default, up to Azure's maximum of 7 days. Set it
+above the longest URL lifetime your app issues.
+
+```ruby
+client = AzureBlob::Client.new(
+  account_name: "account_name",
+  container: "container_name",
+  principal_id: "71b34410-4c50-451d-b456-95ead1b18cce",
+  delegation_key_expiration: 86400, # 1 day
+)
+```
+
+ActiveStorage config example:
+
+```
+prod:
+  service: AzureBlob
+  container: container_name
+  storage_account_name: account_name
+  principal_id: 71b34410-4c50-451d-b456-95ead1b18cce
+  delegation_key_expiration: 86400 # 1 day
+```
+
+The option is ignored when authenticating with a shared key.
+
 #### AKS with Workload Identity
 
 ActiveStorage config example:

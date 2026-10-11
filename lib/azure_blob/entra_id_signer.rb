@@ -14,7 +14,8 @@ module AzureBlob
     attr_reader :account_name
     attr_reader :host
 
-    def initialize(account_name:, host:, principal_id: nil)
+    def initialize(account_name:, host:, principal_id: nil, delegation_key_expiration: nil)
+      @delegation_key_expiration = parse_delegation_key_expiration(delegation_key_expiration)
       @token = AzureBlob::IdentityToken.new(principal_id:)
       @account_name = account_name
       @host = host
@@ -25,7 +26,7 @@ module AzureBlob
     end
 
     def sas_token(uri, options = {})
-      delegation_key.refresh
+      delegation_key.refresh(valid_until: options[:expiry])
       to_sign = [
         options[:permissions],
         options[:start],
@@ -82,8 +83,25 @@ module AzureBlob
 
     private
 
+    attr_reader :delegation_key_expiration
+
+    def parse_delegation_key_expiration(value)
+      return if value.nil?
+
+      seconds = Integer(value, exception: false)
+      unless seconds&.positive?
+        raise ArgumentError, "delegation_key_expiration must be a positive number of seconds, got #{value.inspect}"
+      end
+
+      if seconds > UserDelegationKey::MAX_EXPIRATION
+        raise ArgumentError, "delegation_key_expiration cannot be greater than #{UserDelegationKey::MAX_EXPIRATION} seconds (7 days), got #{value.inspect}"
+      end
+
+      seconds
+    end
+
     def delegation_key
-      @delegation_key ||= UserDelegationKey.new(account_name:, signer: self)
+      @delegation_key ||= UserDelegationKey.new(account_name:, signer: self, expiration: delegation_key_expiration || UserDelegationKey::EXPIRATION)
     end
 
     def sign(body, key:)
