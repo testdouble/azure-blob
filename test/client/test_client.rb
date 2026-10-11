@@ -596,4 +596,13 @@ class TestClient < TestCase
       client.create_block_blob(key, content, timeout: 0.000001)
     end
   end
+
+  def test_error_message_has_status_and_error_code
+    client.create_block_blob(key, content)
+
+    error = assert_raises(AzureBlob::Http::Error) do
+      client.get_blob(key, start: content.size + 10, end: content.size + 20)
+    end
+    assert_equal "416 InvalidRange", error.message
+  end
 end
