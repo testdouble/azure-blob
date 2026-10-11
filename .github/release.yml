@@ -1,0 +1,7 @@
+# Settings for GitHub's generated release notes.
+# Leave the version bump PRs opened by Prepare release out of "What's Changed".
+changelog:
+  exclude:
+    authors:
+      - github-actions
+      - github-actions[bot]

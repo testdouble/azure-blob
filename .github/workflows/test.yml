@@ -2,9 +2,13 @@ name: Run tests
 
 on:
   pull_request:
+    # ready_for_review: marking a Prepare release PR ready runs CI on it.
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     tags:
       - test
+  # Called by release.yml, which runs the same jobs as a dispatch on main.
+  workflow_call:
   workflow_dispatch:
     inputs:
       sha:
