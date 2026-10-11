@@ -2,8 +2,8 @@ name: Run tests
 
 on:
   pull_request:
-    # ready_for_review: PRs opened by a workflow (Prepare release) get no CI
-    # until someone marks them ready.
+    # ready_for_review: CI doesn't start on its own for PRs a workflow opens
+    # (Prepare release), so marking them ready starts it.
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     tags:

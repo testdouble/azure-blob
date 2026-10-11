@@ -1,9 +1,10 @@
 name: Prepare release
 
 # Bumps the version, Gemfile.lock and CHANGELOG on a release-<version> branch
-# and opens a draft PR for it. CI doesn't run on PRs opened with the workflow's
-# token, so mark the PR ready for review to start it (test.yml runs on
-# ready_for_review). Once it's merged, run the Release workflow on main.
+# and opens a draft PR for it. CI doesn't start on its own for a PR opened with
+# the workflow's token (at most it waits for "Approve workflows to run"), so
+# mark the PR ready for review to start it (test.yml runs on ready_for_review).
+# Once it's merged, run the Release workflow on main.
 on:
   workflow_dispatch:
     inputs:
