@@ -100,7 +100,7 @@ module AzureBlob
     #   - block_size: block size of a block by block copy. Defaults to +AzureBlob::DEFAULT_BLOCK_SIZE+
     #
     def copy_blob(key, source_key, options = {})
-      source_client = options.fetch(:source_client, self)
+      source_client = options[:source_client] || self
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
