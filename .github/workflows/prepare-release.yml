@@ -1,10 +1,12 @@
 name: Prepare release
 
-# Bumps the version, Gemfile.lock and CHANGELOG on a release-<version> branch
-# and opens a draft PR for it. CI doesn't start on its own for a PR opened with
-# the workflow's token (at most it waits for "Approve workflows to run"), so
-# mark the PR ready for review to start it (test.yml runs on ready_for_review).
-# Once it's merged, run the Release workflow on main.
+# To release a new version:
+# 1. Actions > Prepare release > Run workflow, with the new version (e.g. 0.9.0).
+#    It opens a draft PR that bumps the version and dates the CHANGELOG entries.
+# 2. Mark that PR ready for review to run CI, then merge it.
+# 3. Actions > Release > Run workflow on main. Tick dry_run to try it without
+#    publishing. It runs the full test suite, then publishes the gem, the
+#    v0.9.0 tag and the GitHub Release.
 on:
   workflow_dispatch:
     inputs:

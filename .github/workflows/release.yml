@@ -1,8 +1,12 @@
 name: Release
 
-# Releases the version in lib/azure_blob/version.rb from main: runs the full
-# test suite (incl. infra and Entra ID), tags v<version>, pushes the gem to
-# RubyGems through trusted publishing and creates the GitHub Release.
+# To release a new version:
+# 1. Actions > Prepare release > Run workflow, with the new version (e.g. 0.9.0).
+#    It opens a draft PR that bumps the version and dates the CHANGELOG entries.
+# 2. Mark that PR ready for review to run CI, then merge it.
+# 3. Actions > Release > Run workflow on main. Tick dry_run to try it without
+#    publishing. It runs the full test suite, then publishes the gem, the
+#    v0.9.0 tag and the GitHub Release.
 on:
   workflow_dispatch:
     inputs:
