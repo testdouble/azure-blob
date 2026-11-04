@@ -43,6 +43,8 @@ module AzureBlob
     #   Will be saved on the blob in Azure.
     # [+:content_disposition+]
     #   Will be saved on the blob in Azure.
+    # [+:cache_control+]
+    #   The Cache-Control value to store on the blob and return on reads.
     # [+:content_md5+]
     #   Will ensure integrity of the upload. The checksum must be a base64 digest. Can be produced with +OpenSSL::Digest::MD5.base64digest+.
     #   The checksum is only checked on a single upload! To verify checksum when uploading multiple blocks, call directly put_blob_block with
@@ -410,6 +412,8 @@ module AzureBlob
     #
     # Options:
     #
+    # [+:cache_control+]
+    #   The Cache-Control value to store on the blob and return on reads.
     # [+:content_md5+]
     #   This is the checksum for the whole blob. The checksum is saved on the blob, but it is not validated!
     #   Add a checksum for each block if you want Azure to validate integrity.
@@ -426,6 +430,7 @@ module AzureBlob
         "x-ms-blob-content-type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
+        "x-ms-blob-cache-control": options[:cache_control],
       }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content)
@@ -464,6 +469,7 @@ module AzureBlob
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
+        "x-ms-blob-cache-control": options[:cache_control],
       }.merge(additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content.read)

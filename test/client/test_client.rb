@@ -155,6 +155,30 @@ class TestClient < TestCase
     assert_equal "funky content_type", response.content_type
   end
 
+  def test_cache_control_persisted
+    client.create_block_blob(key, content, cache_control: "private, max-age=60")
+
+    uri = client.signed_uri(
+      key,
+      permissions: "r",
+      expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
+    )
+
+    assert_equal "private, max-age=60", Net::HTTP.get_response(uri)["Cache-Control"]
+  end
+
+  def test_cache_control_persisted_in_multiple_blocks
+    client.create_block_blob(key, content, cache_control: "private, max-age=60", block_size: 8)
+
+    uri = client.signed_uri(
+      key,
+      permissions: "r",
+      expiry: Time.at(Time.now.to_i + EXPIRATION).utc.iso8601,
+    )
+
+    assert_equal "private, max-age=60", Net::HTTP.get_response(uri)["Cache-Control"]
+  end
+
   def test_metadata_persisted
     client.create_block_blob(key, content, metadata: { hello: "world" })
     response = client.get_blob_properties(key)
