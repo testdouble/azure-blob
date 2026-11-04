@@ -94,6 +94,85 @@ class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
     @service.delete key
   end
 
+  test "update metadata" do
+    key  = SecureRandom.base58(24)
+    data = "Something else entirely!"
+    checksum = OpenSSL::Digest::MD5.base64digest(data)
+    @service.upload(key, StringIO.new(data), checksum: checksum, content_type: "text/plain", custom_metadata: { "foo" => "bar" })
+
+    @service.update_metadata(key, content_type: "image/png", disposition: :attachment, filename: ActiveStorage::Filename.new("test.png"), custom_metadata: { "baz" => "qux" })
+    blob = @service.client.get_blob_properties(key)
+
+    assert_equal "image/png", blob.content_type
+    assert_equal "attachment; filename=\"test.png\"; filename*=UTF-8''test.png", blob.content_disposition
+    assert_equal checksum, blob.checksum
+    assert_equal({ baz: "qux" }, blob.metadata)
+    assert_equal data, @service.download(key)
+  ensure
+    @service.delete key
+  end
+
+  test "update metadata keeps the content disposition when no disposition is given" do
+    key  = SecureRandom.base58(24)
+    data = "Something else entirely!"
+    @service.upload(key, StringIO.new(data), content_type: "text/plain", disposition: :inline, filename: ActiveStorage::Filename.new("test.txt"))
+
+    @service.update_metadata(key, content_type: "text/csv")
+    blob = @service.client.get_blob_properties(key)
+
+    assert_equal "text/csv", blob.content_type
+    assert_equal "inline; filename=\"test.txt\"; filename*=UTF-8''test.txt", blob.content_disposition
+  ensure
+    @service.delete key
+  end
+
+  test "update metadata raises for a missing blob" do
+    assert_raises(ActiveStorage::FileNotFoundError) do
+      @service.update_metadata(SecureRandom.base58(24), content_type: "text/plain")
+    end
+  end
+
+  test "changing a blob's content type updates the stored blob" do
+    blob = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("a,b\n1,2\n"), filename: "data.csv", content_type: "text/plain", identify: false, service_name: :azure)
+
+    blob.update!(content_type: "text/csv")
+
+    assert_equal "text/csv", @service.client.get_blob_properties(blob.key).content_type
+  ensure
+    blob&.purge
+  end
+
+  test "cache control is applied to uploads, direct uploads and composed blobs" do
+    service = ActiveStorage::Service.configure(:azure, SERVICE_CONFIGURATIONS.deep_merge(azure: { cache_control: "public, max-age=3600" }))
+    data = "Something else entirely!"
+    upload_key, direct_key, composed_key = 3.times.map { SecureRandom.base58(24) }
+
+    service.upload(upload_key, StringIO.new(data))
+    assert_equal "public, max-age=3600", service.client.get_blob_properties(upload_key).cache_control
+
+    checksum = OpenSSL::Digest::MD5.base64digest(data)
+    headers = service.headers_for_direct_upload(direct_key, checksum: checksum, content_type: "text/plain")
+    assert_equal "public, max-age=3600", headers["x-ms-blob-cache-control"]
+
+    uri = URI.parse(service.url_for_direct_upload(direct_key, expires_in: 5.minutes, content_type: "text/plain", content_length: data.size, checksum: checksum))
+    request = Net::HTTP::Put.new(uri.request_uri)
+    request.body = data
+    headers.each { |k, v| request.add_field(k, v) }
+    Net::HTTP.start(uri.host, uri.port, use_ssl: uri.port == 443) { |http| http.request(request) }
+    assert_equal "public, max-age=3600", service.client.get_blob_properties(direct_key).cache_control
+
+    service.compose([ upload_key, direct_key ], composed_key)
+    assert_equal "public, max-age=3600", service.client.get_blob_properties(composed_key).cache_control
+  ensure
+    [ upload_key, direct_key, composed_key ].compact.each { |key| service&.delete(key) }
+  end
+
+  test "direct upload headers have no cache control by default" do
+    headers = @service.headers_for_direct_upload(@key, checksum: "", content_type: "text/plain")
+
+    assert_not headers.key?("x-ms-blob-cache-control")
+  end
+
   test "signed URL generation" do
     url = @service.url(@key, expires_in: 5.minutes,
                        disposition: :inline, filename: ActiveStorage::Filename.new("avatar.png"), content_type: "image/png")

@@ -35,9 +35,10 @@ module ActiveStorage
   class Service::AzureBlobService < Service
     attr_reader :client, :container, :signer
 
-    def initialize(storage_account_name:, storage_access_key: nil, container:, storage_blob_host: nil, public: false, **options)
+    def initialize(storage_account_name:, storage_access_key: nil, container:, storage_blob_host: nil, public: false, cache_control: nil, **options)
       @container = container
       @public = public
+      @cache_control = cache_control
       @client = AzureBlob::Client.new(
         account_name: storage_account_name,
         access_key: storage_access_key,
@@ -51,7 +52,19 @@ module ActiveStorage
         handle_errors do
           content_disposition = content_disposition_with(filename: filename, type: disposition) if disposition && filename
 
-          client.create_block_blob(key, IO.try_convert(io) || io, content_md5: checksum, content_type: content_type, content_disposition: content_disposition, metadata: custom_metadata)
+          client.create_block_blob(key, IO.try_convert(io) || io, content_md5: checksum, content_type: content_type, content_disposition: content_disposition, cache_control: cache_control, metadata: custom_metadata)
+        end
+      end
+    end
+
+    def update_metadata(key, content_type:, disposition: nil, filename: nil, custom_metadata: {})
+      instrument :update_metadata, key: key, content_type: content_type, disposition: disposition do
+        handle_errors do
+          properties = { content_type: content_type }
+          properties[:content_disposition] = content_disposition_with(type: disposition, filename: filename) if disposition && filename
+
+          client.set_blob_properties(key, properties)
+          client.set_blob_metadata(key, custom_metadata)
         end
       end
     end
@@ -117,7 +130,10 @@ module ActiveStorage
     def headers_for_direct_upload(key, content_type:, checksum:, filename: nil, disposition: nil, custom_metadata: {}, **)
       content_disposition = content_disposition_with(type: disposition, filename: filename) if filename
 
-      { "Content-Type" => content_type, "Content-MD5" => checksum, "x-ms-blob-content-disposition" => content_disposition, "x-ms-blob-type" => "BlockBlob", **custom_metadata_headers(custom_metadata) }
+      headers = { "Content-Type" => content_type, "Content-MD5" => checksum, "x-ms-blob-content-disposition" => content_disposition, "x-ms-blob-type" => "BlockBlob", **custom_metadata_headers(custom_metadata) }
+      headers["x-ms-blob-cache-control"] = cache_control if cache_control.present?
+
+      headers
     end
 
     def compose(source_keys, destination_key, filename: nil, content_type: nil, disposition: nil, custom_metadata: {})
@@ -132,6 +148,7 @@ module ActiveStorage
           destination_key,
           content_type: content_type,
           content_disposition: content_disposition,
+          cache_control: cache_control,
           metadata: custom_metadata,
         )
 
@@ -144,6 +161,8 @@ module ActiveStorage
     end
 
     private
+      attr_reader :cache_control
+
       def private_url(key, expires_in:, filename:, disposition:, content_type:, **)
         client.signed_uri(
           key,

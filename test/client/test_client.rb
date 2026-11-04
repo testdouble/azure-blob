@@ -172,6 +172,132 @@ class TestClient < TestCase
     assert_equal "attachment", response.content_disposition
   end
 
+  def test_http_properties_persisted
+    client.create_block_blob(key, content, cache_control: "public, max-age=3600", content_encoding: "gzip", content_language: "en-US")
+    blob = client.get_blob_properties(key)
+
+    assert_equal "public, max-age=3600", blob.cache_control
+    assert_equal "gzip", blob.content_encoding
+    assert_equal "en-US", blob.content_language
+  end
+
+  def test_http_properties_persisted_in_multiple_blocks
+    client.create_block_blob(key, content, cache_control: "no-cache", content_encoding: "br", content_language: "fr", block_size: 1)
+    blob = client.get_blob_properties(key)
+
+    assert_equal "no-cache", blob.cache_control
+    assert_equal "br", blob.content_encoding
+    assert_equal "fr", blob.content_language
+  end
+
+  def test_http_properties_persisted_on_append_blob
+    client.create_append_blob(key, cache_control: "private", content_encoding: "gzip", content_language: "de")
+    blob = client.get_blob_properties(key)
+
+    assert_equal "private", blob.cache_control
+    assert_equal "gzip", blob.content_encoding
+    assert_equal "de", blob.content_language
+  end
+
+  def test_http_properties_are_not_sent_when_not_given
+    client.create_block_blob(key, content)
+    blob = client.get_blob_properties(key)
+
+    assert_nil blob.cache_control
+    assert_nil blob.content_encoding
+    assert_nil blob.content_language
+  end
+
+  def test_set_blob_properties_only_changes_the_given_properties
+    checksum = OpenSSL::Digest::MD5.base64digest(content)
+    client.create_block_blob(
+      key, content,
+      content_type: "text/plain; charset=utf-8",
+      content_disposition: "attachment",
+      content_md5: checksum,
+      content_language: "en",
+      metadata: { foo: "bar" },
+    )
+
+    client.set_blob_properties(key, cache_control: "public, max-age=60")
+    blob = client.get_blob_properties(key)
+
+    assert_equal "public, max-age=60", blob.cache_control
+    assert_equal "text/plain; charset=utf-8", blob.http_properties[:content_type]
+    assert_equal "attachment", blob.content_disposition
+    assert_equal checksum, blob.checksum
+    assert_equal "en", blob.content_language
+    assert_equal({ foo: "bar" }, blob.metadata)
+    assert_equal content, client.get_blob(key)
+
+    client.set_blob_properties(key, content_type: "application/json", content_disposition: "inline")
+    blob = client.get_blob_properties(key)
+
+    assert_equal "application/json", blob.content_type
+    assert_equal "inline", blob.content_disposition
+    assert_equal "public, max-age=60", blob.cache_control
+    assert_equal checksum, blob.checksum
+  end
+
+  def test_set_blob_properties_clears_a_property_set_to_nil
+    client.create_block_blob(key, content, cache_control: "no-store", content_language: "en")
+
+    client.set_blob_properties(key, cache_control: nil)
+    blob = client.get_blob_properties(key)
+
+    assert_nil blob.cache_control
+    assert_equal "en", blob.content_language
+  end
+
+  def test_set_blob_properties_does_not_overwrite_a_concurrent_change
+    client.create_block_blob(key, content, content_type: "text/plain")
+    stale = client.get_blob_properties(key)
+    client.create_block_blob(key, content, content_type: "text/csv")
+
+    error = client.stub(:get_blob_properties, stale) do
+      assert_raises(AzureBlob::Http::Error) { client.set_blob_properties(key, cache_control: "no-cache") }
+    end
+
+    assert_equal 412, error.status
+    assert_equal "text/csv", client.get_blob_properties(key).content_type
+  end
+
+  def test_set_blob_properties_404
+    assert_raises(AzureBlob::Http::FileNotFoundError) { client.set_blob_properties(key, cache_control: "no-cache") }
+  end
+
+  def test_set_blob_metadata
+    client.create_block_blob(key, content, content_type: "text/plain", metadata: { foo: "bar" })
+
+    client.set_blob_metadata(key, { hello: "world" })
+    blob = client.get_blob_properties(key)
+    assert_equal({ hello: "world" }, blob.metadata)
+    assert_equal "text/plain", blob.content_type
+
+    client.set_blob_metadata(key, {})
+    assert_equal({}, client.get_blob_properties(key).metadata)
+  end
+
+  def test_copy_block_by_block_keeps_http_properties
+    client.create_block_blob(
+      key, content,
+      content_type: "text/plain; charset=utf-8",
+      cache_control: "public, max-age=60",
+      content_encoding: "identity",
+      content_language: "en",
+    )
+
+    # Azurite never rejects Copy Blob with a 409, so call the block by block fallback directly.
+    client.send(:copy_blob_blocks, copy_key, key, client, { block_size: 1 })
+    copy = client.get_blob_properties(copy_key)
+
+    assert_equal content, client.get_blob(copy_key)
+    assert_equal "text/plain; charset=utf-8", copy.http_properties[:content_type]
+    assert_equal "public, max-age=60", copy.cache_control
+    assert_equal "identity", copy.content_encoding
+    assert_equal "en", copy.content_language
+  end
+
   def test_download
     client.create_block_blob(key, content)
 

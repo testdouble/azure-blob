@@ -26,6 +26,21 @@ microsoft:
   container: container_name
 ```
 
+### Cache-Control
+
+Set `cache_control` to store a `Cache-Control` value on every blob the service writes (uploads, direct uploads and composed blobs):
+
+```
+microsoft:
+  service: AzureBlob
+  storage_account_name: account_name
+  storage_access_key: SECRET_KEY
+  container: container_name
+  cache_control: "public, max-age=31536000"
+```
+
+Direct uploads send it as the `x-ms-blob-cache-control` header, so add that header to the allowed headers of your storage account's CORS rule.
+
 ### Managed Identity (Entra ID)
 
 AzureBlob supports managed identities on:
@@ -136,6 +151,23 @@ client.get_blob(path) #=> "Hello world!"
 
 # Delete
 client.delete_blob(path)
+```
+
+### Blob properties
+
+`create_block_blob`, `create_append_blob` and `commit_blob_blocks` accept `content_type`, `content_disposition`, `cache_control`, `content_encoding` and `content_language`. They are stored on the blob and returned as response headers when the blob is served.
+
+```ruby
+client.create_block_blob(path, gzipped_json, content_type: "application/json", content_encoding: "gzip", cache_control: "public, max-age=3600")
+
+blob = client.get_blob_properties(path)
+blob.cache_control #=> "public, max-age=3600"
+
+# Change some properties without re-uploading. Properties you don't pass are kept; pass nil to clear one.
+client.set_blob_properties(path, cache_control: "no-cache")
+
+# Replace the custom metadata
+client.set_blob_metadata(path, { reviewed: "true" })
 ```
 
 For the full list of methods: https://www.rubydoc.info/gems/azure-blob/AzureBlob/Client

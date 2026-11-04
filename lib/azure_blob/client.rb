@@ -43,6 +43,12 @@ module AzureBlob
     #   Will be saved on the blob in Azure.
     # [+:content_disposition+]
     #   Will be saved on the blob in Azure.
+    # [+:cache_control+]
+    #   Will be saved on the blob in Azure and returned as the +Cache-Control+ header when the blob is served.
+    # [+:content_encoding+]
+    #   Will be saved on the blob in Azure and returned as the +Content-Encoding+ header when the blob is served.
+    # [+:content_language+]
+    #   Will be saved on the blob in Azure and returned as the +Content-Language+ header when the blob is served.
     # [+:content_md5+]
     #   Will ensure integrity of the upload. The checksum must be a base64 digest. Can be produced with +OpenSSL::Digest::MD5.base64digest+.
     #   The checksum is only checked on a single upload! To verify checksum when uploading multiple blocks, call directly put_blob_block with
@@ -204,6 +210,57 @@ module AzureBlob
       false
     end
 
+    # Updates the standard HTTP properties of a blob without touching its content or metadata.
+    #
+    # Calls to {Set Blob Properties}[https://learn.microsoft.com/en-us/rest/api/storageservices/set-blob-properties]
+    #
+    # Azure clears every HTTP property that is missing from a Set Blob Properties request. To make partial updates safe,
+    # this method reads the current properties first and only changes the ones passed in +options+. Pass +nil+ to clear a property.
+    # The update is conditional on the blob's ETag, so it raises AzureBlob::Http::Error (412) instead of overwriting a concurrent change.
+    #
+    # Takes a key (path) and options.
+    #
+    # Options:
+    #
+    # [+:content_type+]
+    # [+:content_disposition+]
+    # [+:content_md5+]
+    # [+:cache_control+]
+    # [+:content_encoding+]
+    # [+:content_language+]
+    def set_blob_properties(key, options = {})
+      current = get_blob_properties(key, options.slice(:timeout, :headers))
+      properties = current.http_properties.merge(options.slice(*BLOB_HTTP_PROPERTIES.keys))
+
+      uri = generate_uri("#{container}/#{key}")
+      query = { comp: "properties" }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
+
+      headers = BLOB_HTTP_PROPERTIES.to_h { |name, header| [ header, properties[name] ] }
+      headers[:"If-Match"] = current.etag if current.etag
+      headers[:"Content-Length"] = 0
+      headers.merge!(additional_headers(options))
+
+      Http.new(uri, headers, signer:).put
+    end
+
+    # Replaces the custom metadata of a blob. Passing an empty hash removes all of the blob's metadata.
+    #
+    # Calls to {Set Blob Metadata}[https://learn.microsoft.com/en-us/rest/api/storageservices/set-blob-metadata]
+    #
+    # Takes a key (path), a metadata hash and options.
+    def set_blob_metadata(key, metadata, options = {})
+      uri = generate_uri("#{container}/#{key}")
+      query = { comp: "metadata" }
+      query[:timeout] = options[:timeout] if options[:timeout]
+      uri.query = URI.encode_www_form(**query)
+
+      headers = { "Content-Length": 0 }.merge(additional_headers(options))
+
+      Http.new(uri, headers, signer:, metadata: metadata || {}).put
+    end
+
     # Returns the tags associated with a blob
     #
     # Calls to the {Get Blob Tags}[https://learn.microsoft.com/en-us/rest/api/storageservices/get-blob-tags] endpoint.
@@ -306,6 +363,8 @@ module AzureBlob
     #   Will be saved on the blob in Azure.
     # [+:content_disposition+]
     #   Will be saved on the blob in Azure.
+    # [+:cache_control+], [+:content_encoding+], [+:content_language+]
+    #   Will be saved on the blob in Azure. See create_block_blob.
     def create_append_blob(key, options = {})
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
@@ -316,7 +375,7 @@ module AzureBlob
         "Content-Type": options[:content_type],
         "Content-MD5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-      }.merge(additional_headers(options))
+      }.merge(optional_blob_http_headers(options), additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(nil)
     end
@@ -413,6 +472,8 @@ module AzureBlob
     # [+:content_md5+]
     #   This is the checksum for the whole blob. The checksum is saved on the blob, but it is not validated!
     #   Add a checksum for each block if you want Azure to validate integrity.
+    # [+:content_type+], [+:content_disposition+], [+:cache_control+], [+:content_encoding+], [+:content_language+]
+    #   Will be saved on the blob in Azure. See create_block_blob.
     def commit_blob_blocks(key, block_ids, options = {})
       block_list = BlockList.new(block_ids)
       content = block_list.to_s
@@ -426,12 +487,30 @@ module AzureBlob
         "x-ms-blob-content-type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-      }.merge(additional_headers(options))
+      }.merge(optional_blob_http_headers(options), additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content)
     end
 
   private
+
+    # Blob properties settable through Set Blob Properties, keyed by option name.
+    BLOB_HTTP_PROPERTIES = {
+      content_type: :"x-ms-blob-content-type",
+      content_disposition: :"x-ms-blob-content-disposition",
+      content_md5: :"x-ms-blob-content-md5",
+      cache_control: :"x-ms-blob-cache-control",
+      content_encoding: :"x-ms-blob-content-encoding",
+      content_language: :"x-ms-blob-content-language",
+    }.freeze
+    private_constant :BLOB_HTTP_PROPERTIES
+
+    # Headers for the HTTP properties beyond the content type, disposition and MD5 that the write methods already send.
+    def optional_blob_http_headers(options)
+      BLOB_HTTP_PROPERTIES.slice(:cache_control, :content_encoding, :content_language).to_h do |name, header|
+        [ header, options[name] ]
+      end
+    end
 
     def additional_headers(options)
       (options[:headers] || {}).transform_keys { |k| "x-ms-#{k}".to_sym }.
@@ -464,7 +543,7 @@ module AzureBlob
         "Content-Type": options[:content_type],
         "x-ms-blob-content-md5": options[:content_md5],
         "x-ms-blob-content-disposition": options[:content_disposition],
-      }.merge(additional_headers(options))
+      }.merge(optional_blob_http_headers(options), additional_headers(options))
 
       Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content.read)
     end
@@ -489,9 +568,7 @@ module AzureBlob
       commit_blob_blocks(
         key,
         block_ids,
-        content_type: source.content_type,
-        content_md5: source.checksum,
-        content_disposition: source.content_disposition,
+        **source.http_properties,
         metadata: metadata,
         **options.slice(:tags, :timeout, :headers),
       )
