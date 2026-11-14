@@ -61,13 +61,19 @@ ensure
 end
 
 task :test_azurite do |t|
-  azurite = Azurite.new
+  # Use the Azurite at STORAGE_BLOB_HOST when set (e.g. the docker compose service), otherwise start one
+  if ENV["STORAGE_BLOB_HOST"].to_s.empty?
+    azurite = Azurite.new
+    ENV["STORAGE_BLOB_HOST"] = "http://127.0.0.1:10000/devstoreaccount1"
+  end
+  host = ENV["STORAGE_BLOB_HOST"]
   # Azurite well-known credentials
   # https://learn.microsoft.com/en-us/azure/storage/common/storage-use-azurite?tabs=visual-studio%2Cblob-storage#well-known-storage-account-and-key
   account_name = ENV["AZURE_ACCOUNT_NAME"] = "devstoreaccount1"
   access_key = ENV["AZURE_ACCESS_KEY"] = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
-  host = ENV["STORAGE_BLOB_HOST"] = "http://127.0.0.1:10000/devstoreaccount1"
   ENV["TESTING_AZURITE"] = "true"
+  ENV["AZURE_PRIVATE_CONTAINER"] = "private" if ENV["AZURE_PRIVATE_CONTAINER"].to_s.empty?
+  ENV["AZURE_PUBLIC_CONTAINER"] = "public" if ENV["AZURE_PUBLIC_CONTAINER"].to_s.empty?
 
   # Create containers
   private_container = AzureBlob::Client.new(account_name:, access_key:, host:, container: ENV["AZURE_PRIVATE_CONTAINER"])
@@ -79,7 +85,7 @@ task :test_azurite do |t|
   Rake::Task["test_client"].execute
   Rake::Task["test_rails"].execute
 ensure
-  azurite.kill
+  azurite&.kill
 end
 
 task :test_entra_id do |t|
