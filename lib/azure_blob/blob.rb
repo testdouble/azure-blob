@@ -24,6 +24,22 @@ module AzureBlob
       response["content-md5"]
     end
 
+    def cache_control
+      response["cache-control"]
+    end
+
+    def content_encoding
+      response["content-encoding"]
+    end
+
+    def content_language
+      response["content-language"]
+    end
+
+    def etag
+      response["etag"]
+    end
+
     def size
       response.content_length
     end
@@ -35,6 +51,18 @@ module AzureBlob
 
     def block_blob?
       blob_type == "BlockBlob"
+    end
+
+    # The raw values of the properties that can be changed with AzureBlob::Client#set_blob_properties.
+    def http_properties # :nodoc:
+      {
+        content_type: response["content-type"],
+        content_disposition: content_disposition,
+        content_md5: checksum,
+        cache_control: cache_control,
+        content_encoding: content_encoding,
+        content_language: content_language,
+      }
     end
 
     def present?

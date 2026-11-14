@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+- Add `cache_control`, `content_encoding` and `content_language` options to `create_block_blob`, `create_append_blob` and `commit_blob_blocks` (#41)
+- Add `AzureBlob::Blob#cache_control`, `#content_encoding`, `#content_language` and `#etag`
+- Add `set_blob_properties` to change a blob's HTTP properties without re-uploading it. Unspecified properties are kept and the update is conditional on the blob's ETag
+- Add `set_blob_metadata`
+- Add a `cache_control` option to the Active Storage service, applied to uploads, direct uploads and composed blobs
+- Implement `update_metadata` in the Active Storage service, so changing an `ActiveStorage::Blob`'s content type or disposition now updates the stored blob
+- Fix block by block copies dropping the cache control, content encoding, content language and the content type parameters (e.g. `charset`) of the source blob
+
 ## [0.9.0] 2026-10-11
 
 - Drop support for Ruby 3.1 and 3.2. Ruby 3.3 or newer is now required
