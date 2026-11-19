@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+- Add optional `persistent_connections` to `AzureBlob::Client.new` and the ActiveStorage config to keep HTTP connections open between requests. Requires the `net-http-persistent` gem (#53)
+- Add optional `connection` to `AzureBlob::Client.new` to send requests through a custom connection object
+
 ## [0.9.0] 2026-10-11
 
 - Drop support for Ruby 3.1 and 3.2. Ruby 3.3 or newer is now required

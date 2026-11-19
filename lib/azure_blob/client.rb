@@ -25,6 +25,7 @@ module AzureBlob
       @principal_id = principal_id
       @use_managed_identities = options[:use_managed_identities]
       @delegation_key_expiration = options[:delegation_key_expiration]
+      @connection = options[:connection] || (persistent_connection if options[:persistent_connections])
       signer unless options[:lazy]
     end
 
@@ -77,7 +78,7 @@ module AzureBlob
         "x-ms-range": options[:start] && "bytes=#{options[:start]}-#{options[:end]}",
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:).get
+      Http.new(uri, headers, signer:, connection:).get
     end
 
     # Copy a blob between containers or within the same container
@@ -111,7 +112,7 @@ module AzureBlob
         "x-ms-requires-sync": "true",
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put
+      Http.new(uri, headers, signer:, connection:, **options.slice(:metadata, :tags)).put
     rescue Http::Error => error
       raise unless error.status == 409
       copy_blob_blocks(key, source_key, source_client, options)
@@ -134,7 +135,7 @@ module AzureBlob
         "x-ms-delete-snapshots": options[:delete_snapshots] || "include",
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:).delete
+      Http.new(uri, headers, signer:, connection:).delete
     end
 
     # Delete all blobs prefixed by the given prefix.
@@ -174,7 +175,7 @@ module AzureBlob
         query[:marker] = marker
         query.reject! { |key, value| value.to_s.empty? }
         uri.query = URI.encode_www_form(**query)
-        response = Http.new(uri, additional_headers(options), signer:).get
+        response = Http.new(uri, additional_headers(options), signer:, connection:).get
       end
 
       BlobList.new(fetcher)
@@ -190,7 +191,7 @@ module AzureBlob
       uri = generate_uri("#{container}/#{key}")
       uri.query = URI.encode_www_form(timeout: options[:timeout]) if options[:timeout]
 
-      response = Http.new(uri, additional_headers(options), signer:).head
+      response = Http.new(uri, additional_headers(options), signer:, connection:).head
 
       Blob.new(response)
     end
@@ -216,7 +217,7 @@ module AzureBlob
       query = { comp: "tags" }
       query[:timeout] = options[:timeout] if options[:timeout]
       uri.query = URI.encode_www_form(**query)
-      response = Http.new(uri, additional_headers(options), signer:).get
+      response = Http.new(uri, additional_headers(options), signer:, connection:).get
 
       Tags.from_response(response).to_h
     end
@@ -231,7 +232,7 @@ module AzureBlob
       query = { restype: "container" }
       query[:timeout] = options[:timeout] if options[:timeout]
       uri.query = URI.encode_www_form(**query)
-      response = Http.new(uri, additional_headers(options), signer:, raise_on_error: false).head
+      response = Http.new(uri, additional_headers(options), signer:, connection:, raise_on_error: false).head
 
       Container.new(response)
     end
@@ -256,7 +257,7 @@ module AzureBlob
       query = { restype: "container" }
       query[:timeout] = options[:timeout] if options[:timeout]
       uri.query = URI.encode_www_form(**query)
-      response = Http.new(uri, headers, signer:).put
+      response = Http.new(uri, headers, signer:, connection:).put
     end
 
     # Delete the container
@@ -267,7 +268,7 @@ module AzureBlob
       query = { restype: "container" }
       query[:timeout] = options[:timeout] if options[:timeout]
       uri.query = URI.encode_www_form(**query)
-      response = Http.new(uri, additional_headers(options), signer:).delete
+      response = Http.new(uri, additional_headers(options), signer:, connection:).delete
     end
 
     # Return a URI object to a resource in the container. Takes a path.
@@ -318,7 +319,7 @@ module AzureBlob
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(nil)
+      Http.new(uri, headers, signer:, connection:, **options.slice(:metadata, :tags)).put(nil)
     end
 
     # Append a block to an Append Blob
@@ -342,7 +343,7 @@ module AzureBlob
         "Content-MD5": options[:content_md5],
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:).put(content)
+      Http.new(uri, headers, signer:, connection:).put(content)
     end
 
     # Uploads a block to a blob.
@@ -368,7 +369,7 @@ module AzureBlob
         "Content-MD5": options[:content_md5],
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:).put(content)
+      Http.new(uri, headers, signer:, connection:).put(content)
 
       block_id
     end
@@ -397,7 +398,7 @@ module AzureBlob
         "x-ms-source-range": source_range && "bytes=#{source_range.min}-#{source_range.max}",
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:).put
+      Http.new(uri, headers, signer:, connection:).put
 
       block_id
     end
@@ -428,7 +429,7 @@ module AzureBlob
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content)
+      Http.new(uri, headers, signer:, connection:, **options.slice(:metadata, :tags)).put(content)
     end
 
   private
@@ -466,7 +467,7 @@ module AzureBlob
         "x-ms-blob-content-disposition": options[:content_disposition],
       }.merge(additional_headers(options))
 
-      Http.new(uri, headers, signer:, **options.slice(:metadata, :tags)).put(content.read)
+      Http.new(uri, headers, signer:, connection:, **options.slice(:metadata, :tags)).put(content.read)
     end
 
     # One Put Block From URL request per block, then one Put Block List to commit them.
@@ -509,6 +510,14 @@ module AzureBlob
       @host ||= "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
     end
 
+    # net-http-persistent is not a dependency of the gem, it is only loaded when asked for.
+    def persistent_connection
+      require "net/http/persistent"
+      Net::HTTP::Persistent.new(name: "azure-blob", proxy: :ENV)
+    rescue LoadError
+      raise AzureBlob::Error, "`persistent_connections` requires the net-http-persistent gem. Add `gem \"net-http-persistent\"` to your Gemfile."
+    end
+
     def signer
       @signer ||=
         begin
@@ -527,6 +536,6 @@ module AzureBlob
         end
     end
 
-    attr_reader :account_name, :container, :http, :cloud_regions, :access_key, :principal_id, :use_managed_identities, :delegation_key_expiration
+    attr_reader :account_name, :container, :http, :connection, :cloud_regions, :access_key, :principal_id, :use_managed_identities, :delegation_key_expiration
   end
 end

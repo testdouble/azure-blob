@@ -152,6 +152,49 @@ To enable lazy loading and ignore missing credentials, set the `lazy` option:
 
 or add `lazy: true` to your `config/storage.yml` for Active Storage.
 
+### Persistent connections
+
+By default, every request opens a new connection to Azure and closes it afterward. Set `persistent_connections` to keep connections open and reuse them, which saves a TCP and TLS handshake on every request.
+
+This relies on the [net-http-persistent](https://github.com/drbrain/net-http-persistent) gem, which is not a dependency of azure-blob. Add it to your Gemfile:
+
+```ruby
+gem "net-http-persistent"
+```
+
+Then set the option on the client:
+
+```ruby
+client = AzureBlob::Client.new(
+  account_name: "account_name",
+  access_key: "SECRET_KEY",
+  container: "container_name",
+  persistent_connections: true,
+)
+```
+
+or add `persistent_connections: true` to your `config/storage.yml` for Active Storage.
+
+Connections belong to the client and are safe to share between threads, so create the client once and reuse it. Active Storage already does.
+
+#### Custom connection
+
+To tune the connections (pool size, timeouts, etc.), build your own and pass it as `connection` instead:
+
+```ruby
+connection = Net::HTTP::Persistent.new(name: "azure-blob", pool_size: 10)
+connection.idle_timeout = 30
+
+client = AzureBlob::Client.new(
+  account_name: "account_name",
+  access_key: "SECRET_KEY",
+  container: "container_name",
+  connection: connection,
+)
+```
+
+`connection` can be any object responding to `request(uri, request)`, where `request` is a `Net::HTTPRequest`, and returning a `Net::HTTPResponse`.
+
 
 ## Contributing
 

@@ -135,6 +135,8 @@ GEM
     minitest (5.25.5)
     minitest-fail-fast (0.1.0)
       minitest (~> 5)
+    net-http-persistent (4.0.8)
+      connection_pool (>= 2.2.4, < 4)
     net-imap (0.5.8)
       date
       net-protocol
@@ -281,6 +283,7 @@ DEPENDENCIES
   m
   minitest
   minitest-fail-fast
+  net-http-persistent
   net-ssh
   propshaft (>= 0.1.7)
   rails (>= 8.0)
