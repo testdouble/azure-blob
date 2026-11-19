@@ -14,6 +14,9 @@ gem "rubocop-rails-omakase"
 
 gem "debug"
 
+# Optional dependency, only needed with the `persistent_connections` option
+gem "net-http-persistent"
+
 
 # Dependencies for Rails tests
 gem "rails", ">= 8.0"
