@@ -27,12 +27,12 @@ module AzureBlob
 
     include REXML
 
-    def initialize(uri, headers = {}, signer: nil, connection: nil, metadata: {}, tags: {}, debug: false, raise_on_error: true)
+    def initialize(uri, headers = {}, signer: nil, connection_pool: nil, metadata: {}, tags: {}, debug: false, raise_on_error: true)
       @raise_on_error = raise_on_error
       @date = Time.now.httpdate
       @uri = uri
       @signer = signer
-      @connection = connection
+      @connection_pool = connection_pool
       @debug = debug
       @headers = headers.merge(
         Metadata.new(metadata).headers,
@@ -83,12 +83,12 @@ module AzureBlob
 
     private
 
-    # Sends the request through the connection when the client has one, which keeps it open
-    # for the next request. Without one, the request gets a connection of its own.
+    # Sends the request through the connection pool when the client has one, which keeps the
+    # connection open for the next request. Without one, the request gets a connection of its own.
     def perform(request, body = nil)
       request.body = body if body
 
-      return connection.request(uri, request) if connection
+      return connection_pool.request(uri, request) if connection_pool
 
       http = Net::HTTP.new(uri.hostname, uri.port)
       http.use_ssl = uri.port == 443
@@ -138,6 +138,6 @@ module AzureBlob
       ERROR_MAPPINGS[status] || ERROR_CODE_MAPPINGS[azure_error_code] || Error
     end
 
-    attr_accessor :host, :connection, :debug, :signer, :response, :headers, :uri, :date, :raise_on_error
+    attr_accessor :host, :connection_pool, :debug, :signer, :response, :headers, :uri, :date, :raise_on_error
   end
 end

@@ -177,23 +177,23 @@ or add `persistent_connections: true` to your `config/storage.yml` for Active St
 
 Connections belong to the client and are safe to share between threads, so create the client once and reuse it. Active Storage already does.
 
-#### Custom connection
+#### Custom connection pool
 
-To tune the connections (pool size, timeouts, etc.), build your own and pass it as `connection` instead:
+To tune the connections (pool size, timeouts, etc.), build your own pool and pass it as `connection_pool` instead:
 
 ```ruby
-connection = Net::HTTP::Persistent.new(name: "azure-blob", pool_size: 10)
-connection.idle_timeout = 30
+connection_pool = Net::HTTP::Persistent.new(name: "azure-blob", pool_size: 10)
+connection_pool.idle_timeout = 30
 
 client = AzureBlob::Client.new(
   account_name: "account_name",
   access_key: "SECRET_KEY",
   container: "container_name",
-  connection: connection,
+  connection_pool: connection_pool,
 )
 ```
 
-`connection` can be any object responding to `request(uri, request)`, where `request` is a `Net::HTTPRequest`, and returning a `Net::HTTPResponse`.
+`connection_pool` can be any object responding to `request(uri, request)`, where `request` is a `Net::HTTPRequest`, and returning a `Net::HTTPResponse`.
 
 
 ## Contributing

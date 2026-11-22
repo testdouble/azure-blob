@@ -4,8 +4,8 @@ require_relative "test_helper"
 require "securerandom"
 
 class TestPersistentConnections < TestCase
-  # What the +connection+ option expects: an object taking the uri and the request, and returning the response.
-  class RecordingConnection
+  # What the +connection_pool+ option expects: an object taking the uri and the request, and returning the response.
+  class RecordingConnectionPool
     attr_reader :requests
 
     def initialize
@@ -75,15 +75,15 @@ class TestPersistentConnections < TestCase
     assert_includes 1..threads, connections
   end
 
-  def test_connection_option
-    connection = RecordingConnection.new
-    custom_client = new_client(connection:)
+  def test_connection_pool_option
+    connection_pool = RecordingConnectionPool.new
+    custom_client = new_client(connection_pool:)
 
     custom_client.create_block_blob(key, content)
     assert_equal content, custom_client.get_blob(key)
     custom_client.delete_blob(key)
 
-    assert_equal [ Net::HTTP::Put, Net::HTTP::Get, Net::HTTP::Delete ], connection.requests.map(&:class)
+    assert_equal [ Net::HTTP::Put, Net::HTTP::Get, Net::HTTP::Delete ], connection_pool.requests.map(&:class)
   end
 
   def test_persistent_connections_without_net_http_persistent
