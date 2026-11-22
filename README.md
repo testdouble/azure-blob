@@ -154,7 +154,7 @@ or add `lazy: true` to your `config/storage.yml` for Active Storage.
 
 ### Persistent connections
 
-By default, every request opens a new connection to Azure and closes it afterward. Set `persistent_connections` to keep connections open and reuse them, which saves a TCP and TLS handshake on every request.
+By default, every request opens a new connection to Azure and closes it afterward. Persistent connections stay open and are reused, which saves a TCP and TLS handshake on every request.
 
 This relies on the [net-http-persistent](https://github.com/drbrain/net-http-persistent) gem, which is not a dependency of azure-blob. Add it to your Gemfile:
 
@@ -162,24 +162,31 @@ This relies on the [net-http-persistent](https://github.com/drbrain/net-http-per
 gem "net-http-persistent"
 ```
 
-Then set the option on the client:
+That is all a Rails app needs: persistent connections are used whenever net-http-persistent is loaded. Outside of Rails, `require "net/http/persistent"` before creating the client.
+
+The `persistent_connections` option overrides this:
+
+- `persistent_connections: false` never uses persistent connections, even when net-http-persistent is loaded.
+- `persistent_connections: true` always uses them, and raises an error if net-http-persistent is missing.
+
+Set it on the client:
 
 ```ruby
 client = AzureBlob::Client.new(
   account_name: "account_name",
   access_key: "SECRET_KEY",
   container: "container_name",
-  persistent_connections: true,
+  persistent_connections: false,
 )
 ```
 
-or add `persistent_connections: true` to your `config/storage.yml` for Active Storage.
+or in your `config/storage.yml` for Active Storage.
 
 Connections belong to the client and are safe to share between threads, so create the client once and reuse it. Active Storage already does.
 
 #### Custom connection pool
 
-To tune the connections (pool size, timeouts, etc.), build your own pool and pass it as `connection_pool` instead:
+To tune the connections (pool size, timeouts, etc.), build your own pool and pass it as `connection_pool`:
 
 ```ruby
 connection_pool = Net::HTTP::Persistent.new(name: "azure-blob", pool_size: 10)
@@ -193,7 +200,33 @@ client = AzureBlob::Client.new(
 )
 ```
 
-`connection_pool` can be any object responding to `request(uri, request)`, where `request` is a `Net::HTTPRequest`, and returning a `Net::HTTPResponse`.
+`connection_pool` also takes a class, or the name of a class, and calls `new` on it. This is how to set a pool from `config/storage.yml`:
+
+```ruby
+class BlobConnectionPool < Net::HTTP::Persistent
+  def initialize
+    super(name: "azure-blob", pool_size: 10)
+    self.idle_timeout = 30
+  end
+end
+```
+
+```yaml
+microsoft:
+  service: AzureBlob
+  storage_account_name: account_name
+  storage_access_key: SECRET_KEY
+  container: container_name
+  connection_pool: BlobConnectionPool
+```
+
+A pool does not have to be a `Net::HTTP::Persistent`. It can be any object that:
+
+- responds to `request(uri, request)`, where `uri` is a `URI` and `request` a `Net::HTTPRequest`
+- returns the `Net::HTTPResponse`
+- is safe to call from several threads at once
+
+`persistent_connections: false` turns a custom pool off as well.
 
 
 ## Contributing

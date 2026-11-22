@@ -8,6 +8,10 @@ class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
 
   include ActiveStorage::Service::SharedServiceTests
 
+  test "persistent connections when net-http-persistent is in the Gemfile" do
+    assert_instance_of Net::HTTP::Persistent, @service.client.send(:connection_pool)
+  end
+
   test "direct upload with content type" do
     key          = SecureRandom.base58(24)
     data         = "Something else entirely!"

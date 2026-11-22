@@ -25,7 +25,7 @@ module AzureBlob
       @principal_id = principal_id
       @use_managed_identities = options[:use_managed_identities]
       @delegation_key_expiration = options[:delegation_key_expiration]
-      @connection_pool = options[:connection_pool] || (persistent_connection_pool if options[:persistent_connections])
+      @connection_pool = build_connection_pool(options[:connection_pool], persistent_connections: options[:persistent_connections])
       signer unless options[:lazy]
     end
 
@@ -510,10 +510,21 @@ module AzureBlob
       @host ||= "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
     end
 
-    # net-http-persistent is not a dependency of the gem, it is only loaded when asked for.
-    def persistent_connection_pool
-      require "net/http/persistent"
-      Net::HTTP::Persistent.new(name: "azure-blob", proxy: :ENV)
+    # +persistent_connections: false+ turns connection pooling off. Otherwise the pool is the one given
+    # (an object, a class or the name of a class), or a pool of persistent connections.
+    def build_connection_pool(connection_pool, persistent_connections:)
+      return if persistent_connections == false
+
+      connection_pool = Object.const_get(connection_pool) if connection_pool.is_a?(String)
+      connection_pool = connection_pool.new if connection_pool.is_a?(Class)
+      connection_pool || persistent_connection_pool(required: persistent_connections)
+    end
+
+    # net-http-persistent is not a dependency of the gem. It is used when the application has loaded it,
+    # and only loaded from here when persistent connections are required.
+    def persistent_connection_pool(required:)
+      require "net/http/persistent" if required
+      Net::HTTP::Persistent.new(name: "azure-blob", proxy: :ENV) if defined?(Net::HTTP::Persistent)
     rescue LoadError
       raise AzureBlob::Error, "`persistent_connections` requires the net-http-persistent gem. Add `gem \"net-http-persistent\"` to your Gemfile."
     end

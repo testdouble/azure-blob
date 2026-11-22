@@ -30,29 +30,41 @@ class TestPersistentConnections < TestCase
     client.delete_prefix(key)
   end
 
-  def test_opens_a_connection_per_request_by_default
+  # The test helper loads net-http-persistent.
+  def test_reuses_the_connection_when_net_http_persistent_is_loaded
     connections = count_connections do
       client.create_block_blob(key, content)
       assert_equal content, client.get_blob(key)
+      assert_equal content.bytesize, client.get_blob_properties(key).size
+      assert_equal [ key ], client.list_blobs(prefix: key).to_a
       client.delete_blob(key)
-    end
-
-    assert_equal 3, connections
-  end
-
-  def test_persistent_connections_reuse_the_connection
-    persistent_client = new_client(persistent_connections: true)
-
-    connections = count_connections do
-      persistent_client.create_block_blob(key, content)
-      assert_equal content, persistent_client.get_blob(key)
-      assert_equal content.bytesize, persistent_client.get_blob_properties(key).size
-      assert_equal [ key ], persistent_client.list_blobs(prefix: key).to_a
-      persistent_client.delete_blob(key)
-      refute persistent_client.blob_exist?(key)
+      refute client.blob_exist?(key)
     end
 
     assert_equal 1, connections
+  end
+
+  def test_no_connection_pool_when_net_http_persistent_is_not_loaded
+    script = <<~RUBY
+      require "azure_blob"
+      connection_pool = AzureBlob::Client.new(account_name: "account", access_key: "key", container: "container").send(:connection_pool)
+      net_http_persistent = defined?(Net::HTTP::Persistent)
+      exit connection_pool.nil? && net_http_persistent.nil?
+    RUBY
+
+    assert system(RbConfig.ruby, "-I", File.expand_path("../../lib", __dir__), "-e", script)
+  end
+
+  def test_persistent_connections_false_opens_a_connection_per_request
+    one_shot_client = new_client(persistent_connections: false)
+
+    connections = count_connections do
+      one_shot_client.create_block_blob(key, content)
+      assert_equal content, one_shot_client.get_blob(key)
+      one_shot_client.delete_blob(key)
+    end
+
+    assert_equal 3, connections
   end
 
   def test_persistent_connections_across_threads
@@ -86,7 +98,34 @@ class TestPersistentConnections < TestCase
     assert_equal [ Net::HTTP::Put, Net::HTTP::Get, Net::HTTP::Delete ], connection_pool.requests.map(&:class)
   end
 
-  def test_persistent_connections_without_net_http_persistent
+  def test_connection_pool_option_with_a_class
+    custom_client = new_client(connection_pool: RecordingConnectionPool)
+
+    custom_client.create_block_blob(key, content)
+    custom_client.delete_blob(key)
+
+    assert_equal [ Net::HTTP::Put, Net::HTTP::Delete ], custom_client.send(:connection_pool).requests.map(&:class)
+  end
+
+  def test_connection_pool_option_with_the_name_of_a_class
+    custom_client = new_client(connection_pool: "TestPersistentConnections::RecordingConnectionPool")
+
+    custom_client.create_block_blob(key, content)
+    custom_client.delete_blob(key)
+
+    assert_equal [ Net::HTTP::Put, Net::HTTP::Delete ], custom_client.send(:connection_pool).requests.map(&:class)
+  end
+
+  def test_persistent_connections_false_ignores_the_connection_pool
+    connection_pool = RecordingConnectionPool.new
+    one_shot_client = new_client(connection_pool:, persistent_connections: false)
+
+    one_shot_client.create_block_blob(key, content)
+
+    assert_empty connection_pool.requests
+  end
+
+  def test_persistent_connections_true_without_net_http_persistent
     client_without_the_gem = Class.new(AzureBlob::Client) do
       def require(name)
         raise LoadError, "cannot load such file -- #{name}" if name == "net/http/persistent"

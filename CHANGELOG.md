@@ -1,7 +1,7 @@
 ## [Unreleased]
 
-- Add optional `persistent_connections` to `AzureBlob::Client.new` and the ActiveStorage config to keep HTTP connections open between requests. Requires the `net-http-persistent` gem (#53)
-- Add optional `connection_pool` to `AzureBlob::Client.new` to send requests through a custom connection pool
+- Add persistent connections: HTTP connections are kept open between requests when the `net-http-persistent` gem is loaded. Set `persistent_connections: false` on `AzureBlob::Client.new` or in the ActiveStorage config to turn them off, or `true` to require the gem (#53)
+- Add optional `connection_pool` to `AzureBlob::Client.new` and the ActiveStorage config to send requests through a custom connection pool
 
 ## [0.9.0] 2026-10-11
 

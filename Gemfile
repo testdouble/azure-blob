@@ -14,7 +14,7 @@ gem "rubocop-rails-omakase"
 
 gem "debug"
 
-# Optional dependency, only needed with the `persistent_connections` option
+# Optional dependency, turns persistent connections on
 gem "net-http-persistent"
 
 

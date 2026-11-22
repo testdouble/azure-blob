@@ -3,6 +3,9 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "azure_blob"
 
+# Loaded the way an application with the gem in its Gemfile would, which turns persistent connections on.
+require "net/http/persistent"
+
 require "minitest/autorun"
 require "debug"
 
