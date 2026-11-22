@@ -30,8 +30,21 @@ class TestPersistentConnections < TestCase
     client.delete_prefix(key)
   end
 
-  # The test helper loads net-http-persistent.
-  def test_reuses_the_connection_when_net_http_persistent_is_loaded
+  def test_opens_a_connection_per_request_without_net_http_persistent
+    skip if using_persistent_connections
+
+    connections = count_connections do
+      client.create_block_blob(key, content)
+      assert_equal content, client.get_blob(key)
+      client.delete_blob(key)
+    end
+
+    assert_equal 3, connections
+  end
+
+  def test_reuses_the_connection_with_net_http_persistent
+    skip unless using_persistent_connections
+
     connections = count_connections do
       client.create_block_blob(key, content)
       assert_equal content, client.get_blob(key)
@@ -42,17 +55,6 @@ class TestPersistentConnections < TestCase
     end
 
     assert_equal 1, connections
-  end
-
-  def test_no_connection_pool_when_net_http_persistent_is_not_loaded
-    script = <<~RUBY
-      require "azure_blob"
-      connection_pool = AzureBlob::Client.new(account_name: "account", access_key: "key", container: "container").send(:connection_pool)
-      net_http_persistent = defined?(Net::HTTP::Persistent)
-      exit connection_pool.nil? && net_http_persistent.nil?
-    RUBY
-
-    assert system(RbConfig.ruby, "-I", File.expand_path("../../lib", __dir__), "-e", script)
   end
 
   def test_persistent_connections_false_opens_a_connection_per_request
@@ -68,6 +70,8 @@ class TestPersistentConnections < TestCase
   end
 
   def test_persistent_connections_across_threads
+    skip unless using_persistent_connections
+
     persistent_client = new_client(persistent_connections: true)
     threads = 4
 
@@ -123,6 +127,17 @@ class TestPersistentConnections < TestCase
     custom_client.create_block_blob(key, content)
 
     assert_equal [ Net::HTTP::Put ], connection_pool.requests.map(&:class)
+  end
+
+  # Runs in another process, loading net-http-persistent here would turn persistent connections on for the other tests.
+  def test_persistent_connections_true_loads_net_http_persistent
+    script = <<~RUBY
+      require "azure_blob"
+      client = AzureBlob::Client.new(account_name: "account", access_key: "key", container: "container", persistent_connections: true)
+      exit client.send(:connection_pool).is_a?(Net::HTTP::Persistent)
+    RUBY
+
+    assert system(RbConfig.ruby, "-I", File.expand_path("../../lib", __dir__), "-e", script)
   end
 
   def test_persistent_connections_true_without_net_http_persistent

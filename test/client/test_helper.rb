@@ -3,8 +3,8 @@
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "azure_blob"
 
-# Loaded the way an application with the gem in its Gemfile would, which turns persistent connections on.
-require "net/http/persistent"
+# Run the tests with persistent connections: PERSISTENT_CONNECTIONS=true bin/rake test
+require "net/http/persistent" if ENV["PERSISTENT_CONNECTIONS"] == "true"
 
 require "minitest/autorun"
 require "debug"
@@ -19,5 +19,9 @@ class TestCase < Minitest::Test
 
   def using_shared_key
     !(ENV["AZURE_ACCESS_KEY"].nil? || ENV["AZURE_ACCESS_KEY"].empty?)
+  end
+
+  def using_persistent_connections
+    ENV["PERSISTENT_CONNECTIONS"] == "true"
   end
 end

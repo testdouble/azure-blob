@@ -8,7 +8,9 @@ class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
 
   include ActiveStorage::Service::SharedServiceTests
 
-  test "persistent connections when net-http-persistent is in the Gemfile" do
+  test "persistent connections when net-http-persistent is loaded" do
+    skip unless ENV["PERSISTENT_CONNECTIONS"] == "true"
+
     assert_instance_of Net::HTTP::Persistent, @service.client.send(:connection_pool)
   end
 

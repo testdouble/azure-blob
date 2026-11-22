@@ -268,6 +268,10 @@ You might be prompted for a sudo password when the VPN starts (sshuttle).
 
 After you are done, run terraform again without the var file (`terraform apply`) to destroy all resources.
 
+#### Persistent connections
+
+The tests run without persistent connections. To run them with persistent connections: `PERSISTENT_CONNECTIONS=true bin/rake test`
+
 #### Cleanup
 
 Some tests copied over from Rails don't clean after themselves. A rake task is provided to empty your containers and keep cost low: `bin/rake flush_test_container`

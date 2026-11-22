@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Run the tests with persistent connections: PERSISTENT_CONNECTIONS=true bin/rake test
+require "net/http/persistent" if ENV["PERSISTENT_CONNECTIONS"] == "true"
+
 require "debug"
 require "action_view"
 require "action_view/helpers"
