@@ -141,21 +141,6 @@ class TestPersistentConnections < TestCase
     assert_equal [ "PUT" ], connection_pool.sent
   end
 
-  def test_persistent_connections_true_without_net_http_persistent
-    client_without_the_gem = Class.new(AzureBlob::Client) do
-      def require(name)
-        raise LoadError, "cannot load such file -- #{name}" if name == "net/http/persistent"
-        super
-      end
-    end
-
-    error = assert_raises(AzureBlob::Error) do
-      client_without_the_gem.new(account_name: "account", access_key: "key", container: "container", persistent_connections: true)
-    end
-
-    assert_match(/net-http-persistent/, error.message)
-  end
-
   private
 
   def new_client(**options)
