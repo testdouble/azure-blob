@@ -17,6 +17,7 @@ class TestClient < TestCase
     @principal_id = ENV["AZURE_PRINCIPAL_ID"]
     @use_managed_identities = ENV["USE_MANAGED_IDENTITIES"] == "true"
     @host = ENV["STORAGE_BLOB_HOST"]
+    @persistent_connections = ENV["PERSISTENT_CONNECTIONS"] == "true"
     @client = AzureBlob::Client.new(
       account_name: @account_name,
       access_key: @access_key,
@@ -24,6 +25,7 @@ class TestClient < TestCase
       principal_id: @principal_id,
       use_managed_identities: @use_managed_identities,
       host: @host,
+      persistent_connections: @persistent_connections,
     )
     @uid = SecureRandom.uuid
     @key = "test-client-#{name}-#{@uid} ?#&<>\"'%+/\\" # Special chars to test proper escaping
@@ -40,6 +42,16 @@ class TestClient < TestCase
   # Destination key for copy tests; registering it here gets it deleted in teardown.
   def copy_key
     @copy_key ||= "#{key}_copy"
+  end
+
+  def test_persistent_connections_follow_the_environment_variable
+    connection_pool = client.send(:connection_pool)
+
+    if @persistent_connections
+      assert_instance_of Net::HTTP::Persistent, connection_pool
+    else
+      assert_nil connection_pool
+    end
   end
 
   def test_rails_is_not_loaded
@@ -456,6 +468,7 @@ class TestClient < TestCase
       container: "missingcontainer",
       principal_id: @principal_id,
       use_managed_identities: @use_managed_identities,
+      persistent_connections: @persistent_connections,
     )
     container = client.get_container_properties
     refute container.present?
@@ -471,6 +484,7 @@ class TestClient < TestCase
       container: "missingcontainer",
       principal_id: @principal_id,
       use_managed_identities: @use_managed_identities,
+      persistent_connections: @persistent_connections,
     )
 
     refute client.container_exist?
@@ -484,6 +498,7 @@ class TestClient < TestCase
       principal_id: @principal_id,
       use_managed_identities: @use_managed_identities,
       host: @host,
+      persistent_connections: @persistent_connections,
     )
     container = client.get_container_properties
     refute container.present?
@@ -513,6 +528,7 @@ class TestClient < TestCase
       principal_id: @principal_id,
       use_managed_identities: @use_managed_identities,
       host: @host,
+      persistent_connections: @persistent_connections,
     )
     client.create_block_blob(key, content)
     assert_equal content, client.get_blob(key)
