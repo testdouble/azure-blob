@@ -156,7 +156,7 @@ or add `lazy: true` to your `config/storage.yml` for Active Storage.
 
 By default, every request opens a new connection to Azure and closes it afterward. Persistent connections stay open and are reused, which saves a TCP and TLS handshake on every request.
 
-This relies on the [net-http-persistent](https://github.com/drbrain/net-http-persistent) gem, which is not a dependency of azure-blob. Add it to your Gemfile:
+This relies on the [net-http-persistent](https://github.com/drbrain/net-http-persistent) gem. If you want to activate persistent connections, add it to your Gemfile:
 
 ```ruby
 gem "net-http-persistent"
