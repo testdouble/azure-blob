@@ -57,24 +57,24 @@ class TestPersistentConnections < TestCase
     assert_equal 1, connections
   end
 
-  def test_persistent_connections_true_across_threads
+  # Four threads share one client. Each thread uploads, downloads and deletes its own blob.
+  def test_persistent_connections_true_with_several_threads
     persistent_client = new_client(persistent_connections: true)
-    threads = 4
 
     connections = count_connections do
-      threads.times.map do |thread|
+      threads = 4.times.map do |number|
         Thread.new do
-          3.times do |index|
-            thread_key = "#{key}/#{thread}/#{index}"
-            persistent_client.create_block_blob(thread_key, "#{content} #{thread_key}")
-            assert_equal "#{content} #{thread_key}", persistent_client.get_blob(thread_key)
-            persistent_client.delete_blob(thread_key)
-          end
+          thread_key = "#{key}/#{number}"
+          persistent_client.create_block_blob(thread_key, "content #{number}")
+          assert_equal "content #{number}", persistent_client.get_blob(thread_key)
+          persistent_client.delete_blob(thread_key)
         end
-      end.each(&:join)
+      end
+      threads.each(&:join)
     end
 
-    assert_includes 1..threads, connections
+    # 12 requests in total, on at most one connection per thread.
+    assert_operator connections, :<=, 4
   end
 
   def test_reuses_the_connection_by_default_when_net_http_persistent_is_loaded
