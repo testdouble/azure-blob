@@ -116,13 +116,13 @@ class TestPersistentConnections < TestCase
     assert_equal [ Net::HTTP::Put, Net::HTTP::Delete ], custom_client.send(:connection_pool).requests.map(&:class)
   end
 
-  def test_persistent_connections_false_ignores_the_connection_pool
+  def test_connection_pool_option_with_persistent_connections_false
     connection_pool = RecordingConnectionPool.new
-    one_shot_client = new_client(connection_pool:, persistent_connections: false)
+    custom_client = new_client(connection_pool:, persistent_connections: false)
 
-    one_shot_client.create_block_blob(key, content)
+    custom_client.create_block_blob(key, content)
 
-    assert_empty connection_pool.requests
+    assert_equal [ Net::HTTP::Put ], connection_pool.requests.map(&:class)
   end
 
   def test_persistent_connections_true_without_net_http_persistent

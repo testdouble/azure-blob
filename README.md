@@ -226,7 +226,7 @@ A pool does not have to be a `Net::HTTP::Persistent`. It can be any object that:
 - returns the `Net::HTTPResponse`
 - is safe to call from several threads at once
 
-`persistent_connections: false` turns a custom pool off as well.
+A `connection_pool` is used whatever `persistent_connections` is set to.
 
 
 ## Contributing

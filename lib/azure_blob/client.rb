@@ -510,23 +510,21 @@ module AzureBlob
       @host ||= "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
     end
 
-    # How requests are sent:
-    # - persistent_connections is false: no pool, each request opens its own connection
-    # - a connection_pool is given: through that pool (an object, a class or the name of a class)
-    # - otherwise: through persistent connections, when net-http-persistent is available
+    # Uses connection_pool when it is set: an object, a class or the name of a class.
+    # Otherwise uses persistent connections when net-http-persistent is available.
+    # Falls back to one connection per request when it is not, or when persistent_connections is false.
     def build_connection_pool(connection_pool, persistent_connections:)
-      return if persistent_connections == false
-
       connection_pool = Object.const_get(connection_pool) if connection_pool.is_a?(String)
       connection_pool = connection_pool.new if connection_pool.is_a?(Class)
-      connection_pool || persistent_connection_pool(required: persistent_connections)
+      connection_pool || persistent_connection_pool(persistent_connections)
     end
 
-    # net-http-persistent is an optional gem:
-    # - persistent_connections is true: it is required here, and an error is raised if it is missing
-    # - otherwise: it is used only if the application has already loaded it
-    def persistent_connection_pool(required:)
-      require "net/http/persistent" if required
+    # net-http-persistent is available when the application has loaded it.
+    # persistent_connections: true loads it, and raises when the gem is missing.
+    def persistent_connection_pool(persistent_connections)
+      return if persistent_connections == false
+
+      require "net/http/persistent" if persistent_connections
       Net::HTTP::Persistent.new(name: "azure-blob", proxy: :ENV) if defined?(Net::HTTP::Persistent)
     rescue LoadError
       raise AzureBlob::Error, "`persistent_connections` requires the net-http-persistent gem. Add `gem \"net-http-persistent\"` to your Gemfile."
