@@ -4,16 +4,17 @@ require_relative "test_helper"
 require "securerandom"
 
 class TestPersistentConnections < TestCase
-  # What the +connection_pool+ option expects: an object taking the uri and the request, and returning the response.
+  # A minimal connection pool: it takes the uri and the request, sends it and returns the response.
+  # It keeps the HTTP method of every request it sent, so the tests can tell what went through it.
   class RecordingConnectionPool
-    attr_reader :requests
+    attr_reader :sent
 
     def initialize
-      @requests = []
+      @sent = []
     end
 
     def request(uri, request)
-      requests << request
+      sent << request.method
       Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https") { |http| http.request(request) }
     end
   end
@@ -110,7 +111,7 @@ class TestPersistentConnections < TestCase
     assert_equal content, custom_client.get_blob(key)
     custom_client.delete_blob(key)
 
-    assert_equal [ Net::HTTP::Put, Net::HTTP::Get, Net::HTTP::Delete ], connection_pool.requests.map(&:class)
+    assert_equal [ "PUT", "GET", "DELETE" ], connection_pool.sent
   end
 
   def test_connection_pool_option_with_a_class
@@ -119,7 +120,7 @@ class TestPersistentConnections < TestCase
     custom_client.create_block_blob(key, content)
     custom_client.delete_blob(key)
 
-    assert_equal [ Net::HTTP::Put, Net::HTTP::Delete ], custom_client.send(:connection_pool).requests.map(&:class)
+    assert_equal [ "PUT", "DELETE" ], custom_client.send(:connection_pool).sent
   end
 
   def test_connection_pool_option_with_the_name_of_a_class
@@ -128,7 +129,7 @@ class TestPersistentConnections < TestCase
     custom_client.create_block_blob(key, content)
     custom_client.delete_blob(key)
 
-    assert_equal [ Net::HTTP::Put, Net::HTTP::Delete ], custom_client.send(:connection_pool).requests.map(&:class)
+    assert_equal [ "PUT", "DELETE" ], custom_client.send(:connection_pool).sent
   end
 
   def test_connection_pool_option_with_persistent_connections_false
@@ -137,7 +138,7 @@ class TestPersistentConnections < TestCase
 
     custom_client.create_block_blob(key, content)
 
-    assert_equal [ Net::HTTP::Put ], connection_pool.requests.map(&:class)
+    assert_equal [ "PUT" ], connection_pool.sent
   end
 
   def test_persistent_connections_true_without_net_http_persistent
