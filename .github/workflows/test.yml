@@ -151,6 +151,8 @@ jobs:
           AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
           AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          # The App Service and AKS jobs run without persistent connections.
+          PERSISTENT_CONNECTIONS: true
         run: bundle exec rake test_azure_vm
 
   aks_test:
@@ -283,7 +285,7 @@ jobs:
         run: bundle exec rake test_rails
 
 
-  # The other jobs run without persistent connections.
+  # Same tests as client_test and rails_test, with persistent connections.
   persistent_connections_test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
