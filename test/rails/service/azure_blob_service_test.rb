@@ -8,6 +8,16 @@ class ActiveStorage::Service::AzureBlobServiceTest < ActiveSupport::TestCase
 
   include ActiveStorage::Service::SharedServiceTests
 
+  test "persistent connections follow PERSISTENT_CONNECTIONS" do
+    connection_pool = @service.client.send(:connection_pool)
+
+    if ENV["PERSISTENT_CONNECTIONS"] == "true"
+      assert_instance_of Net::HTTP::Persistent, connection_pool
+    else
+      assert_nil connection_pool
+    end
+  end
+
   test "direct upload with content type" do
     key          = SecureRandom.base58(24)
     data         = "Something else entirely!"

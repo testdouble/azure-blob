@@ -152,6 +152,73 @@ To enable lazy loading and ignore missing credentials, set the `lazy` option:
 
 or add `lazy: true` to your `config/storage.yml` for Active Storage.
 
+### Persistent connections
+
+By default, every request opens a new connection to Azure and closes it afterward. Persistent connections stay open and are reused, which saves a TCP and TLS handshake on every request.
+
+This relies on the [net-http-persistent](https://github.com/drbrain/net-http-persistent) gem. If you want to activate persistent connections, add it to your Gemfile:
+
+```ruby
+gem "net-http-persistent"
+```
+
+Rails requires it automatically. To use it outside of Rails, set the `persistent_connections` option to `true` on the client:
+
+```ruby
+client = AzureBlob::Client.new(
+  account_name: "account_name",
+  access_key: "SECRET_KEY",
+  container: "container_name",
+  persistent_connections: true,
+)
+```
+
+If your app uses net-http-persistent but you do not want azure-blob to use it, set `persistent_connections: false` on the client or in your `config/storage.yml`.
+
+#### Custom connection pool
+
+To tune the connections (pool size, timeouts, etc.), build your own pool and pass it as `connection_pool`:
+
+```ruby
+connection_pool = Net::HTTP::Persistent.new(name: "azure-blob", pool_size: 10)
+connection_pool.idle_timeout = 30
+
+client = AzureBlob::Client.new(
+  account_name: "account_name",
+  access_key: "SECRET_KEY",
+  container: "container_name",
+  connection_pool: connection_pool,
+)
+```
+
+`connection_pool` also takes a class, or the name of a class, and calls `new` on it. This is how to set a pool from `config/storage.yml`:
+
+```ruby
+class BlobConnectionPool < Net::HTTP::Persistent
+  def initialize
+    super(name: "azure-blob", pool_size: 10)
+    self.idle_timeout = 30
+  end
+end
+```
+
+```yaml
+microsoft:
+  service: AzureBlob
+  storage_account_name: account_name
+  storage_access_key: SECRET_KEY
+  container: container_name
+  connection_pool: BlobConnectionPool
+```
+
+A pool does not have to be a `Net::HTTP::Persistent`. It can be any object that:
+
+- responds to `request(uri, request)`, where `uri` is a `URI` and `request` a `Net::HTTPRequest`
+- returns the `Net::HTTPResponse`
+- is safe to call from several threads at once
+
+A `connection_pool` is used whatever `persistent_connections` is set to.
+
 
 ## Contributing
 

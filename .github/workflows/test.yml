@@ -151,6 +151,8 @@ jobs:
           AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
           AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          # The App Service and AKS jobs run without persistent connections.
+          PERSISTENT_CONNECTIONS: true
         run: bundle exec rake test_azure_vm
 
   aks_test:
@@ -282,3 +284,31 @@ jobs:
           AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
         run: bundle exec rake test_rails
 
+
+  # Same tests as client_test and rails_test, with persistent connections.
+  persistent_connections_test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: approve-external-sha
+    if: ${{ !cancelled() && needs.approve-external-sha.result != 'failure' }}
+    steps:
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libvips sqlite3 libsqlite3-dev
+      - name: Checkout
+        uses: actions/checkout@v7
+      - uses: ./.github/actions/checkout-sha
+        with:
+          sha: ${{ inputs.sha }}
+      - name: Setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+      - name: Client and Rails tests with persistent connections
+        env:
+          AZURE_ACCOUNT_NAME: ${{secrets.AZURE_ACCOUNT_NAME}}
+          AZURE_ACCESS_KEY: ${{secrets.AZURE_ACCESS_KEY}}
+          AZURE_PRIVATE_CONTAINER: ${{secrets.AZURE_PRIVATE_CONTAINER}}
+          AZURE_PUBLIC_CONTAINER: ${{secrets.AZURE_PUBLIC_CONTAINER}}
+          AZURE_PRINCIPAL_ID: ${{secrets.AZURE_PRINCIPAL_ID}}
+          PERSISTENT_CONNECTIONS: true
+        run: bundle exec rake test
