@@ -162,27 +162,18 @@ This relies on the [net-http-persistent](https://github.com/drbrain/net-http-per
 gem "net-http-persistent"
 ```
 
-That is all a Rails app needs: persistent connections are used whenever net-http-persistent is loaded. Outside of Rails, `require "net/http/persistent"` before creating the client.
-
-The `persistent_connections` option overrides this:
-
-- `persistent_connections: false` never uses persistent connections, even when net-http-persistent is loaded.
-- `persistent_connections: true` always uses them, and raises an error if net-http-persistent is missing.
-
-Set it on the client:
+Rails requires it automatically. To use it outside of Rails, set the `persistent_connections` option to `true` on the client:
 
 ```ruby
 client = AzureBlob::Client.new(
   account_name: "account_name",
   access_key: "SECRET_KEY",
   container: "container_name",
-  persistent_connections: false,
+  persistent_connections: true,
 )
 ```
 
-or in your `config/storage.yml` for Active Storage.
-
-Connections belong to the client and are safe to share between threads, so create the client once and reuse it. Active Storage already does.
+If your app uses net-http-persistent but you do not want azure-blob to use it, set `persistent_connections: false` on the client or in your `config/storage.yml`.
 
 #### Custom connection pool
 
