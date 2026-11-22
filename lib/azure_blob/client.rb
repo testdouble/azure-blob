@@ -510,8 +510,10 @@ module AzureBlob
       @host ||= "https://#{account_name}.blob.#{CLOUD_REGIONS_SUFFIX[cloud_regions]}"
     end
 
-    # +persistent_connections: false+ turns connection pooling off. Otherwise the pool is the one given
-    # (an object, a class or the name of a class), or a pool of persistent connections.
+    # How requests are sent:
+    # - persistent_connections is false: no pool, each request opens its own connection
+    # - a connection_pool is given: through that pool (an object, a class or the name of a class)
+    # - otherwise: through persistent connections, when net-http-persistent is available
     def build_connection_pool(connection_pool, persistent_connections:)
       return if persistent_connections == false
 
@@ -520,8 +522,9 @@ module AzureBlob
       connection_pool || persistent_connection_pool(required: persistent_connections)
     end
 
-    # net-http-persistent is not a dependency of the gem. It is used when the application has loaded it,
-    # and only loaded from here when persistent connections are required.
+    # net-http-persistent is an optional gem:
+    # - persistent_connections is true: it is required here, and an error is raised if it is missing
+    # - otherwise: it is used only if the application has already loaded it
     def persistent_connection_pool(required:)
       require "net/http/persistent" if required
       Net::HTTP::Persistent.new(name: "azure-blob", proxy: :ENV) if defined?(Net::HTTP::Persistent)
