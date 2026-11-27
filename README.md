@@ -222,6 +222,9 @@ A `connection_pool` is used whatever `persistent_connections` is set to.
 
 ## Contributing
 
+To run lint and the tests with only Docker, against Azurite, see [CONTRIBUTING.md](CONTRIBUTING.md).
+The rest of this section covers the full setup against real Azure.
+
 ### Dev environment
 
 A dev environment is supplied through Nix with [devenv](https://devenv.sh/).
